@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ContactService } from '../application/contact.service';
-import { RolesGuard, Roles } from '@/common/decorators';
+import { RolesGuard, Roles } from '../../../common/decorators';
 
 @Controller('contact')
 export class ContactController {

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AppointmentsService } from '../application/appointments.service';
-import { RolesGuard, Roles } from '@/common/decorators';
+import { RolesGuard, Roles } from '../../../common/decorators';
 import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
 
 @Controller('appointments')

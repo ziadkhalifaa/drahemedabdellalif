@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SettingsService } from '../application/settings.service';
-import { RolesGuard, Roles } from '@/common/decorators';
+import { RolesGuard, Roles } from '../../../common/decorators';
 import { UserRole } from '@dr-ahmed/shared';
 
 

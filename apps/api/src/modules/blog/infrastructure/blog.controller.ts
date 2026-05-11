@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { BlogService } from '../application/blog.service';
-import { RolesGuard, Roles } from '@/common/decorators';
+import { RolesGuard, Roles } from '../../../common/decorators';
 import { BlogPostStatus } from '@prisma/client';
 
 @Controller('blog')

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AnalyticsService } from '../application/analytics.service';
-import { RolesGuard, Roles } from '@/common/decorators';
+import { RolesGuard, Roles } from '../../../common/decorators';
 
 @Controller('analytics')
 export class AnalyticsController {

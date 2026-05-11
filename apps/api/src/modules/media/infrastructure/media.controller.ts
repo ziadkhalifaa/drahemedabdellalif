@@ -4,7 +4,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from '../application/media.service';
 import { StorageService } from '../application/storage.service';
 
-import { RolesGuard, Roles } from '@/common/decorators';
+import { RolesGuard, Roles } from '../../../common/decorators';
 import { UserRole } from '@dr-ahmed/shared';
 
 @Controller('media')
