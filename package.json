@@ -1,6 +1,10 @@
 {
   "name": "dr-ahmed-platform",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -19,7 +23,7 @@
     "turbo": "^2.9.10",
     "typescript": "^5.9.0"
   },
-  "packageManager": "pnpm@11.0.8",
+  "packageManager": "npm@10.0.0",
   "engines": {
     "node": ">=20.0.0"
   },
