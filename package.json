@@ -15,8 +15,8 @@
     "db:push": "pnpm --filter @dr-ahmed/api run prisma:push",
     "db:migrate": "pnpm --filter @dr-ahmed/api run prisma:migrate",
     "db:seed": "pnpm --filter @dr-ahmed/api run prisma:seed",
-    "deploy:api": "npm run db:generate && npx turbo build --filter=@dr-ahmed/api --force",
-    "deploy:web": "npx turbo build --filter=@dr-ahmed/web --force && node scripts/copy-assets.mjs",
+    "deploy:api": "pnpm run db:generate && pnpm exec turbo build --filter=@dr-ahmed/api --force",
+    "deploy:web": "pnpm exec turbo build --filter=@dr-ahmed/web --force && node scripts/copy-assets.mjs",
     "clean": "npx turbo clean && rm -rf node_modules"
   },
   "dependencies": {
