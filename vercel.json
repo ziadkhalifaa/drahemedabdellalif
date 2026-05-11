@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.ts": {
-      "includeFiles": "apps/api/prisma/schema.prisma"
+      "includeFiles": "apps/api/prisma/**"
     }
   },
   "routes": [
