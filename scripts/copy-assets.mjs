@@ -21,4 +21,14 @@ copyDir('apps/web/public', 'apps/web/.next/standalone/apps/web/public');
 // Copy static folder
 copyDir('apps/web/.next/static', 'apps/web/.next/standalone/apps/web/.next/static');
 
+// Create a root-level server.js that loads the actual server
+const rootServerPath = 'apps/web/.next/standalone/server.js';
+const rootServerContent = `
+const path = require('path');
+process.chdir(path.join(__dirname, 'apps', 'web'));
+require('./apps/web/server.js');
+`;
+fs.writeFileSync(rootServerPath, rootServerContent.trim());
+
 console.log('✅ Assets copied to standalone folder');
+console.log('✅ Root server.js created');
