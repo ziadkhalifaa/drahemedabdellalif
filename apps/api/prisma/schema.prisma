@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -61,11 +61,11 @@ model Appointment {
   date           DateTime
   timeSlot       String
   status         AppointmentStatus @default(pending)
-  notes          String?           @db.Text
+  notes          String?
   
   // Video Meeting Info
   meetingId      String?           @unique
-  meetingUrl     String?           @db.Text
+  meetingUrl     String?
   
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -76,8 +76,8 @@ model MedicalReport {
   patientId   String
   patient     User     @relation(fields: [patientId], references: [id])
   title       String
-  description String?  @db.Text
-  fileUrl     String?  @db.Text
+  description String?
+  fileUrl     String?  // Link to PDF/Image
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -88,20 +88,20 @@ model BlogPost {
   titleEn           String
   slugAr            String         @unique
   slugEn            String         @unique
-  contentAr         String         @db.LongText
-  contentEn         String         @db.LongText
-  excerptAr         String?        @db.Text
-  excerptEn         String?        @db.Text
+  contentAr         String
+  contentEn         String
+  excerptAr         String?
+  excerptEn         String?
   metaTitleAr       String?
   metaTitleEn       String?
-  metaDescriptionAr String?        @db.Text
-  metaDescriptionEn String?        @db.Text
-  keywords          String?        @db.Text
+  metaDescriptionAr String?
+  metaDescriptionEn String?
+  keywords          String?
   categoryId        String?
   category          Category?      @relation(fields: [categoryId], references: [id])
   tags              BlogTag[]
   status            BlogPostStatus @default(draft)
-  featuredImage     String?        @db.Text
+  featuredImage     String?
   createdAt         DateTime       @default(now())
 
   updatedAt         DateTime       @updatedAt
@@ -138,10 +138,10 @@ model Service {
   id            String   @id @default(cuid())
   titleAr       String
   titleEn       String
-  descriptionAr String   @db.Text
-  descriptionEn String   @db.Text
+  descriptionAr String
+  descriptionEn String
   icon          String
-  image         String?  @db.Text
+  image         String?
   order         Int      @default(0)
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
@@ -152,8 +152,8 @@ model Service {
 model Testimonial {
   id           String   @id @default(cuid())
   patientName  String
-  patientAvatar String?  @db.Text
-  content      String   @db.Text
+  patientAvatar String?
+  content      String
   rating       Int
   isApproved   Boolean  @default(false)
   isVisible    Boolean  @default(false)
@@ -166,7 +166,7 @@ model ContactMessage {
   name      String
   email     String
   phone     String
-  message   String   @db.Text
+  message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
@@ -174,7 +174,7 @@ model ContactMessage {
 model Media {
   id        String   @id @default(cuid())
   type      String   // "image" or "video"
-  url       String   @db.Text
+  url       String
   titleAr   String?
   titleEn   String?
   categoryAr String?
