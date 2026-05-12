@@ -6,7 +6,7 @@ export class NewsletterService {
   constructor(private readonly prisma: PrismaService) {}
 
   async subscribe(email: string, name?: string) {
-    return this.prisma.newsletterSubscriber.upsert({
+    return (this.prisma as any).newsletterSubscriber.upsert({
       where: { email },
       update: { isActive: true, name },
       create: { email, name },
@@ -14,7 +14,7 @@ export class NewsletterService {
   }
 
   async unsubscribe(email: string) {
-    return this.prisma.newsletterSubscriber.update({
+    return (this.prisma as any).newsletterSubscriber.update({
       where: { email },
       data: { isActive: false },
     });
@@ -23,13 +23,13 @@ export class NewsletterService {
   async findAll(page = 1, limit = 10) {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.prisma.newsletterSubscriber.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } }),
-      this.prisma.newsletterSubscriber.count(),
+      (this.prisma as any).newsletterSubscriber.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      (this.prisma as any).newsletterSubscriber.count(),
     ]);
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async remove(id: string) {
-    return this.prisma.newsletterSubscriber.delete({ where: { id } });
+    return (this.prisma as any).newsletterSubscriber.delete({ where: { id } });
   }
 }

@@ -99,7 +99,7 @@ export class AuthService {
       throw new UnauthorizedException('Verification code has expired');
     }
 
-    await this.prisma.user.update({
+    await (this.prisma.user as any).update({
       where: { id: user.id },
       data: { 
         isEmailVerified: true, 

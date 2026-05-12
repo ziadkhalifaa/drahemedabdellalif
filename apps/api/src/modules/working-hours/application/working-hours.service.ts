@@ -6,7 +6,7 @@ export class WorkingHoursService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAll() {
-    return this.prisma.workingHours.findMany({
+    return (this.prisma as any).workingHours.findMany({
       orderBy: { dayOfWeek: 'asc' },
     });
   }
@@ -18,15 +18,16 @@ export class WorkingHoursService {
     slotDuration: number;
     isActive: boolean;
   }) {
-    return this.prisma.workingHours.upsert({
-      where: { id: (await this.prisma.workingHours.findFirst({ where: { dayOfWeek: data.dayOfWeek } }))?.id || 'new' },
+    const existing = await (this.prisma as any).workingHours.findFirst({ where: { dayOfWeek: data.dayOfWeek } });
+    return (this.prisma as any).workingHours.upsert({
+      where: { id: existing?.id || 'new' },
       update: data,
       create: data,
     });
   }
 
   async blockSlot(data: { date: string; timeSlot?: string; reason?: string }) {
-    return this.prisma.blockedSlot.create({
+    return (this.prisma as any).blockedSlot.create({
       data: {
         date: new Date(data.date),
         timeSlot: data.timeSlot,
@@ -36,7 +37,7 @@ export class WorkingHoursService {
   }
 
   async getBlockedSlots(date: string) {
-    return this.prisma.blockedSlot.findMany({
+    return (this.prisma as any).blockedSlot.findMany({
       where: {
         date: {
           gte: new Date(date + 'T00:00:00'),
@@ -47,6 +48,6 @@ export class WorkingHoursService {
   }
 
   async unblockSlot(id: string) {
-    return this.prisma.blockedSlot.delete({ where: { id } });
+    return (this.prisma as any).blockedSlot.delete({ where: { id } });
   }
 }

@@ -27,7 +27,7 @@ export class SimpleCacheInterceptor implements NestInterceptor {
       return of(cached.data);
     }
 
-    return next.handle().pipe(
+    return (next.handle() as any).pipe(
       tap((data) => {
         this.cache.set(key, {
           data,

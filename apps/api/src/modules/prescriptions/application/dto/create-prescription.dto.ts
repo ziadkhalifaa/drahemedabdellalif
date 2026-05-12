@@ -3,11 +3,11 @@ import { IsString, IsNotEmpty, IsOptional, IsArray, IsUUID } from 'class-validat
 export class CreatePrescriptionDto {
   @IsUUID()
   @IsNotEmpty()
-  appointmentId: string;
+  appointmentId!: string;
 
   @IsUUID()
   @IsNotEmpty()
-  patientId: string;
+  patientId!: string;
 
   @IsString()
   @IsOptional()
@@ -19,7 +19,7 @@ export class CreatePrescriptionDto {
 
   @IsArray()
   @IsNotEmpty()
-  medications: {
+  medications!: {
     name: string;
     dosage: string;
     duration: string;

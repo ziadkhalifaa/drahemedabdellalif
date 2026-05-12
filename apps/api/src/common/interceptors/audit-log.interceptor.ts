@@ -23,7 +23,7 @@ export class AuditLogInterceptor implements NestInterceptor {
 
     const { method, url, body, ip } = request;
 
-    return next.handle().pipe(
+    return (next.handle() as any).pipe(
       tap(() => {
         // Log the action after successful completion
         (this.prisma as any).auditLog.create({

@@ -20,7 +20,7 @@ export class WhatsAppService {
         to: phone.startsWith('+') ? phone : `+2${phone}`,
         body: message,
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to send WhatsApp message: ${error.message}`);
     }
   }

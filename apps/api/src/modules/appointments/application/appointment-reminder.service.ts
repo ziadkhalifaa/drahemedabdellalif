@@ -57,7 +57,7 @@ export class AppointmentReminderService {
             'approved', // Reuse the status template as a reminder
             apt.meetingUrl || undefined
           );
-        } catch (error) {
+        } catch (error: any) {
           this.logger.error(`Failed to send email reminder to ${email}: ${error.message}`);
         }
       }
@@ -65,7 +65,7 @@ export class AppointmentReminderService {
       if (phone) {
         try {
           await this.whatsappService.sendReminder(phone, name, formattedDate, apt.timeSlot);
-        } catch (error) {
+        } catch (error: any) {
           this.logger.error(`Failed to send WhatsApp reminder to ${phone}: ${error.message}`);
         }
       }
