@@ -9,7 +9,7 @@ import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Cairo, Inter } from 'next/font/google';
-import { GoogleAnalytics } from '@next/third-parties/google';
+// import { GoogleAnalytics } from '@next/third-parties/google';
 import '../../styles/globals.css';
 
 const cairo = Cairo({
@@ -45,13 +45,15 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   // Fetch settings on server to avoid flash of original content
-  const settings = await api.get<any[]>('/settings').catch(() => []);
   const initialSettings: Record<string, any> = {};
+  /*
+  const settings = await api.get<any[]>('/settings').catch(() => []);
   if (Array.isArray(settings)) {
     settings.forEach((s: any) => {
       initialSettings[s.key] = s.value;
     });
   }
+  */
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -77,7 +79,7 @@ export default async function LocaleLayout({
       </head>
       <body className="min-h-screen bg-[var(--background)] font-sans antialiased">
         <Providers messages={messages} locale={locale} initialSettings={initialSettings}>
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+          {/* <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} /> */}
           <AnalyticsTracker />
           <EditorToolbar />
           {children}
