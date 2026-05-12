@@ -2,17 +2,18 @@
 
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Section, SectionHeader, Card } from '@/components/ui';
+import { Section, SectionHeader, Card, Accordion, AccordionItem } from '@/components/ui';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { WhatsAppButton } from '@/components/layout/whatsapp-button';
-import { BookOpen, ClipboardCheck, Info, HeartPulse, ShieldAlert, CheckCircle2, Phone } from 'lucide-react';
+import { BookOpen, ClipboardCheck, Info, HeartPulse, ShieldAlert, CheckCircle2, Phone, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CLINIC_PHONE } from '@dr-ahmed/shared';
-
+import { useState } from 'react';
 
 export default function PatientGuidePage() {
   const t = useTranslations('patientGuide');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const guides = [
     {
@@ -35,58 +36,68 @@ export default function PatientGuidePage() {
     }
   ];
 
+  const filteredGuides = guides.map(g => ({
+    ...g,
+    items: g.items.filter((item: string) => 
+      item.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      g.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(g => g.items.length > 0);
+
   return (
     <>
       <Navbar />
       <main className="min-h-screen pt-24">
-        <Section className="bg-gradient-to-b from-[var(--primary)]/5 to-transparent">
+        <Section className="bg-gradient-to-b from-[var(--primary)]/5 to-transparent pb-0">
           <SectionHeader title={t('title')} subtitle={t('subtitle')} />
           
-          <div className="grid gap-12 lg:grid-cols-3">
-            {guides.map((guide, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-              >
-                <Card className="h-full p-8 flex flex-col space-y-6 border-none shadow-2xl relative overflow-hidden group">
-                  <div className={cn(
-                    "absolute top-0 right-0 w-32 h-32 opacity-5 -mr-16 -mt-16 rounded-full transition-transform group-hover:scale-150 duration-700",
-                    guide.color === 'blue' ? "bg-blue-600" : guide.color === 'green' ? "bg-green-600" : "bg-orange-600"
-                  )} />
-                  
-                  <div className={cn(
-                    "h-14 w-14 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-12 duration-500",
-                    guide.color === 'blue' ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30" : 
-                    guide.color === 'green' ? "bg-green-100 text-green-600 dark:bg-green-900/30" : 
-                    "bg-orange-100 text-orange-600 dark:bg-orange-900/30"
-                  )}>
-                    <guide.icon size={28} />
-                  </div>
-                  
-                  <h3 className="text-2xl font-bold text-[var(--foreground)]">{guide.title}</h3>
-                  
-                  <ul className="space-y-4 flex-1">
+          <div className="mx-auto max-w-4xl mb-12">
+            <div className="relative group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--muted)] group-focus-within:text-[var(--primary)] transition-colors" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search for medical instructions..."
+                className="w-full pl-16 pr-6 py-5 rounded-[2rem] bg-[var(--card)] border border-[var(--border)] focus:outline-none focus:ring-4 focus:ring-[var(--primary)]/10 font-bold text-lg shadow-xl shadow-[var(--primary)]/5 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </Section>
+
+        <Section className="pt-0">
+          <div className="mx-auto max-w-4xl">
+            <Accordion>
+              {filteredGuides.map((guide, i) => (
+                <AccordionItem
+                  key={i}
+                  title={guide.title}
+                  icon={guide.icon}
+                  className="bg-[var(--card)] mb-4 rounded-3xl border border-[var(--border)]"
+                >
+                  <ul className="space-y-4 px-6 py-2">
                     {guide.items.map((item: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-3 text-[var(--muted)] leading-relaxed group/item">
-                        <CheckCircle2 size={18} className={cn(
-                          "mt-1 shrink-0 transition-transform group-hover/item:scale-110",
-                          guide.color === 'blue' ? "text-blue-500" : guide.color === 'green' ? "text-green-500" : "text-orange-500"
-                        )} />
-                        <span className="text-sm font-medium">{item}</span>
+                      <li key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-[var(--background)] border border-[var(--border)] group/item transition-all hover:border-[var(--primary)]/30">
+                        <div className={cn(
+                          "mt-1 h-6 w-6 rounded-full flex items-center justify-center shrink-0 text-white",
+                          guide.color === 'blue' ? "bg-blue-500" : guide.color === 'green' ? "bg-green-500" : "bg-orange-500"
+                        )}>
+                          <CheckCircle2 size={14} />
+                        </div>
+                        <span className="text-base font-bold text-[var(--foreground)]">{item}</span>
                       </li>
                     ))}
                   </ul>
                   
-                  <div className="pt-4 border-t border-[var(--border)]">
-                     <button onClick={() => window.print()} className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] hover:text-[var(--primary)] transition-colors">
+                  <div className="mt-6 pt-6 border-t border-[var(--border)] px-6">
+                     <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-[var(--primary)] hover:opacity-80 transition-all">
+                        <ClipboardCheck size={18} />
                         {t('downloadPdf')}
                      </button>
                   </div>
-                </Card>
-              </motion.div>
-            ))}
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </Section>
 

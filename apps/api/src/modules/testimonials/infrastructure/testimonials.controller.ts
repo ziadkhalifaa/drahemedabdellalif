@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TestimonialsService } from '../application/testimonials.service';
 import { RolesGuard, Roles } from '../../../common/decorators';
@@ -15,8 +15,8 @@ export class TestimonialsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get('all')
-  async findAll() {
-    return this.testimonialsService.findAll();
+  async findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+    return this.testimonialsService.findAll(+page, +limit);
   }
 
   @Post()

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Section, SectionHeader, Card } from '@/components/ui';
+import { Section, SectionHeader, Card, Skeleton } from '@/components/ui';
 import { motion } from 'framer-motion';
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
@@ -17,12 +19,19 @@ export default function GalleryPage() {
   const locale = useLocale();
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
   const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    api.get<any[]>('/media').then(setItems).catch(() => {});
+    api.get<any[]>('/media')
+      .then(setItems)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const filteredItems = items.filter(item => filter === 'all' || item.type === filter);
+  const slides = filteredItems.filter(i => i.type === 'image').map(i => ({ src: getMediaUrl(i.url) }));
 
   return (
     <>
@@ -63,48 +72,68 @@ export default function GalleryPage() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredItems.map((item, i) => {
-              const title = locale === 'ar' ? item.titleAr : item.titleEn;
-              const category = locale === 'ar' ? item.categoryAr : item.categoryEn;
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
+              ))
+            ) : (
+              filteredItems.map((item, i) => {
+                const title = locale === 'ar' ? item.titleAr : item.titleEn;
+                const category = locale === 'ar' ? item.categoryAr : item.categoryEn;
 
-              return (
-                <motion.div
-                  key={item.id || i}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Card 
-                    className="group relative overflow-hidden aspect-[4/3] border-none shadow-xl cursor-pointer"
-                    onClick={() => window.open(getMediaUrl(item.url), '_blank')}
+                return (
+                  <motion.div
+                    key={item.id || i}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--accent)]/20 group-hover:scale-110 transition-transform duration-700" />
-                    {item.type === 'image' && <img src={getMediaUrl(item.url)} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" />}
-                    
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <div className="h-14 w-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
-                          {item.type === 'image' ? <ImageIcon size={24} /> : <Play size={24} className="ml-1" />}
-                       </div>
-                    </div>
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 transition-transform bg-gradient-to-t from-black/80 to-transparent">
-                      <p className="text-xs font-bold text-[var(--primary-light)] uppercase tracking-widest mb-1">{category}</p>
-                      <h4 className="text-lg font-bold text-white">{title}</h4>
-                    </div>
-
-                    {item.type === 'video' && (
-                      <div className="absolute top-4 right-4 bg-[var(--primary)]/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter flex items-center gap-2">
-                        <Play size={10} fill="currentColor" /> {t('videos')}
+                    <Card 
+                      className="group relative overflow-hidden aspect-[4/3] border-none shadow-xl cursor-pointer"
+                      onClick={() => {
+                        if (item.type === 'image') {
+                          const imageIndex = slides.findIndex(s => s.src === getMediaUrl(item.url));
+                          setIndex(imageIndex);
+                          setOpen(true);
+                        } else {
+                          window.open(item.url, '_blank');
+                        }
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--accent)]/20 group-hover:scale-110 transition-transform duration-700" />
+                      {item.type === 'image' && <img src={getMediaUrl(item.url)} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" />}
+                      
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                         <div className="h-14 w-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                            {item.type === 'image' ? <ImageIcon size={24} /> : <Play size={24} className="ml-1" />}
+                         </div>
                       </div>
-                    )}
-                  </Card>
+                      
+                      <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 transition-transform bg-gradient-to-t from-black/80 to-transparent">
+                        <p className="text-xs font-bold text-[var(--primary-light)] uppercase tracking-widest mb-1">{category}</p>
+                        <h4 className="text-lg font-bold text-white">{title}</h4>
+                      </div>
 
-                </motion.div>
-              );
-            })}
+                      {item.type === 'video' && (
+                        <div className="absolute top-4 right-4 bg-[var(--primary)]/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter flex items-center gap-2">
+                          <Play size={10} fill="currentColor" /> {t('videos')}
+                        </div>
+                      )}
+                    </Card>
+
+                  </motion.div>
+                );
+              })
+            )}
           </div>
 
+          <Lightbox
+            open={open}
+            close={() => setOpen(false)}
+            index={index}
+            slides={slides}
+          />
         </Section>
       </main>
       <Footer />

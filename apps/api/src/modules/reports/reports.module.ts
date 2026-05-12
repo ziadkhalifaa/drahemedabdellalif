@@ -4,7 +4,7 @@ import { ReportsService } from './reports.service';
 import { PrismaModule } from '../../common/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MediaModule],
   controllers: [ReportsController],
   providers: [ReportsService],
   exports: [ReportsService],

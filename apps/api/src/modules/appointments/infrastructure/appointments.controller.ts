@@ -25,8 +25,13 @@ export class AppointmentsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get()
-  async findAll() {
-    return this.appointmentsService.findAll();
+  async findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+    return this.appointmentsService.findAll(+page, +limit);
+  }
+
+  @Get('available-slots')
+  async getAvailableSlots(@Query('date') date: string) {
+    return this.appointmentsService.getAvailableSlots(date);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -54,5 +59,12 @@ export class AppointmentsController {
   @Patch(':id/status')
   async updateStatus(@Param('id') id: string, @Body() body: { status: AppointmentStatus }) {
     return this.appointmentsService.updateStatus(id, body.status);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(':id/cancel')
+  async cancel(@Param('id') id: string, @Req() req: any) {
+    // Note: The service should check if the user owns the appointment
+    return this.appointmentsService.updateStatus(id, AppointmentStatus.CANCELLED);
   }
 }

@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Card, Button } from '@/components/ui';
+import { Link } from '@/i18n/routing';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import type { Appointment } from '@dr-ahmed/shared';
 import { AppointmentStatus } from '@dr-ahmed/shared';
-import { Check, X, FileDown, Download } from 'lucide-react';
+import { Check, X, FileDown, Download, Pill } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 
 export default function AdminAppointmentsPage() {
@@ -107,6 +108,13 @@ export default function AdminAppointmentsPage() {
                           <X size={16} />
                         </Button>
                       </div>
+                    )}
+                    {apt.status === 'approved' && (
+                      <Link href={`/admin/prescriptions/new/${apt.id}`}>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-[var(--primary)] hover:bg-[var(--primary)]/5">
+                          <Pill size={16} />
+                        </Button>
+                      </Link>
                     )}
                   </td>
                 </tr>

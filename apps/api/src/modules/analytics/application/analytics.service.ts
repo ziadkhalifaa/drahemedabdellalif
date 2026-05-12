@@ -53,6 +53,16 @@ export class AnalyticsService {
         ORDER BY TO_CHAR("createdAt", 'YYYY-MM-DD')
       `
     ]);
+    
+    // Simple revenue calculation logic
+    const completedAppointments = await this.prisma.appointment.findMany({
+      where: { status: 'completed' },
+      select: { type: true }
+    });
+
+    const totalRevenue = completedAppointments.reduce((acc, apt) => {
+      return acc + (apt.type === 'ONLINE' ? 300 : 500);
+    }, 0);
 
     return {
       overview: {
@@ -60,6 +70,7 @@ export class AnalyticsService {
         blog: { total: totalPosts, published: publishedPosts },
         messages: { total: totalMessages, unread: unreadMessages },
         testimonials: { total: totalTestimonials, approved: approvedTestimonials },
+        totalRevenue,
       },
       recentAppointments,
       recentEvents,
@@ -67,6 +78,21 @@ export class AnalyticsService {
         appointments: appointmentsByMonth,
         visitors: visitorStats,
       }
+    };
+  }
+
+  async getNotifications() {
+    const [pendingAppointments, unreadMessages, pendingTestimonials] = await Promise.all([
+      this.prisma.appointment.count({ where: { status: 'pending' } }),
+      this.prisma.contactMessage.count({ where: { isRead: false } }),
+      this.prisma.testimonial.count({ where: { isApproved: false } }),
+    ]);
+
+    return {
+      pendingAppointments,
+      unreadMessages,
+      pendingTestimonials,
+      total: pendingAppointments + unreadMessages + pendingTestimonials,
     };
   }
 

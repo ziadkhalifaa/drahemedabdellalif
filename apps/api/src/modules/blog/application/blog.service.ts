@@ -20,9 +20,28 @@ export class BlogService {
     return this.prisma.blogPost.create({ data, include: { category: true, tags: { include: { tag: true } } } });
   }
 
-  async findAll(status?: BlogPostStatus) {
+  async findAll(status?: BlogPostStatus, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
     const where = status ? { status } : {};
-    return this.prisma.blogPost.findMany({ where, include: { category: true, tags: { include: { tag: true } } }, orderBy: { createdAt: 'desc' } });
+    
+    const [data, total] = await Promise.all([
+      this.prisma.blogPost.findMany({ 
+        where, 
+        include: { category: true, tags: { include: { tag: true } } }, 
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.blogPost.count({ where })
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async findPublished() {

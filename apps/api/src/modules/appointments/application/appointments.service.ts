@@ -1,5 +1,6 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma.service';
+import { WhatsAppService } from '../../../common/whatsapp.service';
 import { EmailService } from '../../../common/email.service';
 import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
 
@@ -7,7 +8,8 @@ import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
 export class AppointmentsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly whatsappService: WhatsAppService
   ) {}
 
   async create(data: {
@@ -32,12 +34,42 @@ export class AppointmentsService {
 
     if (existing) throw new ConflictException('This time slot is already booked');
 
-    // If ONLINE, generate a meeting link (placeholder for now)
+    // If ONLINE, generate a professional Daily.co meeting link
     let meetingId = null;
     let meetingUrl = null;
     if (data.type === AppointmentType.ONLINE) {
-      meetingId = `room-${Math.random().toString(36).substring(2, 9)}`;
-      meetingUrl = `https://meet.jit.si/${meetingId}`;
+      try {
+        const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.DAILY_API_KEY}` 
+          },
+          body: JSON.stringify({
+            name: `dr-ahmed-${Date.now()}`,
+            privacy: 'private',
+            properties: {
+              exp: Math.floor(Date.now() / 1000) + 7200, // Expires in 2 hours
+              enable_prejoin_ui: true,
+              lang: 'ar'
+            }
+          })
+        });
+        
+        if (dailyRes.ok) {
+          const room = await dailyRes.json();
+          meetingId = room.name;
+          meetingUrl = room.url;
+        } else {
+          // Fallback to Jitsi if Daily.co fails
+          meetingId = `room-${Math.random().toString(36).substring(2, 9)}`;
+          meetingUrl = `https://meet.jit.si/${meetingId}`;
+        }
+      } catch (error) {
+        // Fallback
+        meetingId = `room-${Math.random().toString(36).substring(2, 9)}`;
+        meetingUrl = `https://meet.jit.si/${meetingId}`;
+      }
     }
 
     return this.prisma.appointment.create({
@@ -65,11 +97,91 @@ export class AppointmentsService {
     });
   }
 
-  async findAll() {
-    return this.prisma.appointment.findMany({ 
-      orderBy: { createdAt: 'desc' },
-      include: { patient: true }
+  async findAll(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.appointment.findMany({ 
+        skip, 
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { patient: true }
+      }),
+      this.prisma.appointment.count()
+    ]);
+    return { 
+      data, 
+      total, 
+      page, 
+      limit, 
+      totalPages: Math.ceil(total / limit) 
+    };
+  }
+
+  async getAvailableSlots(dateStr: string) {
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay();
+
+    // Check Working Hours
+    const workingHours = await this.prisma.workingHours.findFirst({
+      where: { dayOfWeek, isActive: true }
     });
+    if (!workingHours) return { slots: [], reason: 'Day off' };
+
+    // Generate All Slots
+    const allSlots = this.generateSlots(workingHours.startTime, workingHours.endTime, workingHours.slotDuration);
+
+    // Get Booked Slots
+    const booked = await this.prisma.appointment.findMany({
+      where: {
+        date: {
+          gte: new Date(dateStr + 'T00:00:00'),
+          lt: new Date(dateStr + 'T23:59:59'),
+        },
+        status: { notIn: [AppointmentStatus.REJECTED, AppointmentStatus.CANCELLED] }
+      },
+      select: { timeSlot: true }
+    });
+
+    // Get Blocked Slots
+    const blocked = await this.prisma.blockedSlot.findMany({
+      where: {
+        date: {
+          gte: new Date(dateStr + 'T00:00:00'),
+          lt: new Date(dateStr + 'T23:59:59'),
+        }
+      }
+    });
+
+    const bookedSet = new Set(booked.map(b => b.timeSlot));
+    const blockedSet = new Set(blocked.map(b => b.timeSlot).filter(Boolean));
+    const isFullDayBlocked = blocked.some(b => !b.timeSlot);
+
+    if (isFullDayBlocked) return { slots: [], reason: 'Day fully blocked' };
+
+    return {
+      slots: allSlots.map(slot => ({
+        time: slot,
+        available: !bookedSet.has(slot) && !blockedSet.has(slot)
+      }))
+    };
+  }
+
+  private generateSlots(startTime: string, endTime: string, duration: number): string[] {
+    const slots = [];
+    const [startH, startM] = startTime.split(':').map(Number);
+    const [endH, endM] = endTime.split(':').map(Number);
+    
+    let current = new Date();
+    current.setHours(startH, startM, 0, 0);
+    
+    const end = new Date();
+    end.setHours(endH, endM, 0, 0);
+
+    while (current < end) {
+      slots.push(current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }));
+      current.setMinutes(current.getMinutes() + duration);
+    }
+    return slots;
   }
 
   async findByPatientId(patientId: string) {
@@ -102,13 +214,17 @@ export class AppointmentsService {
       include: { patient: true }
     });
 
-    // Send email notification if status changed to approved or rejected
+    // Send notifications if status changed to approved or rejected
     if (status === AppointmentStatus.APPROVED || status === AppointmentStatus.REJECTED) {
       const email = appointment.guestEmail || appointment.patient?.email;
+      const phone = appointment.guestPhone || appointment.patient?.phone;
       const name = appointment.guestName || appointment.patient?.name || 'مريضنا العزيز';
       
+      const formattedDate = new Date(appointment.date).toLocaleDateString('ar-EG', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      });
+
       if (email) {
-        const formattedDate = new Date(appointment.date).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         await this.emailService.sendAppointmentStatus(
           email,
           name,
@@ -117,6 +233,15 @@ export class AppointmentsService {
           status.toLowerCase() as 'approved' | 'rejected',
           appointment.meetingUrl || undefined
         );
+      }
+
+      if (phone && status === AppointmentStatus.APPROVED) {
+        await this.whatsappService.sendAppointmentConfirmation(phone, {
+          date: formattedDate,
+          time: appointment.timeSlot,
+          type: appointment.type,
+          url: appointment.meetingUrl || undefined
+        });
       }
     }
 

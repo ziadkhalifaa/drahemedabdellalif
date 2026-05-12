@@ -25,9 +25,9 @@ export class AuthService {
       throw new UnauthorizedException('Please verify your email address first');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const tokens = await this.generateTokens(user);
     return {
-      accessToken: this.jwtService.sign(payload),
+      ...tokens,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     };
   }
@@ -44,12 +44,15 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(data.password, 10);
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       
+      const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
       await this.prisma.user.update({
         where: { id: existing.id },
         data: {
           ...data,
           password: hashedPassword,
           emailVerificationCode: verificationCode,
+          emailVerificationExpiry,
         },
       });
 
@@ -63,6 +66,8 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
     const user = await this.prisma.user.create({
       data: {
         ...data,
@@ -70,6 +75,7 @@ export class AuthService {
         role: 'patient',
         isEmailVerified: false,
         emailVerificationCode: verificationCode,
+        emailVerificationExpiry,
       },
     });
 
@@ -88,17 +94,22 @@ export class AuthService {
       throw new UnauthorizedException('Invalid verification code');
     }
 
+    if (user.emailVerificationExpiry && user.emailVerificationExpiry < new Date()) {
+      throw new UnauthorizedException('Verification code has expired');
+    }
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: { 
         isEmailVerified: true, 
-        emailVerificationCode: null 
+        emailVerificationCode: null,
+        emailVerificationExpiry: null
       }
     });
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const tokens = await this.generateTokens(user);
     return {
-      accessToken: this.jwtService.sign(payload),
+      ...tokens,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     };
   }
@@ -109,9 +120,14 @@ export class AuthService {
 
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
 
+    const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { emailVerificationCode: newCode }
+      data: { 
+        emailVerificationCode: newCode,
+        emailVerificationExpiry 
+      }
     });
 
     return this.emailService.sendOTP(email, newCode);
@@ -150,9 +166,14 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
 
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const passwordResetExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { emailVerificationCode: resetCode },
+      data: { 
+        passwordResetCode: resetCode,
+        passwordResetExpiry
+      },
     });
 
     await this.emailService.sendOTP(email, resetCode);
@@ -163,16 +184,54 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('User not found');
 
-    if (user.emailVerificationCode !== code) {
+    if (user.passwordResetCode !== code) {
       throw new UnauthorizedException('Invalid reset code');
+    }
+
+    if (user.passwordResetExpiry && user.passwordResetExpiry < new Date()) {
+      throw new UnauthorizedException('Reset code has expired');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword, emailVerificationCode: null },
+      data: { 
+        password: hashedPassword, 
+        passwordResetCode: null,
+        passwordResetExpiry: null
+      },
     });
 
     return { message: 'Password reset successfully' };
+  }
+  async generateTokens(user: { id: string; email: string; role: string }) {
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+    
+    const refreshToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      },
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    const token = await this.prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!token || token.expiresAt < new Date()) {
+      if (token) await this.prisma.refreshToken.delete({ where: { id: token.id } });
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    await this.prisma.refreshToken.delete({ where: { id: token.id } });
+    return this.generateTokens(token.user);
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ContactService } from '../application/contact.service';
 import { RolesGuard, Roles } from '../../../common/decorators';
@@ -15,8 +15,8 @@ export class ContactController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get()
-  async findAll() {
-    return this.contactService.findAll();
+  async findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+    return this.contactService.findAll(+page, +limit);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

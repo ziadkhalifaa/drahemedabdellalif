@@ -9,8 +9,12 @@ export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get()
-  async findAll(@Query('status') status?: BlogPostStatus) {
-    return this.blogService.findAll(status);
+  async findAll(
+    @Query('status') status?: BlogPostStatus,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10
+  ) {
+    return this.blogService.findAll(status, +page, +limit);
   }
 
   @Get('published')

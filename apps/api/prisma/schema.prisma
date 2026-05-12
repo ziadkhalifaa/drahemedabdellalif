@@ -42,9 +42,15 @@ model User {
   phoneVerificationCode String?
   isEmailVerified       Boolean        @default(false)
   emailVerificationCode String?
+  emailVerificationExpiry DateTime?
+  passwordResetCode      String?
+  passwordResetExpiry    DateTime?
   role                  UserRole       @default(patient)
   appointments          Appointment[]
   medicalReports        MedicalReport[]
+  refreshTokens         RefreshToken[]
+  auditLogs             AuditLog[]
+  prescriptions         Prescription[]
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 }
@@ -70,6 +76,8 @@ model Appointment {
   
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+  review         AppointmentReview?
+  prescription   Prescription?
 }
 
 model MedicalReport {
@@ -198,4 +206,77 @@ model AnalyticsEvent {
   createdAt DateTime @default(now())
 }
 
+model WorkingHours {
+  id           String   @id @default(cuid())
+  dayOfWeek    Int      // 0=Sunday, 1=Monday, ..., 6=Saturday
+  startTime    String   // "16:00"
+  endTime      String   // "20:00"
+  slotDuration Int      @default(30) // minutes
+  isActive     Boolean  @default(true)
+}
 
+model BlockedSlot {
+  id        String   @id @default(cuid())
+  date      DateTime
+  timeSlot  String?  // null = اليوم كله محجوز
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model AppointmentReview {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  rating        Int         // 1-5
+  comment       String?
+  isPublic      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // e.g., "DELETE_POST", "UPDATE_SETTINGS"
+  resource  String?  // e.g., "BlogPost", "SiteSettings"
+  details   Json?    // Any extra data
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model Prescription {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  patientId     String
+  patient       User        @relation(fields: [patientId], references: [id])
+  
+  diagnosisAr   String?
+  diagnosisEn   String?
+  medications   Json        // List of { name, dosage, duration, notes }
+  instructionsAr String?
+  instructionsEn String?
+  
+  isIssued      Boolean     @default(false)
+  issuedAt      DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}

@@ -9,8 +9,24 @@ export class ContactService {
     return this.prisma.contactMessage.create({ data });
   }
 
-  async findAll() {
-    return this.prisma.contactMessage.findMany({ orderBy: { createdAt: 'desc' } });
+  async findAll(page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.contactMessage.findMany({ 
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.contactMessage.count()
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async markAsRead(id: string) {

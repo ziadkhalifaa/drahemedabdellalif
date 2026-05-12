@@ -1,23 +1,35 @@
 import type { MetadataRoute } from 'next';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://drahmed.com';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://drahmedabdellatif.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = [
-    { url: BASE_URL, lastModified: new Date(), changeFrequency: 'monthly', priority: 1 },
-    { url: `${BASE_URL}/en`, lastModified: new Date(), changeFrequency: 'monthly', priority: 1 },
-    { url: `${BASE_URL}/ar`, lastModified: new Date(), changeFrequency: 'monthly', priority: 1 },
-  ];
+  const locales = ['ar', 'en'];
+  const routes = ['', '/services', '/about', '/contact', '/gallery', '/booking', '/blog', '/patient-guide'];
+  
+  const staticPages: MetadataRoute.Sitemap = routes.flatMap(route => 
+    locales.map(locale => ({
+      url: `${BASE_URL}/${locale}${route}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: route === '' ? 1 : 0.8,
+    }))
+  );
 
   let blogPosts: MetadataRoute.Sitemap = [];
   try {
     const res = await fetch(`${API_BASE}/blog/published`, { cache: 'no-store' });
-    const posts = await res.json();
-    blogPosts = posts.flatMap((post: any) => [
-      { url: `${BASE_URL}/en/blog/${post.slug}`, lastModified: new Date(post.updatedAt), changeFrequency: 'weekly' as const, priority: 0.8 },
-      { url: `${BASE_URL}/ar/blog/${post.slug}`, lastModified: new Date(post.updatedAt), changeFrequency: 'weekly' as const, priority: 0.8 },
-    ]);
+    if (res.ok) {
+      const posts = await res.json();
+      blogPosts = posts.flatMap((post: any) => 
+        locales.map(locale => ({
+          url: `${BASE_URL}/${locale}/blog/${post.slug}`,
+          lastModified: new Date(post.updatedAt),
+          changeFrequency: 'weekly' as const,
+          priority: 0.6,
+        }))
+      );
+    }
   } catch {}
 
   return [...staticPages, ...blogPosts];

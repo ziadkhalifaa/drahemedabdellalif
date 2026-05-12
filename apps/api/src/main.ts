@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -8,14 +8,19 @@ import * as fs from 'fs';
 import { join, resolve } from 'path';
 
 
-import { AppModule } from './app.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './common/logger/winston.config';
 
+import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 let app: NestExpressApplication;
 
 async function bootstrap() {
   if (!app) {
-    app = await NestFactory.create<NestExpressApplication>(AppModule);
+    app = await NestFactory.create<NestExpressApplication>(AppModule, {
+      logger: WinstonModule.createLogger(winstonConfig),
+    });
 
     // Security & Middleware
     app.use(helmet({
@@ -30,8 +35,13 @@ async function bootstrap() {
     app.use(cookieParser());
 
     app.enableCors({
-      origin: true, // في فارسيل خليه true مؤقتاً للسهولة
+      origin: [
+        process.env.FRONTEND_URL || 'http://localhost:3000',
+        'https://drahmedabdellatif.com',
+      ],
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     });
 
     app.useGlobalPipes(
@@ -42,15 +52,19 @@ async function bootstrap() {
       }),
     );
 
-    const config = new DocumentBuilder()
-      .setTitle('Dr. Ahmed Abdellatif API')
-      .setDescription('API for Dr. Ahmed Abdellatif Medical Platform')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
+    app.useGlobalFilters(new GlobalExceptionFilter());
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
+    if (process.env.NODE_ENV !== 'production') {
+      const config = new DocumentBuilder()
+        .setTitle('Dr. Ahmed Abdellatif API')
+        .setDescription('API for Dr. Ahmed Abdellatif Medical Platform')
+        .setVersion('1.0')
+        .addBearerAuth()
+        .build();
+
+      const document = SwaggerModule.createDocument(app, config);
+      SwaggerModule.setup('api/docs', app, document);
+    }
 
     await app.init();
   }
