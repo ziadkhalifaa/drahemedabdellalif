@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "npx turbo dev",
-    "build": "npm run db:generate && npx turbo build --filter=@dr-ahmed/web && node scripts/copy-assets.mjs",
+    "build": "npx prisma generate --schema=apps/api/prisma/schema.prisma --no-engine && npx turbo build --filter=@dr-ahmed/web && node scripts/copy-assets.mjs",
     "start": "node server.js",
     "lint": "npx turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json}\"",
