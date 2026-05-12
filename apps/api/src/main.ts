@@ -38,6 +38,8 @@ async function bootstrap() {
       origin: [
         process.env.FRONTEND_URL || 'http://localhost:3000',
         'https://drahmedabdellatif.com',
+        'http://gold-buffalo-912779.hostingersite.com',
+        'https://gold-buffalo-912779.hostingersite.com',
       ],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
