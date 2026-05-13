@@ -22,7 +22,7 @@ export default function NewsletterPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Campaign state
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [campaignData, setCampaignData] = useState({ subject: '', content: '' });
@@ -30,7 +30,7 @@ export default function NewsletterPage() {
 
   useEffect(() => {
     if (!token) return;
-    
+
     api.get<Subscriber[]>('/newsletter', token)
       .then(res => setSubscribers(res))
       .catch(err => {
@@ -40,7 +40,7 @@ export default function NewsletterPage() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const filteredSubscribers = subscribers.filter(s => 
+  const filteredSubscribers = subscribers.filter(s =>
     s.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -49,7 +49,7 @@ export default function NewsletterPage() {
       toast.error('No subscribers to export');
       return;
     }
-    
+
     const headers = ['Email', 'Subscribed At'];
     const csvContent = [
       headers.join(','),
@@ -70,7 +70,7 @@ export default function NewsletterPage() {
   const handleSendCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !campaignData.subject || !campaignData.content) return;
-    
+
     setSending(true);
     try {
       await api.post('/newsletter/send', campaignData, token);
@@ -105,10 +105,10 @@ export default function NewsletterPage() {
           </h1>
           <p className="text-[var(--muted)]">{t('subtitle', { fallback: 'Manage your subscribers and send email campaigns.' })}</p>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleExportCSV}
             className="rounded-xl font-bold gap-2"
           >
@@ -134,11 +134,11 @@ export default function NewsletterPage() {
                       <X size={24} />
                     </button>
                   </div>
-                  
+
                   <form onSubmit={handleSendCampaign} className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-[var(--muted)] ml-1">{t('subject', { fallback: 'Subject Line' })}</label>
-                      <Input 
+                      <Input
                         required
                         value={campaignData.subject}
                         onChange={(e) => setCampaignData({ ...campaignData, subject: e.target.value })}
@@ -146,10 +146,10 @@ export default function NewsletterPage() {
                         className="py-6 rounded-xl"
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-[var(--muted)] ml-1">{t('content', { fallback: 'Email Content (HTML allowed)' })}</label>
-                      <textarea 
+                      <textarea
                         required
                         value={campaignData.content}
                         onChange={(e) => setCampaignData({ ...campaignData, content: e.target.value })}
@@ -157,7 +157,7 @@ export default function NewsletterPage() {
                         className="w-full min-h-[200px] p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:outline-none transition-all resize-y"
                       />
                     </div>
-                    
+
                     <div className="flex items-center gap-4 bg-[var(--primary)]/5 p-4 rounded-xl border border-[var(--primary)]/10 text-sm">
                       <Users size={20} className="text-[var(--primary)] shrink-0" />
                       <p>
@@ -189,15 +189,15 @@ export default function NewsletterPage() {
           </h2>
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" size={16} />
-            <Input 
-              placeholder="Search emails..." 
+            <Input
+              placeholder="Search emails..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 rounded-xl bg-[var(--background)]"
             />
           </div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-[var(--background)] border-b border-[var(--border)] uppercase text-[10px] font-black tracking-wider text-[var(--muted)]">

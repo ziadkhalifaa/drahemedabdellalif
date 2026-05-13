@@ -10,12 +10,12 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 12);
 
   await prisma.user.upsert({
-    where: { email: 'admin@drahmed.com' },
+    where: { email: 'admin@drahmedabdellatif.com' },
     update: {
       name: 'Prof. Dr. Ahmed Abdellatif',
     },
     create: {
-      email: 'admin@drahmed.com',
+      email: 'admin@drahmedabdellatif.com',
       password: adminPassword,
       name: 'Prof. Dr. Ahmed Abdellatif',
       role: 'admin',
@@ -146,7 +146,7 @@ async function main() {
       id: 'default',
       siteNameAr: 'د. أحمد عبد اللطيف',
       siteNameEn: 'Dr. Ahmed Abdellatif',
-      contactEmail: 'info@drahmed.com',
+      contactEmail: 'info@drahmedabdellatif.com',
       contactPhone: '+201234567890',
       addressAr: 'القاهرة، مصر',
       addressEn: 'Cairo, Egypt',

@@ -67,7 +67,7 @@ export class EmailService {
     `;
 
     try {
-      const from = process.env.SMTP_USER || 'noreply@drahmed.com';
+      const from = process.env.SMTP_USER || 'noreply@drahmedabdellatif.com';
       await this.transporter.sendMail({
         from: `"أ.د. أحمد عبد اللطيف" <${from}>`,
         to: email,
@@ -126,7 +126,7 @@ export class EmailService {
     `;
 
     try {
-      const from = process.env.SMTP_USER || 'noreply@drahmed.com';
+      const from = process.env.SMTP_USER || 'noreply@drahmedabdellatif.com';
       await this.transporter.sendMail({
         from: `"أ.د. أحمد عبد اللطيف" <${from}>`,
         to: email,

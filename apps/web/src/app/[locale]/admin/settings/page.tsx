@@ -23,7 +23,7 @@ export default function AdminSettingsPage() {
     },
     contact: {
       phone: '+20 123 456 7890',
-      email: 'info@drahmed.com',
+      email: 'info@drahmedabdellatif.com',
       addressBeniSuef: 'بني سويف، مصر',
       addressOctober: 'الحي المتميز، 6 أكتوبر',
     }

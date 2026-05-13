@@ -57,7 +57,7 @@ model User {
   prescriptions         Prescription[]
   payments              Payment[]
   createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  updatedAt             DateTime       @default(now()) @updatedAt
 }
 
 model Appointment {
@@ -80,7 +80,7 @@ model Appointment {
   meetingUrl     String?
   
   createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  updatedAt      DateTime          @default(now()) @updatedAt
   review         AppointmentReview?
   prescription   Prescription?
 }
@@ -93,7 +93,7 @@ model MedicalReport {
   description String?
   fileUrl     String?  // Link to PDF/Image
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 model BlogPost {
@@ -118,7 +118,7 @@ model BlogPost {
   featuredImage     String?
   createdAt         DateTime       @default(now())
 
-  updatedAt         DateTime       @updatedAt
+  updatedAt         DateTime       @default(now()) @updatedAt
 }
 
 model Category {
@@ -159,7 +159,7 @@ model Service {
   order         Int      @default(0)
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime @default(now()) @updatedAt
 }
 
 
@@ -172,7 +172,7 @@ model Testimonial {
   isApproved   Boolean  @default(false)
   isVisible    Boolean  @default(false)
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime @default(now()) @updatedAt
 }
 
 model ContactMessage {
@@ -196,7 +196,7 @@ model Media {
   order     Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model SiteSettings {
@@ -283,7 +283,7 @@ model Prescription {
   isIssued      Boolean     @default(false)
   issuedAt      DateTime?
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime    @default(now()) @updatedAt
 }
 
 enum PaymentStatus {
@@ -306,5 +306,5 @@ model Payment {
   paymentMethod   String?       // e.g. "card", "wallet"
   metadata        Json?         // Extra Paymob response data
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  updatedAt       DateTime      @default(now()) @updatedAt
 }

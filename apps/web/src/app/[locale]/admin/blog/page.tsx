@@ -293,7 +293,7 @@ export default function AdminBlogPage() {
                     { (activeLang === 'ar' ? form.metaTitleAr : form.metaTitleEn) || (activeLang === 'ar' ? form.titleAr : form.titleEn) || 'Untiltled Post' }
                   </div>
                   <div className="text-[#006621] dark:text-emerald-500 text-sm truncate">
-                    drahmed.com › blog › { (activeLang === 'ar' ? form.slugAr : form.slugEn) || 'slug' }
+                    drahmedabdellatif.com › blog › { (activeLang === 'ar' ? form.slugAr : form.slugEn) || 'slug' }
                   </div>
                   <div className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2">
                     { (activeLang === 'ar' ? form.metaDescriptionAr : form.metaDescriptionEn) || (activeLang === 'ar' ? form.excerptAr : form.excerptEn) || 'Add a meta description to see how this looks in search.' }

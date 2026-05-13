@@ -13,7 +13,7 @@ export const RATING_OPTIONS = [1, 2, 3, 4, 5] as const;
 export const WHATSAPP_NUMBER = '+201002621743';
 export const CLINIC_ADDRESS = 'Beni Suef, Egypt';
 export const CLINIC_PHONE = '+201002621743';
-export const CLINIC_EMAIL = 'info@drahmed.com';
+export const CLINIC_EMAIL = 'info@drahmedabdellatif.com';
 
 
 export const LOCALES = ['en', 'ar'] as const;
