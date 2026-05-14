@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 export function WhatsAppWidget() {
   const t = useTranslations('common');
-  const phoneNumber = '+201111088877'; // Same as drenmarhabib.com or replace with Dr. Ahmed's actual number
+  const phoneNumber = '+201001516882'; // Dr. Ahmed's actual WhatsApp number
 
   return (
     <motion.div

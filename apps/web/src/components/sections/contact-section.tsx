@@ -35,31 +35,53 @@ export function ContactSection() {
           transition={{ duration: 0.6 }}
           className="space-y-6"
         >
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
-              <MapPin size={24} />
+          <div className="space-y-6">
+            {/* Clinic 1 - Tagamoa */}
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
+                <MapPin size={24} />
+              </div>
+              <div>
+                <p className="font-bold text-lg text-[var(--primary-dark)] dark:text-white">{t('info.tagamoa')}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{t('info.tagamoaAddress')}</p>
+                <p className="text-sm text-gray-500 mt-1">{t('hours.tagamoaHours')}</p>
+                <div className="flex items-center gap-2 mt-2 text-sm font-semibold text-[var(--primary)]">
+                  <Phone size={16} />
+                  <span>01101211994 - 01010415455</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-[var(--foreground)]">Address</p>
-              <p className="text-sm text-[var(--muted)]">{t('address')}</p>
+
+            {/* Clinic 2 - Beni Suef */}
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
+                <MapPin size={24} />
+              </div>
+              <div>
+                <p className="font-bold text-lg text-[var(--primary-dark)] dark:text-white">{t('info.beniSuef')}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{t('info.beniSuefAddress')}</p>
+                <p className="text-sm text-gray-500 mt-1">{t('hours.beniSuefHours')}</p>
+                <div className="flex items-center gap-2 mt-2 text-sm font-semibold text-[var(--primary)]">
+                  <Phone size={16} />
+                  <span>01024366117 - 082/2135709</span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
-              <Phone size={24} />
-            </div>
-            <div>
-              <p className="font-medium text-[var(--foreground)]">Phone</p>
-              <p className="text-sm text-[var(--muted)]">{t('phone')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
-              <Mail size={24} />
-            </div>
-            <div>
-              <p className="font-medium text-[var(--foreground)]">Email</p>
-              <p className="text-sm text-[var(--muted)]">{t('email')}</p>
+
+            {/* Clinic 3 - October */}
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
+                <MapPin size={24} />
+              </div>
+              <div>
+                <p className="font-bold text-lg text-[var(--primary-dark)] dark:text-white">{t('info.october')}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{t('info.octoberAddress')}</p>
+                <p className="text-sm text-gray-500 mt-1">{t('hours.octoberHours')}</p>
+                <div className="flex items-center gap-2 mt-2 text-sm font-semibold text-[var(--primary)]">
+                  <Phone size={16} />
+                  <span>01101211994 - 01010415455</span>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>

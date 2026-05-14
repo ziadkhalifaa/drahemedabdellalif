@@ -233,8 +233,8 @@
   "contact": {
     "title": "Contact Us",
     "subtitle": "We are here to answer your inquiries and provide necessary medical care.",
-    "address": "Beni Suef: Boursaid St. - Al Nada Tower | 6th of October: Magda Sq. - Prima Vista Mall",
-    "phone": "+201002621743",
+    "address": "Fifth Settlement: HCC Bldg | Beni Suef: Al Nada Tower | 6th of October: Prima Vista",
+    "phone": "01101211994 - 01010415455",
     "email": "info@drahmedabdellatif.com",
     "form": {
       "title": "Send us a message",
@@ -253,17 +253,21 @@
     "info": {
       "phone": "Phone Number",
       "email": "Email",
+      "tagamoa": "Fifth Settlement Branch",
       "beniSuef": "Beni Suef Branch",
       "october": "6th of October Branch",
-      "beniSuefAddress": "Boursaid St. - Al Nada Tower",
-      "octoberAddress": "Magda Sq. - Prima Vista Mall"
+      "tagamoaAddress": "HCC Building - behind Air Force Hospital",
+      "beniSuefAddress": "Al Nada Tower, Boursaid St. - 2nd Floor",
+      "octoberAddress": "Prima Vista Building - above CIB Bank"
     },
     "hours": {
       "title": "Working Hours",
+      "tagamoa": "Fifth Settlement Branch",
       "beniSuef": "Beni Suef Branch",
       "october": "6th of October Branch",
-      "beniSuefHours": "Sun - Thu (4 PM - 10 PM)",
-      "octoberHours": "Sat (2 PM - 8 PM)"
+      "tagamoaHours": "Please call for booking",
+      "beniSuefHours": "Sat - Wed (4 PM - 10 PM)",
+      "octoberHours": "Thu (1 PM - 3 PM)"
     },
     "map": "Interactive map will be added here"
   },
