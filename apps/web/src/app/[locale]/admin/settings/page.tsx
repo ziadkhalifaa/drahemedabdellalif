@@ -5,6 +5,7 @@ import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import { Save, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 export default function AdminSettingsPage() {
@@ -46,9 +47,9 @@ export default function AdminSettingsPage() {
     setLoading(true);
     try {
       await api.post(`/settings/${key}`, { value: settings[key] }, token);
-      alert('Settings saved successfully!');
+      toast.success('Settings saved successfully!');
     } catch (e) {
-      alert('Failed to save settings');
+      toast.error('Failed to save settings');
     }
     setLoading(false);
   };

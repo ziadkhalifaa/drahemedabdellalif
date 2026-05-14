@@ -61,7 +61,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     refreshSession();
-    return () => { mounted = false; };
+
+    // Listen for custom token refresh events from the API client
+    const handleTokenRefreshed = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (mounted && customEvent.detail) {
+        setToken(customEvent.detail);
+      }
+    };
+    window.addEventListener('token-refreshed', handleTokenRefreshed);
+
+    return () => { 
+      mounted = false; 
+      window.removeEventListener('token-refreshed', handleTokenRefreshed);
+    };
   }, []);
 
   const login = (newToken: string, newUser: User) => {

@@ -38,6 +38,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
+
+    const handleTokenRefreshed = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setToken(customEvent.detail);
+        localStorage.setItem('admin_token', customEvent.detail);
+      }
+    };
+    window.addEventListener('token-refreshed', handleTokenRefreshed);
+
+    return () => {
+      window.removeEventListener('token-refreshed', handleTokenRefreshed);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
