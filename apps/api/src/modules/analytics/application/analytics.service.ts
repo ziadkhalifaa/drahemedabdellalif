@@ -97,6 +97,12 @@ export class AnalyticsService {
   }
 
   async trackEvent(type: string, payload: Record<string, any>) {
-    return (this.prisma as any).analyticsEvent.create({ data: { type, payload } });
+    try {
+      return await (this.prisma as any).analyticsEvent.create({ data: { type, payload } });
+    } catch (error) {
+      console.error(`[AnalyticsService] Failed to track event ${type}:`, (error as Error).message);
+      // Don't throw to avoid 500 on frontend for tracking failures
+      return null;
+    }
   }
 }
