@@ -223,6 +223,9 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
     const token = await (this.prisma as any).refreshToken.findUnique({
       where: { token: refreshToken },
       include: { user: true },
