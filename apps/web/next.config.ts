@@ -26,9 +26,7 @@ const config: NextConfig = {
       },
     ],
   },
-  experimental: {
-    optimizeCss: false,
-  },
+  experimental: {},
   webpack(webpackConfig) {
     webpackConfig.resolve.alias = {
       ...webpackConfig.resolve.alias,
