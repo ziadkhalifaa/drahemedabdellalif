@@ -34,14 +34,15 @@ export function TechniquesContent({ techniques, locale }: Props) {
             </motion.div>
             
             <h1 className="text-5xl md:text-7xl font-black leading-tight text-[var(--foreground)] tracking-tighter mb-6">
-              {locale === 'ar' ? 'أحدث التقنيات العالمية' : 'Latest Global Techniques'}
+              <EditableText contentKey="techniques.hero.title" defaultAr="أحدث التقنيات العالمية" defaultEn="Latest Global Techniques" />
             </h1>
             
             <p className="text-xl text-[var(--muted)] leading-relaxed font-medium max-w-2xl">
-              {locale === 'ar' 
-                ? 'نستثمر في أحدث ما توصل إليه العلم من أجهزة وتقنيات جراحية لضمان أعلى نسب النجاح وأسرع وقت للتعافي لمرضانا.'
-                : 'We invest in the latest scientific advancements in surgical equipment and techniques to ensure the highest success rates and fastest recovery times for our patients.'
-              }
+              <EditableText 
+                contentKey="techniques.hero.desc" 
+                defaultAr="نستثمر في أحدث ما توصل إليه العلم من أجهزة وتقنيات جراحية لضمان أعلى نسب النجاح وأسرع وقت للتعافي لمرضانا." 
+                defaultEn="We invest in the latest scientific advancements in surgical equipment and techniques to ensure the highest success rates and fastest recovery times for our patients." 
+              />
             </p>
           </div>
 
@@ -116,13 +117,14 @@ export function TechniquesContent({ techniques, locale }: Props) {
               
               <div className="relative z-10 max-w-3xl mx-auto space-y-8">
                  <h2 className="text-4xl md:text-6xl font-black leading-tight tracking-tight">
-                   {locale === 'ar' ? 'مستقبل جراحة المسالك بين يديك' : 'The Future of Urology Surgery'}
+                   <EditableText contentKey="techniques.cta.title" defaultAr="مستقبل جراحة المسالك بين يديك" defaultEn="The Future of Urology Surgery" />
                  </h2>
                  <p className="text-white/90 text-xl font-medium leading-relaxed">
-                   {locale === 'ar' 
-                     ? 'احجز استشارتك الآن لتتعرف على التقنية الأنسب لحالتك وتبدأ رحلة التعافي بأمان.'
-                     : 'Book your consultation now to learn about the most suitable technique for your condition and start your recovery safely.'
-                   }
+                   <EditableText 
+                     contentKey="techniques.cta.subtitle" 
+                     defaultAr="احجز استشارتك الآن لتتعرف على التقنية الأنسب لحالتك وتبدأ رحلة التعافي بأمان." 
+                     defaultEn="Book your consultation now to learn about the most suitable technique for your condition and start your recovery safely." 
+                   />
                  </p>
                  <div className="pt-6">
                     <Link href="/booking">

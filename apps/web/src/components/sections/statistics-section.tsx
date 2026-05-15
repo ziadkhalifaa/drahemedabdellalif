@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { CountUp } from '@/components/ui/count-up';
 import { Users, Activity, Award, BookOpen } from 'lucide-react';
+import { EditableText } from '@/components/editor/editable-components';
 
 const stats = [
   {
@@ -67,12 +68,12 @@ export function StatisticsSection() {
               </div>
               
               <h3 className="text-xl font-bold text-white mb-3 mt-4">
-                {stat.title}
-              </h3>
-              
-              <p className="text-gray-300 leading-relaxed text-sm max-w-[250px]">
-                {stat.description}
-              </p>
+                 <EditableText contentKey={`home.stats.${stat.id}.title`} defaultAr={stat.title} defaultEn={stat.title} />
+               </h3>
+               
+               <div className="text-gray-300 leading-relaxed text-sm max-w-[250px]">
+                 <EditableText contentKey={`home.stats.${stat.id}.desc`} defaultAr={stat.description} defaultEn={stat.description} />
+               </div>
             </motion.div>
           ))}
         </div>

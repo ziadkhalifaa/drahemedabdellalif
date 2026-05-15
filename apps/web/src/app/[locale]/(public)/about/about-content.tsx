@@ -135,7 +135,10 @@ export function AboutContent() {
 
         {/* Why Us Section */}
         <Section>
-          <SectionHeader title={t('experience')} subtitle="لماذا يثق بنا آلاف المرضى؟" />
+          <SectionHeader 
+            title={<EditableText contentKey="about.stats.title" defaultAr={t('experience')} defaultEn={t('experience')} />} 
+            subtitle={<EditableText contentKey="about.stats.subtitle" defaultAr="لماذا يثق بنا آلاف المرضى؟" defaultEn="Why do thousands of patients trust us?" />} 
+          />
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
              {[
                { icon: Activity, titleKey: 'about.feature1.title', titleDef: 'أحدث التقنيات', descKey: 'about.feature1.desc', descDef: 'نستخدم أحدث أجهزة الليزر والمناظير المرنة العالمية.', color: 'blue' },

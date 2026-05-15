@@ -6,6 +6,7 @@ import { Link } from '@/i18n/routing';
 import useSWR from 'swr';
 import { api, getMediaUrl } from '@/lib/api';
 import { useLocale } from 'next-intl';
+import { EditableText } from '@/components/editor/editable-components';
 
 interface Technique {
   id: string;
@@ -45,7 +46,11 @@ export function CoreTechniquesSection() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-bold text-[var(--primary-dark)] dark:text-white"
         >
-          {locale === 'ar' ? 'إزالة تضخم البروستاتا الحميد بدون جراحة' : 'BPH Treatment Without Surgery'}
+          <EditableText 
+            contentKey="home.techniques.title" 
+            defaultAr="إزالة تضخم البروستاتا الحميد بدون جراحة" 
+            defaultEn="BPH Treatment Without Surgery" 
+          />
         </motion.h2>
         <div className="mt-4 w-24 h-1 bg-[var(--accent)] mx-auto rounded-full" />
       </div>

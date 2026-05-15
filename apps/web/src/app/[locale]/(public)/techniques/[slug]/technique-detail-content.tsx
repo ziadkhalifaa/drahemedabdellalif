@@ -164,9 +164,15 @@ export function TechniqueDetailContent({ technique, locale }: Props) {
             >
               <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
               <div className="relative z-10 space-y-8 max-w-2xl mx-auto">
-                <h2 className="text-3xl md:text-4xl font-black">{locale === 'ar' ? 'استشر الدكتور أحمد حول هذه التقنية' : 'Consult Dr. Ahmed About This Technique'}</h2>
+                <h2 className="text-3xl md:text-4xl font-black">
+                   <EditableText contentKey="technique.detail.cta.title" defaultAr="استشر الدكتور أحمد حول هذه التقنية" defaultEn="Consult Dr. Ahmed About This Technique" />
+                </h2>
                 <p className="text-gray-400 text-lg font-medium leading-relaxed">
-                  {locale === 'ar' ? 'احجز موعدك الآن لمناقشة مدى ملاءمة هذه التقنية لحالتك الصحية والحصول على تشخيص دقيق.' : 'Book your appointment now to discuss the suitability of this technique for your condition and get a precise diagnosis.'}
+                   <EditableText 
+                     contentKey="technique.detail.cta.desc" 
+                     defaultAr="احجز موعدك الآن لمناقشة مدى ملاءمة هذه التقنية لحالتك الصحية والحصول على تشخيص دقيق." 
+                     defaultEn="Book your appointment now to discuss the suitability of this technique for your condition and get a precise diagnosis." 
+                   />
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                    <Link href="/booking">

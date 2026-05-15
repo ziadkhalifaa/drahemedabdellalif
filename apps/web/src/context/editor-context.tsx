@@ -92,11 +92,12 @@ export function EditorProvider({
       await Promise.all(
         Object.entries(pendingChanges).map(([key, value]) => {
           // Handle specific model updates
-          if (key.startsWith('service:')) {
-            const [_, id, field] = key.split(':');
+          if (key.startsWith('service:') || key.startsWith('technique:')) {
+            const [model, id, field] = key.split(':');
+            const endpoint = model === 'service' ? 'services' : 'techniques';
             // If it's an image update, value is { src, alt }
             const payload = field === 'image' ? { [field]: value.src } : { [field]: value };
-            return api.patch(`/services/${id}`, payload, token);
+            return api.patch(`/${endpoint}/${id}`, payload, token);
           }
           
           // Default to settings update

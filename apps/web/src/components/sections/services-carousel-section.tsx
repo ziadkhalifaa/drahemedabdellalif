@@ -10,6 +10,7 @@ import { Link } from '@/i18n/routing';
 import useSWR from 'swr';
 import { api, getMediaUrl } from '@/lib/api';
 import { useLocale, useTranslations } from 'next-intl';
+import { EditableText } from '@/components/editor/editable-components';
 
 interface Service {
   id: string;
@@ -63,7 +64,7 @@ export function ServicesCarouselSection() {
               viewport={{ once: true }}
               className="text-4xl lg:text-5xl font-extrabold text-[var(--primary-dark)] dark:text-white mb-4"
             >
-              الخدمات الطبية المتميزة
+              <EditableText contentKey="home.services.title" defaultAr="الخدمات الطبية المتميزة" defaultEn="Premium Medical Services" />
             </motion.h2>
             <motion.div 
               initial={{ opacity: 0, w: 0 }}
@@ -71,9 +72,13 @@ export function ServicesCarouselSection() {
               viewport={{ once: true }}
               className="w-24 h-1 bg-[var(--accent)] rounded-full mb-6" 
             />
-            <p className="text-gray-600 dark:text-gray-300 text-lg">
-              نقدم مجموعة متكاملة من أحدث الخدمات الطبية المتخصصة في جراحة المسالك البولية للبالغين والأطفال، معتمدين على تقنيات غير جراحية لتحقيق أعلى معدلات النجاح.
-            </p>
+            <div className="text-gray-600 dark:text-gray-300 text-lg">
+              <EditableText 
+                contentKey="home.services.desc" 
+                defaultAr="نقدم مجموعة متكاملة من أحدث الخدمات الطبية المتخصصة في جراحة المسالك البولية للبالغين والأطفال، معتمدين على تقنيات غير جراحية لتحقيق أعلى معدلات النجاح." 
+                defaultEn="We offer a comprehensive range of the latest specialized medical services in urology for adults and children, relying on non-surgical techniques to achieve the highest success rates." 
+              />
+            </div>
           </div>
           
           <div className="hidden md:flex gap-3 mt-6 md:mt-0">
