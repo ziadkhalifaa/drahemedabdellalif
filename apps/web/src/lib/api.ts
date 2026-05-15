@@ -96,13 +96,17 @@ export function getMediaUrl(url: string): string {
   if (url.startsWith('http') || url.startsWith('https') || url.startsWith('data:')) return url;
   // Public folder images (in apps/web/public/)
   if (url.startsWith('/images/')) return url;
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dkqmympallxpdfypwxlr.supabase.co';
+  
   // Legacy /uploads/ paths — convert to Supabase Storage URL
   if (url.startsWith('/uploads/')) {
     const filename = url.replace('/uploads/', '');
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (supabaseUrl) {
-      return `${supabaseUrl}/storage/v1/object/public/media/images/${filename}`;
-    }
+    return `${supabaseUrl}/storage/v1/object/public/media/images/${filename}`;
   }
-  return url;
+
+  // Relative path (likely from Supabase)
+  // Ensure it doesn't have a double slash if the url starts with /
+  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+  return `${supabaseUrl}/storage/v1/object/public/media/${cleanPath}`;
 }
