@@ -61,6 +61,9 @@ export interface User {
   name: string;
   phone?: string;
   role: UserRole;
+  gender?: string;
+  dateOfBirth?: string;
+  address?: string;
   createdAt: string;
 }
 
@@ -126,6 +129,10 @@ export interface Service {
   image?: string;
   order: number;
   isActive: boolean;
+  metaTitleAr?: string;
+  metaTitleEn?: string;
+  metaDescriptionAr?: string;
+  metaDescriptionEn?: string;
   createdAt: string;
 }
 
@@ -173,6 +180,10 @@ export interface Technique {
   image?: string;
   order: number;
   isActive: boolean;
+  metaTitleAr?: string;
+  metaTitleEn?: string;
+  metaDescriptionAr?: string;
+  metaDescriptionEn?: string;
 }
 
 export interface ContactMessage {

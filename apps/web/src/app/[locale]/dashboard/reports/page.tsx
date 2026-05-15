@@ -177,7 +177,7 @@ export default function ReportsPage() {
                   </div>
                   <h3 className="text-xl font-bold mb-2">{t('reports.noReports')}</h3>
                   <p className="text-[var(--muted)] max-w-sm mx-auto">
-                    You haven't uploaded any reports yet, or no reports have been assigned to you.
+                    You haven&apos;t uploaded any reports yet, or no reports have been assigned to you.
                   </p>
                 </Card>
               )}

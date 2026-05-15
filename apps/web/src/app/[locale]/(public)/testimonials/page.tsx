@@ -96,7 +96,7 @@ export default function TestimonialsPage() {
                     </div>
 
                     <p className="text-[var(--muted)] leading-relaxed italic text-lg">
-                      "{testimonial.content}"
+                      &quot;{testimonial.content}&quot;
                     </p>
 
                     <div className="mt-6 pt-6 border-t border-[var(--border)] flex justify-between items-center text-xs text-[var(--muted)]">

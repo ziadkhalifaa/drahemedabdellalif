@@ -191,7 +191,7 @@ export default function AdminReportsPage() {
               ) : (
                 <tr>
                   <td colSpan={3} className="px-6 py-16 text-center text-[var(--muted)] text-base font-medium">
-                    No patients found matching "{searchTerm}"
+                    No patients found matching &quot;{searchTerm}&quot;
                   </td>
                 </tr>
               )}

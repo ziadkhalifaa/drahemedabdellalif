@@ -9,6 +9,7 @@ import { WhatsAppButton } from '@/components/layout/whatsapp-button';
 import { Link } from '@/i18n/routing';
 import { getMediaUrl } from '@/lib/api';
 import { Zap, ChevronRight, Activity, ShieldCheck } from 'lucide-react';
+import { EditableText } from '@/components/editor/editable-components';
 
 interface Props {
   techniques: any[];

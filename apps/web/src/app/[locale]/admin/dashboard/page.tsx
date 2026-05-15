@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard Overview</h1>
-          <p className="text-sm text-[var(--muted)]">Welcome back! Here's what's happening today.</p>
+          <p className="text-sm text-[var(--muted)]">Welcome back! Here&apos;s what&apos;s happening today.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">

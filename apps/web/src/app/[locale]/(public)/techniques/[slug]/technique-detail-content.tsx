@@ -9,6 +9,7 @@ import { WhatsAppButton } from '@/components/layout/whatsapp-button';
 import { ShieldCheck, Zap, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { getMediaUrl } from '@/lib/api';
+import { EditableText } from '@/components/editor/editable-components';
 
 interface Props {
   technique: any | null;

@@ -223,7 +223,7 @@ export default function NewsletterPage() {
               ) : (
                 <tr>
                   <td colSpan={3} className="px-6 py-12 text-center text-[var(--muted)]">
-                    No subscribers found matching "{searchTerm}"
+                    No subscribers found matching &quot;{searchTerm}&quot;
                   </td>
                 </tr>
               )}

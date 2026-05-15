@@ -111,7 +111,7 @@ export default function AdminMessagesPage() {
                 </div>
               </div>
               <div className="mt-4 p-4 bg-[var(--card-hover)] rounded-xl">
-                <p className="text-sm text-[var(--foreground)] leading-relaxed italic">"{msg.message}"</p>
+                <p className="text-sm text-[var(--foreground)] leading-relaxed italic">&quot;{msg.message}&quot;</p>
               </div>
               <div className="mt-4 flex items-center justify-between text-[10px] text-[var(--muted)] font-medium">
                 <span>{new Date(msg.createdAt).toLocaleString()}</span>

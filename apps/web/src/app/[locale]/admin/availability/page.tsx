@@ -99,7 +99,7 @@ export default function AvailabilityCalendarPage() {
             <CalendarDays className="text-[var(--primary)]" />
             Availability Calendar
           </h1>
-          <p className="text-sm text-[var(--muted)]">Block days or individual time slots when you're unavailable.</p>
+          <p className="text-sm text-[var(--muted)]">Block days or individual time slots when you&apos;re unavailable.</p>
         </div>
         <Button onClick={() => setShowBlockModal(true)} className="gap-2 rounded-xl font-bold">
           <Plus size={18} /> Block a Slot

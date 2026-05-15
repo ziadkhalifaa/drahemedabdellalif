@@ -82,7 +82,7 @@ export function SuccessStoryCard({ story, onClick }: SuccessStoryProps) {
         </div>
         
         <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 leading-relaxed mb-4 italic">
-          "{content || story.content}"
+          &quot;{content || story.content}&quot;
         </p>
         
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
