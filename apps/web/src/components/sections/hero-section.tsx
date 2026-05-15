@@ -77,7 +77,7 @@ export function HeroSection() {
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   src={getMediaUrl(slides[currentSlide].image)}
                   alt={locale === 'ar' ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
-                  className="w-full h-full object-cover object-[70%_center]"
+                  className="w-full h-full object-contain object-right lg:object-right-bottom drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent z-10" />

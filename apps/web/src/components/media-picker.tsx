@@ -39,25 +39,14 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 1920;
-
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height *= maxDim / width;
-              width = maxDim;
-            } else {
-              width *= maxDim / height;
-              height = maxDim;
-            }
-          }
+          const width = img.width;
+          const height = img.height;
 
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          canvas.toBlob((blob) => resolve(blob || file), 'image/webp', 0.85);
+          canvas.toBlob((blob) => resolve(blob || file), 'image/webp', 0.90);
         };
         img.src = e.target?.result as string;
       };
