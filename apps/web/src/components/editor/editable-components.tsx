@@ -156,6 +156,13 @@ export function EditableImage({
         </div>
       )}
 
+      {/* Persistent edit indicator for visibility */}
+      <div className="absolute top-4 right-4 z-20 pointer-events-none group-hover:opacity-0 transition-opacity">
+        <div className="bg-blue-600 text-white p-2 rounded-xl shadow-lg border border-white/20">
+          <Edit3 size={14} />
+        </div>
+      </div>
+
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <div className="flex gap-2 pointer-events-auto">
           <label className="cursor-pointer bg-blue-600 text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform flex items-center justify-center" title="Upload New">

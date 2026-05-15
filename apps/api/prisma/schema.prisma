@@ -1,6 +1,3 @@
-// Run this after deploying:
-// npx prisma migrate dev --name add_payments --schema=apps/api/prisma/schema.prisma
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
@@ -12,96 +9,64 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum UserRole {
-  admin
-  editor
-  patient
-}
-
-enum AppointmentType {
-  ONLINE
-  IN_CLINIC
-}
-
-enum AppointmentStatus {
-  pending
-  approved
-  rejected
-  completed
-  cancelled
-}
-
-enum BlogPostStatus {
-  draft
-  published
-}
-
 model User {
-  id                    String         @id @default(cuid())
-  email                 String         @unique
-  password              String
-  name                  String
-  phone                 String?
-  isPhoneVerified       Boolean        @default(false)
-  phoneVerificationCode String?
-  isEmailVerified       Boolean        @default(false)
-  emailVerificationCode String?
+  id                      String          @id @default(cuid())
+  email                   String          @unique
+  password                String
+  name                    String
+  phone                   String?
+  isPhoneVerified         Boolean         @default(false)
+  phoneVerificationCode   String?
+  isEmailVerified         Boolean         @default(false)
+  emailVerificationCode   String?
+  role                    UserRole        @default(patient)
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @default(now()) @updatedAt
   emailVerificationExpiry DateTime?
-  passwordResetCode      String?
-  passwordResetExpiry    DateTime?
-  role                  UserRole       @default(patient)
-  
-  // Patient Profile Fields
-  gender                String?        // "male", "female"
-  dateOfBirth           DateTime?
-  address               String?
-  
-  appointments          Appointment[]
-  medicalReports        MedicalReport[]
-  refreshTokens         RefreshToken[]
-  auditLogs             AuditLog[]
-  prescriptions         Prescription[]
-  payments              Payment[]
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @default(now()) @updatedAt
+  passwordResetCode       String?
+  passwordResetExpiry     DateTime?
+  address                 String?
+  dateOfBirth             DateTime?
+  gender                  String?
+  appointments            Appointment[]
+  auditLogs               AuditLog[]
+  medicalReports          MedicalReport[]
+  payments                Payment[]
+  prescriptions           Prescription[]
+  refreshTokens           RefreshToken[]
 }
 
 model Appointment {
-  id             String            @id @default(cuid())
-  type           AppointmentType   @default(IN_CLINIC)
-  patientId      String?
-  patient        User?             @relation(fields: [patientId], references: [id])
-  // Guest info (fallback)
-  guestName      String?
-  guestPhone     String?
-  guestEmail     String?
-  
-  date           DateTime
-  timeSlot       String
-  status         AppointmentStatus @default(pending)
-  notes          String?
+  id                 String             @id @default(cuid())
+  type               AppointmentType    @default(IN_CLINIC)
+  patientId          String?
+  guestName          String?
+  guestPhone         String?
+  guestEmail         String?
+  date               DateTime
+  timeSlot           String
+  status             AppointmentStatus  @default(pending)
+  notes              String?
+  meetingId          String?            @unique
+  meetingUrl         String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @default(now()) @updatedAt
   cancellationReason String?
-  
-  // Video Meeting Info
-  meetingId      String?           @unique
-  meetingUrl     String?
-  
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @default(now()) @updatedAt
-  review         AppointmentReview?
-  prescription   Prescription?
-  payments       Payment[]
+  patient            User?              @relation(fields: [patientId], references: [id])
+  review             AppointmentReview?
+  payments           Payment[]
+  prescription       Prescription?
 }
 
 model MedicalReport {
   id          String   @id @default(cuid())
   patientId   String
-  patient     User     @relation(fields: [patientId], references: [id])
   title       String
   description String?
-  fileUrl     String?  // Link to PDF/Image
+  fileUrl     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+  patient     User     @relation(fields: [patientId], references: [id])
 }
 
 model BlogPost {
@@ -120,14 +85,13 @@ model BlogPost {
   metaDescriptionEn String?
   keywords          String?
   categoryId        String?
-  category          Category?      @relation(fields: [categoryId], references: [id])
-  tags              BlogTag[]
   status            BlogPostStatus @default(draft)
   featuredImage     String?
-  showOnHomepage    Boolean        @default(false)
   createdAt         DateTime       @default(now())
-
   updatedAt         DateTime       @default(now()) @updatedAt
+  showOnHomepage    Boolean        @default(false)
+  category          Category?      @relation(fields: [categoryId], references: [id])
+  tags              BlogTag[]
 }
 
 model Category {
@@ -158,80 +122,72 @@ model BlogTag {
 }
 
 model Service {
-  id            String   @id @default(cuid())
-  titleAr       String
-  titleEn       String
-  descriptionAr String
-  descriptionEn String
-  slug          String?  @unique
-  icon          String
-  image         String?
-  order         Int      @default(0)
-  isActive      Boolean  @default(true)
-  
-  // SEO Fields
-  metaTitleAr       String?
-  metaTitleEn       String?
+  id                String   @id @default(cuid())
+  titleAr           String
+  titleEn           String
+  descriptionAr     String
+  descriptionEn     String
+  icon              String
+  image             String?
+  order             Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+  slug              String?  @unique
   metaDescriptionAr String?
   metaDescriptionEn String?
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now()) @updatedAt
+  metaTitleAr       String?
+  metaTitleEn       String?
 }
 
-
 model Testimonial {
-  id              String   @id @default(cuid())
-  patientName     String
-  patientAvatar   String?
-  content         String
-  rating          Int
-
-  storyTitle      String?
-  storyTitleEn    String?
-  treatmentType   String?
-  storyContent    String?
-  storyContentEn  String?
-  patientImages   String[] @default([])
-  patientCity     String?
-  isSuccessStory  Boolean  @default(false)
-
-  isApproved      Boolean  @default(false)
-  isVisible       Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @default(now()) @updatedAt
+  id             String   @id @default(cuid())
+  patientName    String
+  patientAvatar  String?
+  content        String
+  rating         Int
+  isApproved     Boolean  @default(false)
+  isVisible      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  isSuccessStory Boolean  @default(false)
+  patientCity    String?
+  patientImages  String[] @default([])
+  storyContent   String?
+  storyContentEn String?
+  storyTitle     String?
+  storyTitleEn   String?
+  treatmentType  String?
 }
 
 model HeroSlide {
-  id          String   @id @default(cuid())
-  titleAr     String
-  titleEn     String
-  subtitleAr  String
-  subtitleEn  String
-  image       String
-  isPortrait  Boolean  @default(false)
-  order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  id         String   @id @default(cuid())
+  titleAr    String
+  titleEn    String
+  subtitleAr String
+  subtitleEn String
+  image      String
+  isPortrait Boolean  @default(false)
+  order      Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
 model Technique {
-  id            String   @id @default(cuid())
-  titleAr       String
-  titleEn       String
-  descriptionAr String
-  descriptionEn String
-  image         String?
-  slug          String   @unique
-  order         Int      @default(0)
-  isActive      Boolean  @default(true)
-  
-  // SEO Fields
-  metaTitleAr       String?
-  metaTitleEn       String?
+  id                String  @id @default(cuid())
+  titleAr           String
+  titleEn           String
+  descriptionAr     String
+  descriptionEn     String
+  image             String?
+  slug              String  @unique
+  order             Int     @default(0)
+  isActive          Boolean @default(true)
   metaDescriptionAr String?
   metaDescriptionEn String?
+  metaTitleAr       String?
+  metaTitleEn       String?
 }
 
 model ContactMessage {
@@ -245,17 +201,17 @@ model ContactMessage {
 }
 
 model Media {
-  id        String   @id @default(cuid())
-  type      String   // "image" or "video"
-  url       String
-  titleAr   String?
-  titleEn   String?
+  id         String   @id @default(cuid())
+  type       String
+  url        String
+  titleAr    String?
+  titleEn    String?
   categoryAr String?
   categoryEn String?
-  order     Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  order      Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
 model SiteSettings {
@@ -271,18 +227,18 @@ model AnalyticsEvent {
 }
 
 model WorkingHours {
-  id           String   @id @default(cuid())
-  dayOfWeek    Int      // 0=Sunday, 1=Monday, ..., 6=Saturday
-  startTime    String   // "16:00"
-  endTime      String   // "20:00"
-  slotDuration Int      @default(30) // minutes
-  isActive     Boolean  @default(true)
+  id           String  @id @default(cuid())
+  dayOfWeek    Int
+  startTime    String
+  endTime      String
+  slotDuration Int     @default(30)
+  isActive     Boolean @default(true)
 }
 
 model BlockedSlot {
   id        String   @id @default(cuid())
   date      DateTime
-  timeSlot  String?  // null = اليوم كله محجوز
+  timeSlot  String?
   reason    String?
   createdAt DateTime @default(now())
 }
@@ -298,51 +254,89 @@ model NewsletterSubscriber {
 model AppointmentReview {
   id            String      @id @default(cuid())
   appointmentId String      @unique
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  rating        Int         // 1-5
+  rating        Int
   comment       String?
   isPublic      Boolean     @default(false)
   createdAt     DateTime    @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
 }
 
 model RefreshToken {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   token     String   @unique
+  userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
-
 
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String   // e.g., "DELETE_POST", "UPDATE_SETTINGS"
-  resource  String?  // e.g., "BlogPost", "SiteSettings"
-  details   Json?    // Any extra data
+  action    String
+  resource  String?
+  details   Json?
   ip        String?
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Prescription {
-  id            String      @id @default(cuid())
-  appointmentId String      @unique
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  patientId     String
-  patient       User        @relation(fields: [patientId], references: [id])
-  
-  diagnosisAr   String?
-  diagnosisEn   String?
-  medications   Json        // List of { name, dosage, duration, notes }
+  id             String      @id @default(cuid())
+  appointmentId  String      @unique
+  patientId      String
+  diagnosisAr    String?
+  diagnosisEn    String?
+  medications    Json
   instructionsAr String?
   instructionsEn String?
-  
-  isIssued      Boolean     @default(false)
-  issuedAt      DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @default(now()) @updatedAt
+  isIssued       Boolean     @default(false)
+  issuedAt       DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @default(now()) @updatedAt
+  appointment    Appointment @relation(fields: [appointmentId], references: [id])
+  patient        User        @relation(fields: [patientId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  userId        String
+  appointmentId String?
+  paymobOrderId String?       @unique
+  amount        Float
+  currency      String        @default("EGP")
+  transactionId String?
+  paymentMethod String?
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
+  status        PaymentStatus @default(PENDING)
+  appointment   Appointment?  @relation(fields: [appointmentId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+enum UserRole {
+  admin
+  editor
+  patient
+}
+
+enum AppointmentType {
+  ONLINE
+  IN_CLINIC
+}
+
+enum AppointmentStatus {
+  pending
+  approved
+  rejected
+  completed
+  cancelled
+}
+
+enum BlogPostStatus {
+  draft
+  published
 }
 
 enum PaymentStatus {
@@ -350,21 +344,4 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
-}
-
-model Payment {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  appointmentId   String?
-  appointment     Appointment?  @relation(fields: [appointmentId], references: [id])
-  paymobOrderId   String?       @unique
-  amount          Float         // Amount in EGP
-  currency        String        @default("EGP")
-  status          PaymentStatus @default(PENDING)
-  transactionId   String?       // Paymob transaction ID
-  paymentMethod   String?       // e.g. "card", "wallet"
-  metadata        Json?         // Extra Paymob response data
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
 }

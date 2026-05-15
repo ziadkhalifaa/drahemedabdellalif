@@ -5,7 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui';
 import { Link } from '@/i18n/routing';
-import { Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Calendar, ChevronRight, ChevronLeft, Edit } from 'lucide-react';
+import { useEditor } from '@/components/editor/editor-context';
 import useSWR from 'swr';
 import { api, getMediaUrl } from '@/lib/api';
 
@@ -22,6 +23,7 @@ interface Slide {
 export function HeroSection() {
   const t = useTranslations('hero');
   const locale = useLocale();
+  const { isEditing } = useEditor();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const { data: slidesData, isLoading } = useSWR<Slide[]>('/hero-slides', api.get);
@@ -82,6 +84,17 @@ export function HeroSection() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {isEditing && (
+        <div className="absolute top-24 right-8 z-50">
+          <Link href="/admin/hero-slides">
+            <Button className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 gap-2">
+              <Edit size={16} />
+              {locale === 'ar' ? 'تعديل السلايدر' : 'Edit Slides'}
+            </Button>
+          </Link>
+        </div>
+      )}
 
       <div className="relative z-20 w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl">

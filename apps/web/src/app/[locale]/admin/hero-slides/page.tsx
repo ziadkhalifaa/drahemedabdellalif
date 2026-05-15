@@ -6,6 +6,7 @@ import { useAuth } from '@/components/layout/admin-layout';
 import { api, getMediaUrl } from '@/lib/api';
 
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Image as ImageIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface HeroSlide {
   id: string;
