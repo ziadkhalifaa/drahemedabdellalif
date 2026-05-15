@@ -7,55 +7,27 @@ import { useCallback, useEffect, useState } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
-const services = [
-  {
-    id: 1,
-    title: 'علاج تضخم البروستاتا',
-    description: 'بدون جراحة باستخدام أحدث التقنيات مثل الهولميوم ليزر والريزيوم.',
-    image: 'https://images.unsplash.com/photo-1551076805-e18690c5e53b?q=80&w=800&auto=format&fit=crop',
-    link: '/services/prostate'
-  },
-  {
-    id: 2,
-    title: 'علاج سرطان البروستاتا',
-    description: 'تشخيص دقيق وعلاج متخصص لضمان أفضل النتائج بأحدث الطرق العالمية.',
-    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=800&auto=format&fit=crop',
-    link: '/services/prostate-cancer'
-  },
-  {
-    id: 3,
-    title: 'حصوات الجهاز البولي',
-    description: 'علاج حصوات الكلى والمثانة بالليزر والمنظار المرن بدون جراحة.',
-    image: 'https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?q=80&w=800&auto=format&fit=crop',
-    link: '/services/stones'
-  },
-  {
-    id: 4,
-    title: 'أورام المثانة السطحية',
-    description: 'استئصال الأورام السطحية بالمنظار والليزر بأعلى درجات الأمان.',
-    image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=800&auto=format&fit=crop',
-    link: '/services/bladder'
-  },
-  {
-    id: 5,
-    title: 'ضيق مجرى البول',
-    description: 'شق وعلاج ضيق مجرى البول بأحدث تقنيات المناظير.',
-    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=800&auto=format&fit=crop',
-    link: '/services/urethra'
-  },
-  {
-    id: 6,
-    title: 'جراحات الأطفال',
-    description: 'علاج التشوهات الخلقية، الخصية المعلقة، والسلس البولي بأمان تام.',
-    image: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ce122?q=80&w=800&auto=format&fit=crop',
-    link: '/services/pediatric'
-  }
-];
+import useSWR from 'swr';
+import { api, getMediaUrl } from '@/lib/api';
+import { useLocale, useTranslations } from 'next-intl';
+
+interface Service {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+  image: string | null;
+}
 
 export function ServicesCarouselSection() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, direction: 'rtl', align: 'start' }, [Autoplay({ delay: 4000 })]);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const locale = useLocale();
+
+  const { data: servicesData, isLoading } = useSWR<Service[]>('/services', api.get);
+  const services = servicesData && servicesData.length > 0 ? servicesData : [];
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
@@ -72,6 +44,12 @@ export function ServicesCarouselSection() {
     emblaApi.on('select', onSelect);
     emblaApi.on('reInit', onSelect);
   }, [emblaApi, onSelect]);
+
+  if (isLoading) {
+    return <section className="py-24 bg-white dark:bg-[#0a0a0a] min-h-[600px] animate-pulse" />;
+  }
+
+  if (services.length === 0) return null;
 
   return (
     <section className="py-24 bg-white dark:bg-[#0a0a0a] overflow-hidden">
@@ -125,21 +103,23 @@ export function ServicesCarouselSection() {
           <div className="embla__container flex -ml-4 rtl:-ml-0 rtl:-mr-4">
             {services.map((service) => (
               <div className="embla__slide flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0 pl-4 rtl:pl-0 rtl:pr-4" key={service.id}>
-                <div className="relative group rounded-3xl overflow-hidden h-[400px] shadow-lg">
+                <div className="relative group rounded-3xl overflow-hidden h-[400px] shadow-lg bg-gray-100 dark:bg-gray-800">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 transition-opacity duration-300 group-hover:from-black/95" />
-                  <img 
-                    src={service.image} 
-                    alt={service.title}
-                    className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
-                  />
+                  {service.image && (
+                    <img 
+                      src={getMediaUrl(service.image)} 
+                      alt={locale === 'ar' ? service.titleAr : service.titleEn}
+                      className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
+                    />
+                  )}
                   <div className="absolute inset-0 z-20 flex flex-col justify-end p-8 translate-y-8 group-hover:translate-y-0 transition-transform duration-300">
                     <h3 className="text-2xl font-bold text-white mb-3">
-                      {service.title}
+                      {locale === 'ar' ? service.titleAr : service.titleEn}
                     </h3>
                     <p className="text-gray-300 text-sm mb-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
-                      {service.description}
+                      {locale === 'ar' ? service.descriptionAr : service.descriptionEn}
                     </p>
-                    <Link href={service.link} className="inline-flex items-center text-[var(--accent)] font-semibold hover:text-white transition-colors opacity-0 group-hover:opacity-100 duration-300 delay-200">
+                    <Link href={`/services/${service.id}`} className="inline-flex items-center text-[var(--accent)] font-semibold hover:text-white transition-colors opacity-0 group-hover:opacity-100 duration-300 delay-200">
                       تفاصيل الخدمة
                       <ChevronLeft size={16} className="ml-1" />
                     </Link>

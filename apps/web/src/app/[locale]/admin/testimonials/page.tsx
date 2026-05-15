@@ -4,15 +4,18 @@ import { useState, useEffect } from 'react';
 import { Card, Button } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
-import type { Testimonial } from '@dr-ahmed/shared';
-import { Check, X, Trash2 } from 'lucide-react';
+import { Check, X, Trash2, Star, Trophy, Eye, EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type Tab = 'all' | 'pending' | 'success-stories';
 
 export default function AdminTestimonialsPage() {
   const { token } = useAuth();
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>('all');
 
   const fetchTestimonials = () => {
-    if (token) api.get<Testimonial[]>('/testimonials/all', token).then(setTestimonials).catch(() => {});
+    if (token) api.get<any[]>('/testimonials/all', token).then(setTestimonials).catch(() => {});
   };
 
   useEffect(() => { fetchTestimonials(); }, [token]);
@@ -23,54 +26,168 @@ export default function AdminTestimonialsPage() {
     fetchTestimonials();
   };
 
-  const toggleVisibility = async (item: Testimonial) => {
+  const toggleVisibility = async (item: any) => {
     if (!token) return;
     await api.patch(`/testimonials/${item.id}`, { isVisible: !item.isVisible }, token);
     fetchTestimonials();
   };
 
+  const toggleSuccessStory = async (item: any) => {
+    if (!token) return;
+    await api.patch(`/testimonials/${item.id}/toggle-success-story`, { isSuccessStory: !item.isSuccessStory }, token);
+    fetchTestimonials();
+  };
+
   const handleDelete = async (id: string) => {
     if (!token) return;
-    if (confirm('Delete this testimonial?')) {
+    if (confirm('Delete this testimonial permanently?')) {
       await api.delete(`/testimonials/${id}`, token);
       fetchTestimonials();
     }
   };
 
+  const filtered = testimonials.filter(t => {
+    if (activeTab === 'pending') return !t.isApproved;
+    if (activeTab === 'success-stories') return t.isSuccessStory;
+    return true;
+  });
+
+  const tabs: { id: Tab; label: string; count?: number }[] = [
+    { id: 'all', label: 'الكل', count: testimonials.length },
+    { id: 'pending', label: 'بانتظار الموافقة', count: testimonials.filter(t => !t.isApproved).length },
+    { id: 'success-stories', label: 'قصص النجاح', count: testimonials.filter(t => t.isSuccessStory).length },
+  ];
+
   return (
-    <>
-      <h2 className="mb-6 text-xl font-semibold text-[var(--foreground)]">Testimonials</h2>
-      <Card>
-        <div className="space-y-4">
-          {testimonials.map((item) => (
-            <div key={item.id} className="flex items-start justify-between border-b border-[var(--border)] pb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-[var(--foreground)]">{item.patientName}</span>
-                  <span className="text-xs text-[var(--muted)]">{'★'.repeat(item.rating)}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${
-                    item.isApproved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                  }`}>{item.isApproved ? 'Approved' : 'Pending'}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${
-                    item.isVisible ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
-                  }`}>{item.isVisible ? 'Visible' : 'Hidden'}</span>
-                </div>
-                <p className="mt-1 text-sm text-[var(--muted)]">{item.content}</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">التعليقات والتقييمات</h1>
+        <p className="text-sm text-[var(--muted)]">إدارة تعليقات المرضى وقصص النجاح.</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-[var(--border)] pb-0">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "px-5 py-3 text-sm font-bold rounded-t-xl transition-all border-b-2 -mb-[2px]",
+              activeTab === tab.id
+                ? "border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5"
+                : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"
+            )}
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className={cn(
+                "mr-2 inline-flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-black",
+                activeTab === tab.id ? "bg-[var(--primary)] text-white" : "bg-gray-100 dark:bg-gray-800 text-[var(--muted)]"
+              )}>{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* List */}
+      <div className="space-y-3">
+        {filtered.map((item) => (
+          <Card key={item.id} className={cn(
+            "p-5 transition-all",
+            item.isSuccessStory && "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10"
+          )}>
+            <div className="flex items-start gap-4">
+              {/* Avatar */}
+              <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-bold text-lg flex-shrink-0">
+                {item.patientName?.charAt(0) || '?'}
               </div>
-              <div className="flex gap-2 ml-4">
-                {!item.isApproved && (
-                  <Button size="sm" variant="ghost" onClick={() => approve(item.id)} className="text-green-600"><Check size={16} /></Button>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center flex-wrap gap-2 mb-1">
+                  <span className="font-bold text-[var(--foreground)]">{item.patientName}</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: item.rating || 5 }).map((_, i) => (
+                      <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  {item.isSuccessStory && (
+                    <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Trophy size={10} /> قصة نجاح
+                    </span>
+                  )}
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                    item.isApproved ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                  )}>
+                    {item.isApproved ? 'معتمد' : 'بانتظار الموافقة'}
+                  </span>
+                  {!item.isVisible && (
+                    <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-full">مخفي</span>
+                  )}
+                </div>
+                <p className="text-sm text-[var(--muted)] line-clamp-2">{item.content}</p>
+                {item.storyTitle && (
+                  <p className="text-xs text-[var(--primary)] font-bold mt-1">📖 {item.storyTitle}</p>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => toggleVisibility(item)}>
-                  {item.isVisible ? <X size={16} /> : <Check size={16} />}
+                {item.treatmentType && (
+                  <p className="text-xs text-gray-400 mt-0.5">النوع: {item.treatmentType}</p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-1 flex-shrink-0">
+                {!item.isApproved && (
+                  <Button
+                    size="sm" variant="ghost"
+                    onClick={() => approve(item.id)}
+                    className="h-9 w-9 p-0 rounded-xl text-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20"
+                    title="اعتماد"
+                  >
+                    <Check size={16} />
+                  </Button>
+                )}
+                <Button
+                  size="sm" variant="ghost"
+                  onClick={() => toggleSuccessStory(item)}
+                  className={cn(
+                    "h-9 w-9 p-0 rounded-xl",
+                    item.isSuccessStory
+                      ? "text-amber-500 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20"
+                      : "text-gray-400 hover:text-amber-500 hover:bg-amber-50"
+                  )}
+                  title={item.isSuccessStory ? "إلغاء قصة النجاح" : "تعيين كقصة نجاح"}
+                >
+                  <Trophy size={16} />
                 </Button>
-                <Button size="sm" variant="ghost" className="text-red-500" onClick={() => handleDelete(item.id)}><Trash2 size={16} /></Button>
+                <Button
+                  size="sm" variant="ghost"
+                  onClick={() => toggleVisibility(item)}
+                  className="h-9 w-9 p-0 rounded-xl text-blue-500 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20"
+                  title={item.isVisible ? "إخفاء" : "إظهار"}
+                >
+                  {item.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                </Button>
+                <Button
+                  size="sm" variant="ghost"
+                  onClick={() => handleDelete(item.id)}
+                  className="h-9 w-9 p-0 rounded-xl text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/20"
+                  title="حذف"
+                >
+                  <Trash2 size={16} />
+                </Button>
               </div>
             </div>
-          ))}
-          {testimonials.length === 0 && <p className="text-center text-[var(--muted)] py-8">No testimonials</p>}
-        </div>
-      </Card>
-    </>
+          </Card>
+        ))}
+
+        {filtered.length === 0 && (
+          <div className="text-center py-16 text-[var(--muted)]">
+            <p className="text-4xl mb-4">💬</p>
+            <p className="font-bold">لا توجد تعليقات في هذا القسم</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

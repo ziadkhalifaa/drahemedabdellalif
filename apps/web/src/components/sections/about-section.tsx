@@ -17,7 +17,7 @@ export function AboutSection() {
 
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          
+
           {/* Text Content */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -27,27 +27,27 @@ export function AboutSection() {
             className="order-2 lg:order-1"
           >
             <h2 className="text-4xl lg:text-5xl font-extrabold text-[var(--primary-dark)] dark:text-white mb-6 leading-tight">
-              <EditableText 
-                contentKey="about.title" 
-                defaultAr="الأستاذ الدكتور أحمد عبد اللطيف" 
-                defaultEn="Prof. Dr. Ahmed Abdellatif" 
+              <EditableText
+                contentKey="about.title"
+                defaultAr="الأستاذ الدكتور أحمد عبد اللطيف"
+                defaultEn="Prof. Dr. Ahmed Abdellatif"
                 as="span"
               />
             </h2>
-            
+
             <div className="w-20 h-1.5 bg-[var(--accent)] rounded-full mb-8" />
 
             <div className="text-lg text-gray-600 dark:text-gray-300 leading-loose space-y-6">
-              <EditableText 
-                contentKey="about.description1" 
-                defaultAr="أستاذ واستشاري جراحة المسالك البولية والكلى والمناظير والذكورة. بفضل خبرته العلمية العميقة ومهاراته الجراحية المتميزة، استطاع تقديم حلول طبية مبتكرة باستخدام أحدث التقنيات." 
-                defaultEn="Professor and Consultant of Urology, Nephrology, Endoscopy, and Andrology..." 
+              <EditableText
+                contentKey="about.description1"
+                defaultAr="أستاذ واستشاري جراحة المسالك البولية والكلى والمناظير والذكورة. بفضل خبرته العلمية العميقة ومهاراته الجراحية المتميزة، استطاع تقديم حلول طبية مبتكرة باستخدام أحدث التقنيات."
+                defaultEn="Professor and Consultant of Urology, Nephrology, Endoscopy, and Andrology..."
                 as="p"
               />
-              <EditableText 
-                contentKey="about.description2" 
-                defaultAr="يتميز بخبرته الفريدة في علاج المسالك البولية للأطفال، بما في ذلك التشوهات الخلقية، السلس البولي، والخصية المعلقة، باستخدام تقنيات متقدمة وآمنة تناسب أعمارهم الحساسة." 
-                defaultEn="Renowned for unique expertise in pediatric urology..." 
+              <EditableText
+                contentKey="about.description2"
+                defaultAr="يتميز بخبرته الفريدة في علاج المسالك البولية للأطفال، بما في ذلك التشوهات الخلقية، السلس البولي، والخصية المعلقة، باستخدام تقنيات متقدمة وآمنة تناسب أعمارهم الحساسة."
+                defaultEn="Renowned for unique expertise in pediatric urology..."
                 as="p"
               />
             </div>
@@ -55,10 +55,10 @@ export function AboutSection() {
             <div className="mt-10">
               <Link href="/about">
                 <Button size="lg" className="h-14 px-8 text-lg bg-[var(--primary-dark)] hover:bg-[var(--primary)] text-white rounded-xl shadow-lg transition-all hover:-translate-x-2 gap-3 group">
-                  <EditableText 
-                    contentKey="about.readMore" 
-                    defaultAr="تعرف علينا أكثر" 
-                    defaultEn="Know more about us" 
+                  <EditableText
+                    contentKey="about.readMore"
+                    defaultAr="تعرف علينا أكثر"
+                    defaultEn="Know more about us"
                     as="span"
                   />
                   <ArrowLeft size={20} className="transition-transform group-hover:-translate-x-1" />
@@ -76,15 +76,15 @@ export function AboutSection() {
             className="order-1 lg:order-2 relative"
           >
             <div className="relative rounded-[2rem] overflow-hidden shadow-2xl z-10 border-8 border-white dark:border-[#222]">
-              <EditableImage 
+              <EditableImage
                 contentKey="about.image"
                 defaultSrc="/images/dr-ahmed.png"
                 alt="Prof. Dr. Ahmed"
                 className="w-full h-auto aspect-[4/5] object-contain bg-gray-50 dark:bg-[#111]"
               />
-              
+
               {/* Floating Badge */}
-              <motion.div 
+              <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}

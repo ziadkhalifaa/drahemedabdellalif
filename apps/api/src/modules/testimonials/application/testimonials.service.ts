@@ -27,8 +27,16 @@ export class TestimonialsService {
 
   async findVisible() {
     return this.prisma.testimonial.findMany({
-      where: { isApproved: true, isVisible: true },
+      where: { isApproved: true, isVisible: true, isSuccessStory: false },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getSuccessStories(limit?: number) {
+    return this.prisma.testimonial.findMany({
+      where: { isApproved: true, isVisible: true, isSuccessStory: true },
+      orderBy: { createdAt: 'desc' },
+      take: limit ? parseInt(limit.toString(), 10) : undefined,
     });
   }
 
@@ -38,7 +46,7 @@ export class TestimonialsService {
     return testimonial;
   }
 
-  async create(data: { patientName: string; content: string; rating: number; patientAvatar?: string }) {
+  async create(data: any) {
     return this.prisma.testimonial.create({ data });
   }
 
@@ -55,5 +63,10 @@ export class TestimonialsService {
   async approve(id: string) {
     await this.findOne(id);
     return this.prisma.testimonial.update({ where: { id }, data: { isApproved: true, isVisible: true } });
+  }
+
+  async toggleSuccessStory(id: string, isSuccessStory: boolean) {
+    await this.findOne(id);
+    return this.prisma.testimonial.update({ where: { id }, data: { isSuccessStory } });
   }
 }

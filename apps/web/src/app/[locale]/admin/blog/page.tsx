@@ -33,7 +33,8 @@ export default function AdminBlogPage() {
     metaDescriptionAr: '', metaDescriptionEn: '',
     keywords: '',
     status: 'draft' as 'draft' | 'published',
-    featuredImage: ''
+    featuredImage: '',
+    showOnHomepage: false
   });
 
   const fetchPosts = () => {
@@ -73,7 +74,8 @@ export default function AdminBlogPage() {
       metaDescriptionAr: '', metaDescriptionEn: '',
       keywords: '',
       status: 'draft',
-      featuredImage: ''
+      featuredImage: '',
+      showOnHomepage: false
     });
   };
 
@@ -88,7 +90,8 @@ export default function AdminBlogPage() {
       metaDescriptionAr: post.metaDescriptionAr || '', metaDescriptionEn: post.metaDescriptionEn || '',
       keywords: post.keywords || '',
       status: (post.status as any) || 'draft',
-      featuredImage: (post as any).featuredImage || ''
+      featuredImage: (post as any).featuredImage || '',
+      showOnHomepage: (post as any).showOnHomepage || false
     });
     setShowForm(true);
   };
@@ -358,6 +361,22 @@ export default function AdminBlogPage() {
                   className="rounded-xl h-12"
                   placeholder="urology, clinic, surgery..."
                 />
+              </div>
+
+              {/* Show on Homepage */}
+              <div className="space-y-4 border-t pt-8 mt-8 border-gray-100 dark:border-white/10">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={form.showOnHomepage}
+                    onChange={(e) => setForm({ ...form, showOnHomepage: e.target.checked })}
+                    className="w-5 h-5 rounded border-gray-300 text-[var(--primary)] focus:ring-[var(--primary)]"
+                  />
+                  <div>
+                    <div className="text-sm font-bold">Show on Homepage</div>
+                    <div className="text-[10px] text-[var(--muted)] uppercase tracking-widest mt-1">Pin this article to the main page</div>
+                  </div>
+                </label>
               </div>
             </div>
           </aside>

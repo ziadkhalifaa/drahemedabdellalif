@@ -23,8 +23,10 @@ const navSections = [
   {
     title: 'Content',
     items: [
+      { href: '/admin/hero-slides', icon: Image, labelKey: 'Hero Slides' },
+      { href: '/admin/services', icon: Package, labelKey: 'Services' },
+      { href: '/admin/techniques', icon: Star, labelKey: 'Techniques' },
       { href: '/admin/blog', icon: FileText, labelKey: 'blog' },
-      { href: '/admin/services', icon: Package, labelKey: 'services' },
       { href: '/admin/media', icon: Image, labelKey: 'media' },
     ]
   },

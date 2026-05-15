@@ -13,14 +13,12 @@ async function main() {
     where: { email: 'admin@drahmedabdellatif.com' },
     update: {
       name: 'Prof. Dr. Ahmed Abdellatif',
-      image: '/images/dr-ahmed.png',
     },
     create: {
       email: 'admin@drahmedabdellatif.com',
       password: adminPassword,
       name: 'Prof. Dr. Ahmed Abdellatif',
       role: 'admin',
-      image: '/images/dr-ahmed.png',
     },
   });
 
@@ -179,7 +177,58 @@ async function main() {
     }
   });
 
+  // Seed Hero Slides
+  await (prisma as any).heroSlide.deleteMany({});
+  await (prisma as any).heroSlide.createMany({
+    data: [
+      {
+        titleAr: 'أ.د. أحمد عبد اللطيف',
+        titleEn: 'Prof. Dr. Ahmed Abdellatif',
+        subtitleAr: 'أستاذ واستشاري جراحة المسالك البولية والكلى والمناظير والذكورة',
+        subtitleEn: 'Professor & Consultant of Urology, Endoscopy, and Andrology',
+        image: '/images/dr-ahmed.png',
+        isPortrait: true,
+        order: 1,
+      }
+    ]
+  });
+
+  // Seed Techniques
+  await (prisma as any).technique.deleteMany({});
+  await (prisma as any).technique.createMany({
+    data: [
+      {
+        titleAr: 'تبخير البروستاتا بالبلازما',
+        titleEn: 'Plasma Prostate Vaporization',
+        descriptionAr: 'تقنية آمنة لعلاج تضخم البروستاتا الحميد بدون جراحة تقليدية.',
+        descriptionEn: 'Safe technology for treating BPH without traditional surgery.',
+        image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=800&auto=format&fit=crop',
+        slug: 'plasma-vaporization',
+        order: 1,
+      },
+      {
+        titleAr: 'ليزر هولميوم (HoLEP)',
+        titleEn: 'Holmium Laser (HoLEP)',
+        descriptionAr: 'استئصال البروستاتا بالليزر، الخيار الذهبي للأحجام الكبيرة.',
+        descriptionEn: 'Laser enucleation of the prostate, the gold standard for large prostates.',
+        image: 'https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?q=80&w=800&auto=format&fit=crop',
+        slug: 'holep',
+        order: 2,
+      },
+      {
+        titleAr: 'المناظير المرنة',
+        titleEn: 'Flexible Endoscopy',
+        descriptionAr: 'تفتيت حصوات الكلى والحالب بالليزر عبر المنظار المرن بدون جروح.',
+        descriptionEn: 'Laser fragmentation of kidney and ureteral stones via flexible endoscope.',
+        image: 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=800&auto=format&fit=crop',
+        slug: 'flexible-endoscopy',
+        order: 3,
+      }
+    ]
+  });
+
   console.log('Seed completed');
+}
 
 main()
   .then(() => {

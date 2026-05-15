@@ -1,47 +1,50 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui';
 import { Link } from '@/i18n/routing';
 import { Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
+import useSWR from 'swr';
+import { api, getMediaUrl } from '@/lib/api';
 
-const slides = [
-  {
-    id: 1,
-    image: '/images/dr-ahmed.png',
-    title: 'أ.د. أحمد عبد اللطيف',
-    subtitle: 'أستاذ واستشاري جراحة المسالك البولية والكلى والمناظير والذكورة، خبرة عالمية في علاج أمراض المسالك البولية بأحدث التقنيات.',
-    isPortrait: true
-  },
-  {
-    id: 2,
-    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2000&auto=format&fit=crop',
-    title: 'أحدث التقنيات الطبية',
-    subtitle: 'نستخدم تقنيات متطورة مثل الهولميوم ليزر والريزيوم لعلاج تضخم البروستاتا بفعالية وأمان تام.',
-  },
-  {
-    id: 3,
-    image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=2000&auto=format&fit=crop',
-    title: 'رعاية فائقة وقصص نجاح',
-    subtitle: 'آلاف الحالات الناجحة التي استعادت جودة حياتها بفضل الرعاية الطبية المتميزة والتشخيص الدقيق.',
-  }
-];
+interface Slide {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  subtitleAr: string;
+  subtitleEn: string;
+  image: string;
+  isPortrait: boolean;
+}
 
 export function HeroSection() {
   const t = useTranslations('hero');
+  const locale = useLocale();
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const { data: slidesData, isLoading } = useSWR<Slide[]>('/hero-slides', api.get);
+  const slides = slidesData && slidesData.length > 0 ? slidesData : [];
+
   useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+
+  if (isLoading) {
+    return <section className="h-[90vh] min-h-[600px] w-full bg-black animate-pulse" />;
+  }
+
+  if (slides.length === 0) {
+    return null; // or a fallback static hero
+  }
 
   return (
     <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-black flex items-center">
@@ -64,15 +67,15 @@ export function HeroSection() {
                   initial={{ y: 100, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 1, delay: 0.5 }}
-                  src={slides[currentSlide].image}
-                  alt={slides[currentSlide].title}
+                  src={getMediaUrl(slides[currentSlide].image)}
+                  alt={locale === 'ar' ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
                   className="h-[80%] lg:h-[95%] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                 />
               </div>
             </div>
           ) : (
             <img
-              src={slides[currentSlide].image}
+              src={getMediaUrl(slides[currentSlide].image)}
               alt="Hero Background"
               className="w-full h-full object-cover"
             />
@@ -91,22 +94,22 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
-                {slides[currentSlide].title}
+                {locale === 'ar' ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
               </h1>
               <p className="mt-6 text-lg sm:text-2xl text-white/90 max-w-2xl leading-relaxed font-light drop-shadow-md">
-                {slides[currentSlide].subtitle}
+                {locale === 'ar' ? slides[currentSlide].subtitleAr : slides[currentSlide].subtitleEn}
               </p>
               
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
                 <Link href="/booking">
                   <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
                     <Calendar size={20} />
-                    احجز موعدك الآن
+                    {t('cta')}
                   </Button>
                 </Link>
                 <Link href="/services">
                   <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white text-white hover:bg-white hover:text-black rounded-xl transition-all">
-                    تصفح خدماتنا
+                    {t('learnMore')}
                   </Button>
                 </Link>
               </div>

@@ -11,7 +11,7 @@ import { WhyUsSection } from '@/components/sections/why-us-section';
 import { TestimonialsSection } from '@/components/sections/testimonials-section';
 import { BookingCTASection } from '@/components/sections/booking-cta-section';
 import { BookingForm } from '@/components/sections/booking-form';
-import { ContactSection } from '@/components/sections/contact-section';
+
 
 export default function HomePage() {
   return (
@@ -19,9 +19,9 @@ export default function HomePage() {
       <Navbar />
       <main className="overflow-hidden">
         <HeroSection />
+        <StatisticsSection />
         <CoreTechniquesSection />
         <AboutSection />
-        <StatisticsSection />
         <ServicesCarouselSection />
         <WhyUsSection />
         <SurgicalTipsSection />
@@ -32,7 +32,6 @@ export default function HomePage() {
             <BookingForm />
           </div>
         </section>
-        <ContactSection />
       </main>
       <Footer />
       <WhatsAppWidget />

@@ -6,41 +6,35 @@ import { useCallback, useEffect, useState } from 'react';
 import { ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
-const tips = [
-  {
-    id: 1,
-    title: 'دور الهولميوم ليزر في علاج المسالك البولية',
-    description: 'أشعة الهولميوم ليزر تعد من أحدث الحلول الطبية لعلاج أمراض المسالك البولية، وتتميز بفعالية وأمان عالٍ.',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=800&auto=format&fit=crop',
-    link: '/tips/holmium-laser'
-  },
-  {
-    id: 2,
-    title: 'الفرق بين الليزر والأشعة التداخلية',
-    description: 'الهولميوم ليزر هو الحل الأمثل لتضخم البروستاتا بفضل نتائجة الدائمة والسريعة مقارنةً بالأشعة التداخلية.',
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop',
-    link: '/tips/laser-vs-radiation'
-  },
-  {
-    id: 3,
-    title: 'دليلك للوقاية من تضخم البروستاتا',
-    description: 'يتساءل الكثير عن طرق الوقاية من تضخم البروستاتا الحميد. هل يمكن حقًا الوقاية من هذا المرض؟',
-    image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=800&auto=format&fit=crop',
-    link: '/tips/prevention'
-  },
-  {
-    id: 4,
-    title: 'التهاب البروستاتا وطرق العلاج',
-    description: 'التهاب البروستاتا يسبب ألمًا وصعوبة في التبول، ويعالج بالأدوية وتغيير نمط الحياة.',
-    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=800&auto=format&fit=crop',
-    link: '/tips/prostatitis'
-  }
-];
+import useSWR from 'swr';
+import { api, getMediaUrl } from '@/lib/api';
+import { useLocale } from 'next-intl';
+
+interface BlogPost {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  excerptAr: string | null;
+  excerptEn: string | null;
+  slugAr: string;
+  slugEn: string;
+  featuredImage: string | null;
+  showOnHomepage: boolean;
+}
 
 export function SurgicalTipsSection() {
+  const locale = useLocale();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, direction: 'rtl', align: 'start', slidesToScroll: 1 });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
+
+  const { data: postsData } = useSWR<BlogPost[]>('/blog/published', api.get);
+  // Prefer showOnHomepage posts, otherwise fall back to latest 4
+  const posts = postsData
+    ? (postsData.filter(p => p.showOnHomepage).length > 0
+        ? postsData.filter(p => p.showOnHomepage)
+        : postsData.slice(0, 4))
+    : [];
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
@@ -58,6 +52,8 @@ export function SurgicalTipsSection() {
     emblaApi.on('reInit', onSelect);
   }, [emblaApi, onSelect]);
 
+  if (posts.length === 0) return null;
+
   return (
     <section className="py-24 bg-gray-50 dark:bg-[#111] overflow-hidden relative">
       {/* Decorative dots background */}
@@ -71,7 +67,7 @@ export function SurgicalTipsSection() {
             viewport={{ once: true }}
             className="text-3xl md:text-4xl font-bold text-[var(--primary-dark)] dark:text-white mb-4"
           >
-            نصائح جراحية وتثقيف طبي
+            {locale === 'ar' ? 'نصائح جراحية وتثقيف طبي' : 'Surgical Tips & Medical Education'}
           </motion.h2>
           <div className="w-24 h-1 bg-[var(--accent)] mx-auto rounded-full" />
         </div>
@@ -86,38 +82,51 @@ export function SurgicalTipsSection() {
             ref={emblaRef}
           >
             <div className="embla__container flex -ml-6 rtl:-ml-0 rtl:-mr-6">
-              {tips.map((tip) => (
-                <div className="embla__slide flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0 pl-6 rtl:pl-0 rtl:pr-6" key={tip.id}>
-                  <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-800 h-full flex flex-col group">
-                    <div className="relative h-56 overflow-hidden">
-                      <img 
-                        src={tip.image} 
-                        alt={tip.title}
-                        className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute top-4 right-4 bg-[var(--accent)] text-black text-xs font-bold px-3 py-1 rounded-full">
-                        مقال طبي
+              {posts.map((post) => {
+                const title = locale === 'ar' ? post.titleAr : post.titleEn;
+                const excerpt = locale === 'ar' ? post.excerptAr : post.excerptEn;
+                const slug = locale === 'ar' ? post.slugAr : post.slugEn;
+                return (
+                  <div className="embla__slide flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0 pl-6 rtl:pl-0 rtl:pr-6" key={post.id}>
+                    <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-lg border border-gray-100 dark:border-gray-800 h-full flex flex-col group">
+                      <div className="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-800">
+                        {post.featuredImage ? (
+                          <img 
+                            src={getMediaUrl(post.featuredImage)} 
+                            alt={title}
+                            className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[var(--primary)]/10 to-[var(--accent)]/10 flex items-center justify-center">
+                            <span className="text-4xl opacity-10">📰</span>
+                          </div>
+                        )}
+                        <div className="absolute top-4 right-4 bg-[var(--accent)] text-black text-xs font-bold px-3 py-1 rounded-full">
+                          {locale === 'ar' ? 'مقال طبي' : 'Medical Article'}
+                        </div>
+                      </div>
+                      <div className="p-6 flex flex-col flex-grow">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2">
+                          {title}
+                        </h3>
+                        {excerpt && (
+                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 flex-grow line-clamp-3 leading-relaxed">
+                            {excerpt}
+                          </p>
+                        )}
+                        <Link href={`/blog/${slug}`} className="inline-flex items-center text-[var(--primary)] font-semibold hover:text-[var(--primary-dark)] dark:hover:text-white transition-colors mt-auto">
+                          {locale === 'ar' ? 'اقرأ المزيد' : 'Read More'}
+                          <ArrowLeft size={16} className="mr-2" />
+                        </Link>
                       </div>
                     </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2">
-                        {tip.title}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 flex-grow line-clamp-3 leading-relaxed">
-                        {tip.description}
-                      </p>
-                      <Link href={tip.link} className="inline-flex items-center text-[var(--primary)] font-semibold hover:text-[var(--primary-dark)] dark:hover:text-white transition-colors mt-auto">
-                        اقرأ المزيد
-                        <ArrowLeft size={16} className="mr-2" />
-                      </Link>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
 
-          {/* Carousel Controls Container positioned outside */}
+          {/* Carousel Controls */}
           <div className="flex justify-center gap-4 mt-12">
             <button 
               onClick={scrollPrev} 

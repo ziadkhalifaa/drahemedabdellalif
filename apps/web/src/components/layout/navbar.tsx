@@ -71,7 +71,7 @@ export function Navbar() {
       title: t('successStories'), 
       desc: locale === 'ar' ? "قصص نجاح واقعية لمرضانا." : "Real success stories from our patients.", 
       icon: <Activity className="text-green-500" />, 
-      href: "/testimonials" 
+      href: "/success-stories" 
     },
     { 
       title: t('blog'), 

@@ -117,6 +117,7 @@ model BlogPost {
   tags              BlogTag[]
   status            BlogPostStatus @default(draft)
   featuredImage     String?
+  showOnHomepage    Boolean        @default(false)
   createdAt         DateTime       @default(now())
 
   updatedAt         DateTime       @default(now()) @updatedAt
@@ -165,15 +166,51 @@ model Service {
 
 
 model Testimonial {
-  id           String   @id @default(cuid())
-  patientName  String
-  patientAvatar String?
-  content      String
-  rating       Int
-  isApproved   Boolean  @default(false)
-  isVisible    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  id              String   @id @default(cuid())
+  patientName     String
+  patientAvatar   String?
+  content         String
+  rating          Int
+
+  storyTitle      String?
+  storyTitleEn    String?
+  treatmentType   String?
+  storyContent    String?
+  storyContentEn  String?
+  patientImages   String[] @default([])
+  patientCity     String?
+  isSuccessStory  Boolean  @default(false)
+
+  isApproved      Boolean  @default(false)
+  isVisible       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+model HeroSlide {
+  id          String   @id @default(cuid())
+  titleAr     String
+  titleEn     String
+  subtitleAr  String
+  subtitleEn  String
+  image       String
+  isPortrait  Boolean  @default(false)
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model Technique {
+  id            String   @id @default(cuid())
+  titleAr       String
+  titleEn       String
+  descriptionAr String
+  descriptionEn String
+  image         String?
+  slug          String   @unique
+  order         Int      @default(0)
+  isActive      Boolean  @default(true)
 }
 
 model ContactMessage {

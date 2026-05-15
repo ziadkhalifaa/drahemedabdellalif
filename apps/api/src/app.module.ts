@@ -22,6 +22,8 @@ import { join } from 'path';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
+import { HeroModule } from './modules/hero/hero.module';
+import { TechniquesModule } from './modules/techniques/techniques.module';
 
 @Module({
   imports: [
@@ -65,6 +67,8 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     NewsletterModule,
     PrescriptionsModule,
     PaymentsModule,
+    HeroModule,
+    TechniquesModule,
   ],
   providers: [
     {

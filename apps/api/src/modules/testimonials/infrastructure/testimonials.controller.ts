@@ -12,6 +12,11 @@ export class TestimonialsController {
     return this.testimonialsService.findVisible();
   }
 
+  @Get('success-stories')
+  async getSuccessStories(@Query('limit') limit?: number) {
+    return this.testimonialsService.getSuccessStories(limit);
+  }
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get('all')
@@ -20,7 +25,7 @@ export class TestimonialsController {
   }
 
   @Post()
-  async create(@Body() body: { patientName: string; content: string; rating: number }) {
+  async create(@Body() body: any) {
     return this.testimonialsService.create(body);
   }
 
@@ -36,6 +41,13 @@ export class TestimonialsController {
   @Patch(':id/approve')
   async approve(@Param('id') id: string) {
     return this.testimonialsService.approve(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Patch(':id/toggle-success-story')
+  async toggleSuccessStory(@Param('id') id: string, @Body() body: { isSuccessStory: boolean }) {
+    return this.testimonialsService.toggleSuccessStory(id, body.isSuccessStory);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
