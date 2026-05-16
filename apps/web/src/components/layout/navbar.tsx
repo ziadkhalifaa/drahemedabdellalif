@@ -27,7 +27,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import { api, getMediaUrl } from '@/lib/api';
 import type { Service } from '@dr-ahmed/shared';
 
@@ -42,6 +42,8 @@ export function Navbar() {
   const isRTL = locale === 'ar';
   
   const [scrolled, setScrolled] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [services, setServices] = useState<Service[]>([]);
@@ -117,6 +119,10 @@ export function Navbar() {
       )}
       onMouseLeave={() => setActiveMenu(null)}
     >
+      <motion.div
+        className="absolute top-0 left-0 right-0 h-1 z-[60] bg-gradient-to-r from-primary to-blue-500 origin-left"
+        style={{ scaleX }}
+      />
       <motion.nav 
         layout
         className={cn(

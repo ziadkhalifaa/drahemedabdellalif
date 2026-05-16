@@ -36,23 +36,71 @@ model User {
   refreshTokens           RefreshToken[]
 }
 
+model Clinic {
+  id           String               @id @default(cuid())
+  nameAr       String
+  nameEn       String
+  addressAr    String
+  addressEn    String
+  phone        String?
+  mapUrl       String?
+  imageUrl     String?
+  isActive     Boolean              @default(true)
+  order        Int                  @default(0)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @default(now()) @updatedAt
+  workingHours ClinicWorkingHours[]
+  blockedSlots ClinicBlockedSlot[]
+  appointments Appointment[]
+}
+
+model ClinicWorkingHours {
+  id           String  @id @default(cuid())
+  clinicId     String
+  dayOfWeek    Int     // 0=Sunday ... 6=Saturday
+  startTime    String  // "09:00"
+  endTime      String  // "17:00"
+  slotDuration Int     @default(30) // minutes
+  isActive     Boolean @default(true)
+  clinic       Clinic  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@unique([clinicId, dayOfWeek])
+}
+
+model ClinicBlockedSlot {
+  id        String   @id @default(cuid())
+  clinicId  String
+  date      DateTime
+  timeSlot  String?  // null = block entire day
+  reason    String?
+  createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+}
+
 model Appointment {
-  id                 String             @id @default(cuid())
-  type               AppointmentType    @default(IN_CLINIC)
+  id                 String               @id @default(cuid())
+  type               AppointmentType      @default(IN_CLINIC)
   patientId          String?
   guestName          String?
   guestPhone         String?
   guestEmail         String?
   date               DateTime
   timeSlot           String
-  status             AppointmentStatus  @default(pending)
+  status             AppointmentStatus    @default(pending)
   notes              String?
-  meetingId          String?            @unique
+  meetingId          String?              @unique
   meetingUrl         String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @default(now()) @updatedAt
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @default(now()) @updatedAt
   cancellationReason String?
-  patient            User?              @relation(fields: [patientId], references: [id])
+  clinicId           String?
+  paymentMethod      PaymentMethodType    @default(NONE)
+  paymentProofUrl    String?
+  paymentSenderNum   String?
+  paymentStatus      PaymentConfirmStatus @default(NOT_REQUIRED)
+  paymentNote        String?
+  clinic             Clinic?              @relation(fields: [clinicId], references: [id])
+  patient            User?                @relation(fields: [patientId], references: [id])
   review             AppointmentReview?
   payments           Payment[]
   prescription       Prescription?
@@ -299,20 +347,26 @@ model Prescription {
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  userId        String
-  appointmentId String?
-  paymobOrderId String?       @unique
-  amount        Float
-  currency      String        @default("EGP")
-  transactionId String?
-  paymentMethod String?
-  metadata      Json?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @default(now()) @updatedAt
-  status        PaymentStatus @default(PENDING)
-  appointment   Appointment?  @relation(fields: [appointmentId], references: [id])
-  user          User          @relation(fields: [userId], references: [id])
+  id              String            @id @default(cuid())
+  userId          String
+  appointmentId   String?
+  paymobOrderId   String?           @unique
+  amount          Float
+  currency        String            @default("EGP")
+  transactionId   String?
+  paymentMethod   String?
+  metadata        Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
+  status          PaymentStatus     @default(PENDING)
+  method          PaymentMethodType @default(PAYMOB)
+  proofImageUrl   String?
+  senderPhone     String?
+  adminNote       String?
+  confirmedAt     DateTime?
+  confirmedById   String?
+  appointment     Appointment?      @relation(fields: [appointmentId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
 }
 
 enum UserRole {
@@ -344,4 +398,19 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
+}
+
+enum PaymentMethodType {
+  NONE
+  INSTAPAY
+  VODAFONE_CASH
+  PAYMOB
+  CASH
+}
+
+enum PaymentConfirmStatus {
+  NOT_REQUIRED
+  PENDING_REVIEW
+  CONFIRMED
+  REJECTED
 }

@@ -1,4 +1,9 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, Req, Query, ForbiddenException } from '@nestjs/common';
+import {
+  Controller, Get, Post, Patch, Param, Body,
+  UseGuards, Req, Query, ForbiddenException,
+  UseInterceptors, UploadedFile,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { AppointmentsService } from '../application/appointments.service';
 import { AppointmentReminderService } from '../application/appointment-reminder.service';
@@ -33,6 +38,10 @@ export class AppointmentsController {
     date: string;
     timeSlot: string;
     notes?: string;
+    clinicId?: string;
+    paymentMethod?: string;
+    paymentSenderNum?: string;
+    paymentProofUrl?: string;
   }) {
     return this.appointmentsService.create(body);
   }
@@ -40,8 +49,14 @@ export class AppointmentsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get()
-  async findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
-    return this.appointmentsService.findAll(+page, +limit);
+  async findAll(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Query('clinicId') clinicId?: string,
+    @Query('paymentStatus') paymentStatus?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.appointmentsService.findAll(+page, +limit, { clinicId, paymentStatus, status });
   }
 
   @Get('available-slots')
@@ -78,14 +93,43 @@ export class AppointmentsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Patch(':id/status')
-  async updateStatus(@Param('id') id: string, @Body() body: { status: AppointmentStatus; cancellationReason?: string }) {
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: AppointmentStatus; cancellationReason?: string },
+  ) {
     return this.appointmentsService.updateStatus(id, body.status, body.cancellationReason);
+  }
+
+  @Post(':id/payment-proof')
+  @UseInterceptors(FileInterceptor('proof'))
+  async uploadProof(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('senderPhone') senderPhone: string,
+  ) {
+    return this.appointmentsService.uploadPaymentProof(id, file, senderPhone);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor')
+  @Patch(':id/confirm-payment')
+  async confirmPayment(
+    @Param('id') id: string,
+    @Body() body: { action: 'confirm' | 'reject'; adminNote?: string },
+  ) {
+    return this.appointmentsService.confirmPayment(id, body.action, body.adminNote);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor')
+  @Get('pending-payments')
+  async getPendingPayments() {
+    return this.appointmentsService.getPendingPayments();
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id/cancel')
   async cancel(@Param('id') id: string, @Req() req: any) {
-    // Note: The service should check if the user owns the appointment
     return this.appointmentsService.updateStatus(id, AppointmentStatus.CANCELLED);
   }
 }

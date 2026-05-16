@@ -13,9 +13,7 @@ import { Link } from '@/i18n/routing';
 import { WhatsAppButton } from '@/components/layout/whatsapp-button';
 
 
-
-import { BookingWizard } from '@/components/booking/booking-wizard';
-
+import BookingWizard from '@/components/booking/booking-wizard';
 export default function BookingPage() {
   const tNav = useTranslations('nav');
   const t = useTranslations('booking');

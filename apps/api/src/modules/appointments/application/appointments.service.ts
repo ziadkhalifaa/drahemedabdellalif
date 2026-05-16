@@ -1,7 +1,9 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma.service';
 import { WhatsAppService } from '../../../common/whatsapp.service';
 import { EmailService } from '../../../common/email.service';
+import { StorageService } from '../../media/application/storage.service';
+import { ClinicsService } from '../../clinics/application/clinics.service';
 import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
 
 @Injectable()
@@ -9,7 +11,9 @@ export class AppointmentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
-    private readonly whatsappService: WhatsAppService
+    private readonly whatsappService: WhatsAppService,
+    private readonly storageService: StorageService,
+    private readonly clinicsService: ClinicsService,
   ) {}
 
   async create(data: {
@@ -21,18 +25,38 @@ export class AppointmentsService {
     date: string;
     timeSlot: string;
     notes?: string;
+    clinicId?: string;
+    paymentMethod?: string;
+    paymentSenderNum?: string;
+    paymentProofUrl?: string;
   }) {
     const appointmentDate = new Date(data.date);
 
-    const existing = await this.prisma.appointment.findFirst({
-      where: {
-        date: appointmentDate,
-        timeSlot: data.timeSlot,
-        status: { notIn: [AppointmentStatus.REJECTED, AppointmentStatus.CANCELLED] },
-      },
-    });
+    // التحقق من توفر الوقت في العيادة المختارة
+    if (data.clinicId) {
+      const availableSlots = await this.clinicsService.getAvailableSlots(
+        data.clinicId,
+        data.date,
+      );
+      if (!availableSlots.includes(data.timeSlot)) {
+        throw new ConflictException('هذا الوقت غير متاح في العيادة المختارة');
+      }
+    } else {
+      // فحص global (للأونلاين أو بدون عيادة)
+      const existing = await this.prisma.appointment.findFirst({
+        where: {
+          date: appointmentDate,
+          timeSlot: data.timeSlot,
+          status: { notIn: [AppointmentStatus.REJECTED, AppointmentStatus.CANCELLED] },
+        },
+      });
+      if (existing) throw new ConflictException('This time slot is already booked');
+    }
 
-    if (existing) throw new ConflictException('This time slot is already booked');
+    // تحديد حالة الدفع
+    const paymentStatus = data.paymentMethod && data.paymentMethod !== 'NONE' && data.paymentMethod !== 'CASH'
+      ? (data.paymentProofUrl ? 'PENDING_REVIEW' : 'PENDING_REVIEW')
+      : 'NOT_REQUIRED';
 
     // If ONLINE, generate a professional Daily.co meeting link
     let meetingId = null;
@@ -43,9 +67,9 @@ export class AppointmentsService {
         try {
           const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
             method: 'POST',
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${dailyApiKey}` 
+              'Authorization': `Bearer ${dailyApiKey}`,
             },
             body: JSON.stringify({
               name: `dr-ahmed-${Date.now()}`,
@@ -53,11 +77,10 @@ export class AppointmentsService {
               properties: {
                 exp: Math.floor(Date.now() / 1000) + 7200,
                 enable_prejoin_ui: true,
-                lang: 'ar'
-              }
-            })
+                lang: 'ar',
+              },
+            }),
           });
-          
           if (dailyRes.ok) {
             const room: any = await dailyRes.json();
             meetingId = room.name;
@@ -71,8 +94,6 @@ export class AppointmentsService {
           meetingUrl = `https://meet.jit.si/${meetingId}`;
         }
       } else {
-        // DAILY_API_KEY not set — use Jitsi fallback
-        console.warn('DAILY_API_KEY not set — using Jitsi fallback for video meetings');
         meetingId = `room-${Math.random().toString(36).substring(2, 9)}`;
         meetingUrl = `https://meet.jit.si/${meetingId}`;
       }
@@ -90,37 +111,37 @@ export class AppointmentsService {
         notes: data.notes,
         meetingId,
         meetingUrl,
+        clinicId: data.clinicId || null,
+        paymentMethod: (data.paymentMethod as any) || 'NONE',
+        paymentSenderNum: data.paymentSenderNum,
+        paymentProofUrl: data.paymentProofUrl,
+        paymentStatus: paymentStatus as any,
       },
       include: {
-        patient: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        patient: { select: { id: true, name: true, email: true } },
+        clinic: true,
       },
     });
   }
 
-  async findAll(page = 1, limit = 10) {
+  async findAll(page = 1, limit = 10, filters?: { clinicId?: string; paymentStatus?: string; status?: string }) {
     const skip = (page - 1) * limit;
+    const where: any = {};
+    if (filters?.clinicId) where.clinicId = filters.clinicId;
+    if (filters?.paymentStatus) where.paymentStatus = filters.paymentStatus;
+    if (filters?.status) where.status = filters.status;
+
     const [data, total] = await Promise.all([
-      this.prisma.appointment.findMany({ 
-        skip, 
+      this.prisma.appointment.findMany({
+        skip,
         take: limit,
+        where,
         orderBy: { createdAt: 'desc' },
-        include: { patient: true }
+        include: { patient: true, clinic: true },
       }),
-      this.prisma.appointment.count()
+      this.prisma.appointment.count({ where }),
     ]);
-    return { 
-      data, 
-      total, 
-      page, 
-      limit, 
-      totalPages: Math.ceil(total / limit) 
-    };
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getAvailableSlots(dateStr: string) {
@@ -201,16 +222,85 @@ export class AppointmentsService {
     return this.prisma.appointment.findMany({
       where: { patientId },
       orderBy: { date: 'asc' },
+      include: { clinic: true },
     });
   }
 
   async findOne(id: string) {
-    const appointment = await this.prisma.appointment.findUnique({ 
+    const appointment = await this.prisma.appointment.findUnique({
       where: { id },
-      include: { patient: true }
+      include: { patient: true, clinic: true },
     });
     if (!appointment) throw new NotFoundException('Appointment not found');
     return appointment;
+  }
+
+  // ─── Payment Proof ───────────────────────────────────────────────────
+
+  async uploadPaymentProof(
+    appointmentId: string,
+    file: Express.Multer.File,
+    senderPhone: string,
+  ) {
+    const appointment = await this.findOne(appointmentId);
+    const proofUrl = await this.storageService.saveImage(file);
+    return this.prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        paymentProofUrl: proofUrl,
+        paymentSenderNum: senderPhone,
+        paymentStatus: 'PENDING_REVIEW' as any,
+      },
+      include: { clinic: true, patient: true },
+    });
+  }
+
+  async confirmPayment(
+    appointmentId: string,
+    action: 'confirm' | 'reject',
+    adminNote?: string,
+  ) {
+    const appointment = await this.findOne(appointmentId);
+    const paymentStatus = action === 'confirm' ? 'CONFIRMED' : 'REJECTED';
+    const appointmentStatus =
+      action === 'confirm' ? AppointmentStatus.APPROVED : appointment.status;
+
+    const updated = await this.prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        paymentStatus: paymentStatus as any,
+        status: appointmentStatus,
+        paymentNote: adminNote,
+      },
+      include: { clinic: true, patient: true },
+    });
+
+    // إرسال إشعار للمريض
+    const phone = appointment.guestPhone || (appointment as any).patient?.phone;
+    const name = appointment.guestName || (appointment as any).patient?.name || 'مريضنا العزيز';
+    const clinicName = (appointment as any).clinic?.nameAr || '';
+
+    if (phone && action === 'confirm') {
+      const formattedDate = new Date(appointment.date).toLocaleDateString('ar-EG', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      });
+      await this.whatsappService.sendAppointmentConfirmation(phone, {
+        date: formattedDate,
+        time: appointment.timeSlot,
+        type: appointment.type,
+        url: appointment.meetingUrl || undefined,
+      }).catch(console.error);
+    }
+
+    return updated;
+  }
+
+  async getPendingPayments() {
+    return this.prisma.appointment.findMany({
+      where: { paymentStatus: 'PENDING_REVIEW' as any },
+      orderBy: { createdAt: 'asc' },
+      include: { patient: true, clinic: true },
+    });
   }
 
   async updateStatus(id: string, status: AppointmentStatus, cancellationReason?: string) {

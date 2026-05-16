@@ -6,7 +6,8 @@ import {
   LogOut, LayoutDashboard, Calendar, FileText, 
   Package, MessageSquare, Star, X, Image, 
   Settings, ChevronRight, PieChart, Users, Edit3,
-  Clock, Bell, ShieldCheck, Mail, Users2, Layout
+  Clock, Bell, ShieldCheck, Mail, Users2, Layout,
+  Building2, CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,8 @@ const navSections = [
     items: [
       { href: '/admin', icon: LayoutDashboard, labelKey: 'dashboard' },
       { href: '/admin/appointments', icon: Calendar, labelKey: 'appointments' },
+      { href: '/admin/clinics', icon: Building2, labelKey: 'clinics' },
+      { href: '/admin/payments', icon: CreditCard, labelKey: 'payments' },
       { href: '/admin/editor', icon: Edit3, labelKey: 'live_editor' },
     ]
   },
@@ -57,8 +60,8 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin' || pathname === `/admin/dashboard`;
-    return pathname?.includes(href);
+    if (href === '/admin') return pathname === '/admin' || pathname === '/admin/dashboard';
+    return pathname?.startsWith(href);
   };
 
   const sidebarContent = (
@@ -107,7 +110,13 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
                       "transition-all duration-300",
                       isActive(item.href) ? "text-primary-light scale-110" : "text-white/30 group-hover:text-white/60"
                     )} />
-                    <span>{item.labelKey === 'live_editor' ? (isRTL ? 'محرر الموقع' : 'Live Editor') : t(item.labelKey)}</span>
+                    <span>{item.labelKey === 'live_editor'
+                      ? (isRTL ? 'محرر الموقع' : 'Live Editor')
+                      : item.labelKey === 'clinics'
+                      ? (isRTL ? 'العيادات' : 'Clinics')
+                      : item.labelKey === 'payments'
+                      ? (isRTL ? 'المدفوعات' : 'Payments')
+                      : t(item.labelKey)}</span>
                   </div>
                   {isActive(item.href) && (
                     <motion.div 

@@ -22,6 +22,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 import { HeroModule } from './modules/hero/hero.module';
 import { TechniquesModule } from './modules/techniques/techniques.module';
+import { ClinicsModule } from './modules/clinics/clinics.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { TechniquesModule } from './modules/techniques/techniques.module';
     PaymentsModule,
     HeroModule,
     TechniquesModule,
+    ClinicsModule,
   ],
   providers: [
     {

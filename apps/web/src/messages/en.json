@@ -311,6 +311,8 @@
     "login": "Admin Login",
     "dashboard": "Dashboard",
     "appointments": "Appointments",
+    "clinics": "Clinics",
+    "payments": "Payments",
     "blog": "Blog Posts",
     "services": "Services",
     "testimonials": "Testimonials",
