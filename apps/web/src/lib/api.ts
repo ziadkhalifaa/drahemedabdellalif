@@ -198,3 +198,10 @@ export const appointmentsApi = {
   ) => api.patch<any>(`/appointments/${appointmentId}/confirm-payment`, { action, adminNote }, token),
 };
 
+export const siteSettingsApi = {
+  getAllPublic: () => api.get<any[]>('/settings/public'),
+  updateMultiple: (settings: { key: string; value: string }[], token: string) => 
+    api.put<any>('/settings', { settings }, token),
+};
+
+
