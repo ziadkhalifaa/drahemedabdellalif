@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
-import { Pill, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
+import { Pill, Plus, Trash2, Save, ArrowLeft, Activity, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from '@/i18n/routing';
 

@@ -29,7 +29,11 @@ export default function LoginPage() {
       const data: any = await api.post('/auth/login', { email, password });
       login(data.accessToken, data.user);
       toast.success(tCommon('success') || 'Login Successful');
-      router.push('/dashboard');
+      if (data.user?.role === 'admin' || data.user?.role === 'editor') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error: any) {
       toast.error(error.message || tCommon('error'));
     } finally {

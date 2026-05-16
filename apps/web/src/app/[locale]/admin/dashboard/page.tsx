@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button } from '@/components/ui';
 import { api } from '@/lib/api';
