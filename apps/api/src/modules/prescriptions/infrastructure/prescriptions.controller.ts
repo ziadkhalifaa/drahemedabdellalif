@@ -32,4 +32,11 @@ export class PrescriptionsController {
   async getByPatient(@Param('patientId') patientId: string) {
     return this.prescriptionsService.findByPatient(patientId);
   }
+
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'editor')
+  async findAll() {
+    return this.prescriptionsService.findAll();
+  }
 }

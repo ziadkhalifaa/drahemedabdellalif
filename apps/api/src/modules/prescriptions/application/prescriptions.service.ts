@@ -50,4 +50,14 @@ export class PrescriptionsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async findAll() {
+    return this.prisma.prescription.findMany({
+      include: { 
+        appointment: { include: { patient: true } },
+        patient: true 
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
