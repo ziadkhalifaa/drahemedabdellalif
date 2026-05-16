@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard, Roles } from '../../../common/decorators';
+import { RolesGuard, Roles } from '../../common/decorators';
 import { RemindersService } from './reminders.service';
 
 @Controller('reminders')

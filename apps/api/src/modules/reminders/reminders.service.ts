@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '../../../common/prisma.service';
-import { WhatsAppService } from '../../../common/whatsapp.service';
+import { PrismaService } from '../../common/prisma.service';
+import { WhatsAppService } from '../../common/whatsapp.service';
 
 @Injectable()
 export class RemindersService {
