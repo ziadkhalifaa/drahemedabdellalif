@@ -147,6 +147,7 @@ export function Navbar() {
             label={t('services')} 
             isActive={activeMenu === 'services'} 
             onMouseEnter={() => setActiveMenu('services')}
+            href="/services"
           />
           
           <MenuTrigger 
@@ -448,17 +449,30 @@ function NavLink({ href, label }: { href: string, label: string }) {
   );
 }
 
-function MenuTrigger({ label, isActive, onMouseEnter }: { label: string, isActive: boolean, onMouseEnter: () => void }) {
-  return (
-    <button 
-      onMouseEnter={onMouseEnter} 
-      className={cn(
-        "flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider transition-all rounded-full outline-none", 
-        isActive ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary hover:bg-primary/5"
-      )}
-    >
+function MenuTrigger({ label, isActive, onMouseEnter, href }: { label: string, isActive: boolean, onMouseEnter: () => void, href?: string }) {
+  const content = (
+    <>
       {label} 
       <ChevronDown size={12} className={cn("transition-transform duration-300 opacity-50", isActive && "rotate-180 opacity-100")} />
+    </>
+  );
+
+  const className = cn(
+    "flex items-center gap-1.5 px-4 py-2 text-[11px] font-black uppercase tracking-wider transition-all rounded-full outline-none", 
+    isActive ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary hover:bg-primary/5"
+  );
+
+  if (href) {
+    return (
+      <Link href={href as any} onMouseEnter={onMouseEnter} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button onMouseEnter={onMouseEnter} className={className}>
+      {content}
     </button>
   );
 }

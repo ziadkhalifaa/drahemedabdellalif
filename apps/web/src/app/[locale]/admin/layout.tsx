@@ -76,8 +76,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                  <LayoutGrid size={18} />
                </div>
                <div className="flex flex-col">
-                 <h1 className="text-xs font-black uppercase tracking-widest text-foreground leading-none">Console</h1>
-                 <span className="text-[10px] font-bold text-muted uppercase tracking-tighter opacity-60">Admin Platform v2.0</span>
+                 <h1 className="text-xs font-black uppercase tracking-widest text-foreground leading-none">{isRTL ? 'التحكم' : 'Console'}</h1>
+                 <span className="text-[10px] font-bold text-muted uppercase tracking-tighter opacity-60">{isRTL ? 'منصة الإدارة v2.0' : 'Admin Platform v2.0'}</span>
                </div>
             </div>
           </div>

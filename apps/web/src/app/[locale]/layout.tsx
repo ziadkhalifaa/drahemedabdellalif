@@ -9,13 +9,14 @@ import { api } from '@/lib/api';
 
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { Cairo, Inter } from 'next/font/google';
+import { Tajawal, Inter } from 'next/font/google';
 // import { GoogleAnalytics } from '@next/third-parties/google';
 import '../../styles/globals.css';
 
-const cairo = Cairo({
+const tajawal = Tajawal({
+  weight: ['200', '300', '400', '500', '700', '800', '900'],
   subsets: ['arabic', 'latin'],
-  variable: '--font-cairo',
+  variable: '--font-tajawal',
   display: 'swap',
 });
 
@@ -74,7 +75,7 @@ export default async function LocaleLayout({
   };
 
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning className={`${cairo.variable} ${inter.variable}`}>
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning className={`${tajawal.variable} ${inter.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1B4332" />

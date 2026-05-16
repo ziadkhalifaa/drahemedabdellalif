@@ -76,8 +76,8 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
             <ShieldCheck className="text-white" size={24} />
           </div>
           <div>
-            <h2 className="text-sm font-black tracking-tight uppercase">Dr. Ahmed</h2>
-            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-black">Admin Console</p>
+            <h2 className="text-sm font-black tracking-tight uppercase">{isRTL ? 'د. أحمد عبد اللطيف' : 'Dr. Ahmed'}</h2>
+            <p className="text-[9px] text-white/40 uppercase tracking-[0.2em] font-black">{isRTL ? 'لوحة تحكم الإدارة' : 'Admin Console'}</p>
           </div>
         </Link>
         <button onClick={onClose} className="lg:hidden text-white/60 hover:text-white transition-colors">

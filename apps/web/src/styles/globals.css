@@ -2,6 +2,11 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: var(--font-tajawal), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-inter: var(--font-inter);
+}
+
 :root {
   --primary: #0f4c81; /* Classic Blue - Premium & Trustworthy */
   --primary-light: #2c7da0;

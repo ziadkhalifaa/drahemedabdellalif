@@ -34,65 +34,70 @@ export function SuccessStoryCard({ story, onClick }: SuccessStoryProps) {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white dark:bg-[#111] rounded-2xl shadow-xl overflow-hidden cursor-pointer group border border-gray-100 dark:border-gray-800 hover:border-[var(--primary)]/50 transition-all"
+      className="bg-white/5 dark:bg-white/5 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-[2.5rem] shadow-xl overflow-hidden cursor-pointer group hover:bg-white/10 dark:hover:bg-white/10 transition-all duration-500 relative h-full flex flex-col p-8"
       onClick={onClick}
     >
-      <div className="relative h-48 sm:h-56 overflow-hidden bg-gray-100 dark:bg-gray-800 group/img">
-        {hasImages ? (
-          <>
+      {/* Decorative Quote Icon */}
+      <div className="absolute top-6 right-8 opacity-5 dark:opacity-10 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
+        <Quote size={80} className="text-[var(--primary)]" fill="currentColor" />
+      </div>
+
+      <div className="flex items-start gap-4 mb-6 relative z-10">
+        <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[var(--primary)]/20 group-hover:border-[var(--primary)] transition-colors shadow-lg shrink-0">
+          {hasImages ? (
             <img 
               src={getMediaUrl(story.patientImages[0])} 
               alt={title || story.patientName}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="w-full h-full object-cover"
             />
-            <button 
-              onClick={handleImageClick}
-              className="absolute top-4 right-4 bg-black/50 hover:bg-[var(--primary)] text-white p-2 rounded-full opacity-0 group-hover/img:opacity-100 transition-all z-20"
-            >
-              <Maximize2 size={16} />
-            </button>
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--primary)]/20 to-[var(--accent)]/20">
-            <Quote size={64} className="text-[var(--primary)]/30" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute bottom-4 left-4 right-4 text-white">
-          <h3 className="text-xl font-bold line-clamp-1">{title || story.patientName}</h3>
-          {story.patientCity && (
-            <div className="flex items-center text-sm text-gray-200 mt-1">
-              <MapPin size={14} className="mr-1 rtl:ml-1 rtl:mr-0" />
-              {story.patientCity}
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center text-white text-xl font-bold">
+              {story.patientName.charAt(0)}
             </div>
           )}
+          {hasImages && (
+            <button 
+              onClick={handleImageClick}
+              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+            >
+              <Maximize2 size={16} className="text-white" />
+            </button>
+          )}
+        </div>
+        
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-[var(--primary)] transition-colors">
+            {story.patientName}
+          </h3>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+            <div className="flex gap-0.5">
+              {Array.from({ length: story.rating || 5 }).map((_, i) => (
+                <Star key={i} size={14} className="fill-[var(--accent)] text-[var(--accent)]" />
+              ))}
+            </div>
+            {story.patientCity && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                <MapPin size={12} className="mr-1 rtl:ml-1 rtl:mr-0" />
+                {story.patientCity}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="bg-[var(--primary)]/10 text-[var(--primary)] text-xs font-bold px-3 py-1 rounded-full">
-            {story.treatmentType ? t(`treatmentTypes.${story.treatmentType}`) || story.treatmentType : t('tabSuccessStories')}
-          </div>
-          <div className="flex gap-1">
-            {Array.from({ length: story.rating || 5 }).map((_, i) => (
-              <Star key={i} size={14} className="fill-[var(--accent)] text-[var(--accent)]" />
-            ))}
-          </div>
-        </div>
-        
-        <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 leading-relaxed mb-4 italic">
+      <div className="flex-1 relative z-10 flex flex-col">
+        <h4 className="text-sm font-bold text-[var(--primary)] mb-3">
+          {story.treatmentType ? t(`treatmentTypes.${story.treatmentType}`) || story.treatmentType : t('tabSuccessStories')}
+        </h4>
+        <p className="text-gray-700 dark:text-gray-300 text-base line-clamp-4 leading-relaxed mb-6 font-medium italic">
           &quot;{content || story.content}&quot;
         </p>
         
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs">
-              {story.patientName.charAt(0)}
-            </div>
-            <span className="text-sm font-medium dark:text-white">{story.patientName}</span>
-          </div>
-          <span className="text-xs font-semibold text-[var(--accent)] group-hover:text-[var(--primary)] transition-colors">
+        <div className="mt-auto pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
+            {title && title !== story.patientName ? title : ''}
+          </span>
+          <span className="text-xs font-black text-[var(--primary)] flex items-center gap-1 group-hover:gap-2 transition-all">
             {t('readFullStory')} &rarr;
           </span>
         </div>

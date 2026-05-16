@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Section } from '@/components/ui';
 import { api } from '@/lib/api';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { SuccessStoryCard } from '@/components/ui/success-story-card';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 
 export function TestimonialsSection() {
   const t = useTranslations('testimonials');
@@ -17,9 +18,17 @@ export function TestimonialsSection() {
   const isAr = locale === 'ar';
   const [stories, setStories] = useState<any[]>([]);
 
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: 'center', direction: isAr ? 'rtl' : 'ltr' },
+    [Autoplay({ delay: 5000, stopOnInteraction: true })]
+  );
+
   useEffect(() => {
-    api.get<any[]>('/testimonials/success-stories?limit=3').then(setStories).catch(() => {});
+    api.get<any[]>('/testimonials/success-stories?limit=10').then(setStories).catch(() => {});
   }, []);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   if (!stories.length) return null;
 
@@ -61,33 +70,37 @@ export function TestimonialsSection() {
             </motion.p>
           </div>
 
-          <Link href="/success-stories" className="flex-shrink-0">
-            <Button
-              size="lg"
-              className="h-12 px-6 text-sm bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white rounded-xl shadow-lg transition-all hover:-translate-y-1 gap-2 font-black"
-            >
-              {t('viewAll') || 'عرض جميع قصص النجاح'}
-              {isAr ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <button onClick={scrollPrev} className="p-3 rounded-full bg-black/5 dark:bg-white/5 hover:bg-[var(--primary)] hover:text-white transition-all">
+                {isAr ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
+              </button>
+              <button onClick={scrollNext} className="p-3 rounded-full bg-black/5 dark:bg-white/5 hover:bg-[var(--primary)] hover:text-white transition-all">
+                {isAr ? <ArrowLeft size={20} /> : <ArrowRight size={20} />}
+              </button>
+            </div>
+            <Link href="/success-stories" className="hidden sm:block">
+              <Button
+                size="lg"
+                className="h-12 px-6 text-sm bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white rounded-xl shadow-lg transition-all hover:-translate-y-1 gap-2 font-black"
+              >
+                {t('viewAll') || 'عرض جميع قصص النجاح'}
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {stories.map((story, i) => (
-            <motion.div
-              key={story.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="group hover:-translate-y-2 transition-transform duration-300"
-            >
-              <Link href={`/success-stories/${story.id}`} className="block h-full">
-                <SuccessStoryCard story={story} />
-              </Link>
-            </motion.div>
-          ))}
+        {/* Carousel */}
+        <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
+          <div className="flex gap-6 pb-8 pt-4">
+            {stories.map((story, i) => (
+              <div key={story.id} className="flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0">
+                <Link href={`/success-stories/${story.id}`} className="block h-full transition-transform duration-300 hover:-translate-y-2">
+                  <SuccessStoryCard story={story} />
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

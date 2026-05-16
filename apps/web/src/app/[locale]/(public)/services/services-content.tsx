@@ -50,7 +50,7 @@ export function ServicesContent({ services, locale }: Props) {
             </motion.div>
           </div>
           
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-8 lg:grid-cols-2">
             {services.map((service, i) => {
               const title = locale === 'ar' ? service.titleAr : service.titleEn;
               const description = locale === 'ar' ? service.descriptionAr : service.descriptionEn;
@@ -64,31 +64,29 @@ export function ServicesContent({ services, locale }: Props) {
                   transition={{ duration: 0.6, delay: i * 0.1 }}
                 >
                   <Link href={`/services/${service.id}`} className="block h-full">
-                    <Card className="group h-full flex flex-col overflow-hidden rounded-[2.5rem] border-none shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white dark:bg-white/5">
-                      <div className="relative aspect-[3/4] overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+                    <Card className="group h-full flex flex-col sm:flex-row overflow-hidden rounded-[2rem] border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white/5 backdrop-blur-xl dark:bg-white/5">
+                      <div className="relative sm:w-2/5 aspect-video sm:aspect-auto overflow-hidden bg-slate-100 dark:bg-slate-900/50">
                         <EditableImage 
                           contentKey={`service:${service.id}:image`}
                           defaultSrc={service.image || ''}
                           alt={title}
                           className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity pointer-events-none" />
-                        <div className="absolute bottom-6 left-6 right-6 pointer-events-none">
-                           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider mb-2">
-                             {t('badge')}
-                           </div>
-                           <h3 className="text-2xl font-black text-white leading-tight">
-                              <EditableText 
-                                contentKey={`service:${service.id}:${locale === 'ar' ? 'titleAr' : 'titleEn'}`}
-                                defaultAr={service.titleAr}
-                                defaultEn={service.titleEn}
-                                className="pointer-events-auto"
-                              />
-                           </h3>
-                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/80 sm:from-black/60 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity pointer-events-none" />
                       </div>
-                      <div className="p-8 flex-1 flex flex-col space-y-4">
-                        <div className="text-[var(--muted)] leading-relaxed line-clamp-4">
+                      <div className="p-8 sm:w-3/5 flex flex-col justify-center space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 w-fit rounded-full bg-[var(--primary)]/10 dark:bg-white/10 border border-[var(--primary)]/20 text-[var(--primary)] dark:text-white text-[10px] font-bold uppercase tracking-wider">
+                           {t('badge')}
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-900 dark:text-white leading-tight group-hover:text-[var(--primary)] transition-colors">
+                           <EditableText 
+                             contentKey={`service:${service.id}:${locale === 'ar' ? 'titleAr' : 'titleEn'}`}
+                             defaultAr={service.titleAr}
+                             defaultEn={service.titleEn}
+                             className="pointer-events-auto"
+                           />
+                        </h3>
+                        <div className="text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3 text-sm">
                            <EditableText 
                               contentKey={`service:${service.id}:${locale === 'ar' ? 'descriptionAr' : 'descriptionEn'}`}
                               defaultAr={service.descriptionAr}
