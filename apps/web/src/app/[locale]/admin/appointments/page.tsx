@@ -6,8 +6,8 @@ import { Link } from '@/i18n/routing';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import type { Appointment } from '@dr-ahmed/shared';
-import { AppointmentStatus } from '@dr-ahmed/shared';
-import { Check, X, FileDown, Download, Pill } from 'lucide-react';
+import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
+import { Check, X, FileDown, Download, Pill, Video } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 
 export default function AdminAppointmentsPage() {
@@ -127,29 +127,40 @@ export default function AdminAppointmentsPage() {
                   <td className="p-4 text-[var(--muted)]">{apt.timeSlot}</td>
                   <td className="p-4">
                     <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                      apt.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                      apt.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                      apt.status === AppointmentStatus.APPROVED ? 'bg-emerald-100 text-emerald-700' :
+                      apt.status === AppointmentStatus.REJECTED ? 'bg-red-100 text-red-700' :
                       'bg-amber-100 text-amber-700'
                     }`}>{apt.status}</span>
                   </td>
                   <td className="p-4">
-                    {apt.status === 'pending' && (
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => updateStatus(apt.id, AppointmentStatus.APPROVED)} className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50">
-                          <Check size={16} />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => updateStatus(apt.id, AppointmentStatus.REJECTED)} className="h-8 w-8 p-0 text-red-600 hover:bg-red-50">
-                          <X size={16} />
-                        </Button>
-                      </div>
-                    )}
-                    {apt.status === 'approved' && (
-                      <Link href={`/admin/prescriptions/new/${apt.id}`}>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-[var(--primary)] hover:bg-[var(--primary)]/5">
-                          <Pill size={16} />
-                        </Button>
-                      </Link>
-                    )}
+                    <div className="flex gap-2">
+                      {apt.status === AppointmentStatus.PENDING && (
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => updateStatus(apt.id, AppointmentStatus.APPROVED)} className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50">
+                            <Check size={16} />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => updateStatus(apt.id, AppointmentStatus.REJECTED)} className="h-8 w-8 p-0 text-red-600 hover:bg-red-50">
+                            <X size={16} />
+                          </Button>
+                        </div>
+                      )}
+                      {apt.status === AppointmentStatus.APPROVED && (
+                        <>
+                          {apt.type === AppointmentType.ONLINE && (
+                            <Link href={`/dashboard/video/${apt.meetingId || apt.id}`}>
+                              <Button size="sm" variant="ghost" title="Join Video Call" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50">
+                                <Video size={16} />
+                              </Button>
+                            </Link>
+                          )}
+                          <Link href={`/admin/prescriptions/new/${apt.id}`}>
+                            <Button size="sm" variant="ghost" title="New Prescription" className="h-8 w-8 p-0 text-[var(--primary)] hover:bg-[var(--primary)]/5">
+                              <Pill size={16} />
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
