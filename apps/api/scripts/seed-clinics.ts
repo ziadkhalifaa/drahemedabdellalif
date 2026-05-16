@@ -92,6 +92,37 @@ async function main() {
     },
   });
 
+  // ─── Online Consultation (Virtual Clinic) ─────────────────────────────
+  const clinicOnline = await prisma.clinic.upsert({
+    where: { id: 'clinic-online' },
+    update: { nameAr: 'استشارات أونلاين', nameEn: 'Online Consultations' },
+    create: {
+      id: 'clinic-online',
+      nameAr: 'استشارات أونلاين',
+      nameEn: 'Online Consultations',
+      addressAr: 'مكالمة فيديو عبر الإنترنت - مدة 15 دقيقة',
+      addressEn: 'Video call via internet - 15 minutes',
+      isActive: true,
+      order: 0,
+    },
+  });
+
+  // السبت للخميس (0-4) من 9 ص ل 9 م - سلوت 15 دقيقة
+  for (const day of [0, 1, 2, 3, 4]) {
+    await prisma.clinicWorkingHours.upsert({
+      where: { clinicId_dayOfWeek: { clinicId: clinicOnline.id, dayOfWeek: day } },
+      update: {},
+      create: {
+        clinicId: clinicOnline.id,
+        dayOfWeek: day,
+        startTime: '09:00',
+        endTime: '21:00',
+        slotDuration: 15,
+        isActive: true,
+      },
+    });
+  }
+
   // ─── Payment settings in SiteSettings ─────────────────────────────────
   await prisma.siteSettings.upsert({
     where: { key: 'payment.vodafone' },
@@ -121,6 +152,7 @@ async function main() {
   console.log(`  - ${clinic1.nameAr} (${clinic1.id})`);
   console.log(`  - ${clinic2.nameAr} (${clinic2.id})`);
   console.log(`  - ${clinic3.nameAr} (${clinic3.id})`);
+  console.log(`  - ${clinicOnline.nameAr} (${clinicOnline.id})`);
   console.log('  - Payment settings saved');
 }
 

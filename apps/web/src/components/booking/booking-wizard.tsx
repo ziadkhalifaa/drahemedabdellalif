@@ -61,17 +61,19 @@ export default function BookingWizard() {
   }, []);
   
   useEffect(() => {
-    if (date && (type === AppointmentType.IN_CLINIC && clinicId)) {
-      setSlotsLoading(true);
-      clinicsApi.getAvailableSlots(clinicId, date)
-        .then(setAvailableSlots)
-        .catch(() => toast.error(isRTL ? 'خطأ في تحميل المواعيد' : 'Error loading slots'))
-        .finally(() => setSlotsLoading(false));
-    } else if (date && type === AppointmentType.ONLINE) {
-      // Mock online slots for now or call generic slot endpoint
-      // Assuming a generic /appointments/available-slots exists or we use a basic list
-      setAvailableSlots(['10:00', '10:15', '10:30', '11:00', '11:15', '11:30', '12:00', '14:00', '14:30', '15:00', '16:00', '17:00']);
-    }
+    if (!date || !type) return;
+    setSlotsLoading(true);
+    
+    // For IN_CLINIC: use the selected clinic ID
+    // For ONLINE: use the virtual 'clinic-online' ID
+    const targetClinicId = type === AppointmentType.IN_CLINIC ? clinicId : 'clinic-online';
+    
+    if (!targetClinicId) { setSlotsLoading(false); return; }
+    
+    clinicsApi.getAvailableSlots(targetClinicId, date)
+      .then(setAvailableSlots)
+      .catch(() => toast.error(isRTL ? 'خطأ في تحميل المواعيد' : 'Error loading slots'))
+      .finally(() => setSlotsLoading(false));
   }, [date, clinicId, type, isRTL]);
 
   const handleNext = () => {

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Clock, Save, Plus, Trash2, Phone,
-  MapPin, CheckCircle, XCircle, Loader2, Calendar, AlertCircle
+  MapPin, CheckCircle, XCircle, Loader2, Calendar, AlertCircle, Video
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -131,18 +131,19 @@ export default function AdminClinicsPage() {
       </div>
 
       {/* Clinic Tabs */}
-      <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/10">
+      <div className="flex gap-2 p-1 bg-white/5 rounded-2xl border border-white/10 flex-wrap">
         {clinics.map((c, idx) => (
           <button
             key={c.id}
             onClick={() => setActiveTab(idx)}
             className={cn(
-              'flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all',
+              'flex-1 min-w-[120px] py-3 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2',
               activeTab === idx
-                ? 'bg-primary text-white shadow-lg'
+                ? c.id === 'clinic-online' ? 'bg-blue-600 text-white shadow-lg' : 'bg-primary text-white shadow-lg'
                 : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
             )}
           >
+            {c.id === 'clinic-online' ? <Video size={14} /> : <Building2 size={14} />}
             {isRTL ? c.nameAr : c.nameEn}
           </button>
         ))}
