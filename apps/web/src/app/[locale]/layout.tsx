@@ -56,6 +56,9 @@ export default async function LocaleLayout({
   }
   */
 
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Physician',
@@ -66,8 +69,8 @@ export default async function LocaleLayout({
       addressLocality: 'Beni Suef',
       addressCountry: 'EG'
     },
-    telephone: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
-    url: process.env.NEXT_PUBLIC_BASE_URL,
+    telephone: whatsappNumber,
+    url: baseUrl,
   };
 
   return (
