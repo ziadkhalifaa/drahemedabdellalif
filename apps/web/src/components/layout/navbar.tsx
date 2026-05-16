@@ -135,6 +135,8 @@ export function Navbar() {
         <div className="hidden lg:flex items-center gap-1 bg-black/5 dark:bg-white/5 rounded-full p-1 border border-black/5 dark:border-white/5">
           <NavLink href="/" label={t('home')} />
           
+          <NavLink href="/about" label={t('aboutUs')} />
+          
           <MenuTrigger 
             label={t('services')} 
             isActive={activeMenu === 'services'} 
@@ -367,6 +369,7 @@ export function Navbar() {
                 {/* Mobile Links */}
                 <div className="grid gap-2">
                   <MobileNavLink href="/" label={t('home')} onClick={() => setMobileOpen(false)} />
+                  <MobileNavLink href="/about" label={t('aboutUs')} onClick={() => setMobileOpen(false)} />
                   <MobileNavLink href="/services" label={t('services')} onClick={() => setMobileOpen(false)} />
                   <MobileNavLink href="/patient-guide" label={t('patientGuide')} onClick={() => setMobileOpen(false)} />
                   <MobileNavLink href="/gallery" label={t('media')} onClick={() => setMobileOpen(false)} />
