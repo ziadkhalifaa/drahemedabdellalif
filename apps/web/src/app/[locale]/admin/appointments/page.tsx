@@ -21,8 +21,8 @@ export default function AdminAppointmentsPage() {
     if (!token) return;
     setLoading(true);
     setError(false);
-    api.get<Appointment[]>('/appointments', token)
-      .then(setAppointments)
+    api.get<{data: Appointment[], total: number}>('/appointments', token)
+      .then((res) => setAppointments(res.data || []))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   };
