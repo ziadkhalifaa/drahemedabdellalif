@@ -10,7 +10,7 @@ import {
   Building2, Clock, Save, Plus, Trash2, Phone,
   MapPin, CheckCircle, XCircle, Loader2, Calendar, AlertCircle
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const DAYS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

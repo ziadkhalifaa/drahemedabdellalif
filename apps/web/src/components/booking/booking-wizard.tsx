@@ -10,7 +10,7 @@ import {
   UploadCloud, CheckCircle, AlertCircle, MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { AppointmentType } from '@dr-ahmed/shared';
 
 const steps = [

@@ -10,7 +10,7 @@ import {
   CreditCard, CheckCircle, XCircle, Loader2,
   Eye, Phone, Calendar, Clock, Building2, AlertCircle, Image
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const STATUS_LABELS: Record<string, { ar: string; en: string; color: string }> = {
   PENDING_REVIEW: { ar: 'في الانتظار', en: 'Pending Review', color: 'orange' },
