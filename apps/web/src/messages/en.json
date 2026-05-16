@@ -126,6 +126,7 @@
   },
   "whyUs": {
     "title": "Why Choose Us",
+    "heading": "Why We Are the <span class=\"text-[var(--primary)] text-glow\">Best</span> Choice for Your Health?",
     "reasons": [
       { "title": "Academic & Clinical Excellence", "description": "University Professor and specialized consultant combining modern science with long-standing experience." },
       { "title": "Advanced Endoscopy", "description": "Utilizing the latest endoscopic and microscopic surgical techniques for faster recovery." },
