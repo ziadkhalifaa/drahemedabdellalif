@@ -5,7 +5,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Input, Textarea, Button } from '@/components/ui';
 import { api } from '@/lib/api';
-import { Calendar, CheckCircle2, AlertCircle, Clock, Phone, Mail, User, FileText } from 'lucide-react';
+import { Calendar, CheckCircle2, AlertCircle, Clock, Phone, Mail, User, FileText, Building2, BabyIcon } from 'lucide-react';
+import { clinicsApi } from '@/lib/api';
 import { TIME_SLOTS } from '@dr-ahmed/shared';
 import { cn } from '@/lib/utils';
 
@@ -18,19 +19,29 @@ export function BookingForm() {
     patientName: '',
     patientPhone: '',
     patientEmail: '',
+    birthDate: '',
+    clinicId: '',
     date: '',
     timeSlot: '',
     notes: '',
   });
+  const [clinics, setClinics] = useState<any[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'conflict'>('idle');
+
+  useEffect(() => {
+    clinicsApi.getAll().then(setClinics).catch(console.error);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
     try {
-      await api.post('/appointments', form);
+      await api.post('/appointments', {
+        ...form,
+        type: 'IN_CLINIC' // This simple form is for clinic visits
+      });
       setStatus('success');
-      setForm({ patientName: '', patientPhone: '', patientEmail: '', date: '', timeSlot: '', notes: '' });
+      setForm({ patientName: '', patientPhone: '', patientEmail: '', birthDate: '', clinicId: '', date: '', timeSlot: '', notes: '' });
     } catch (err: any) {
       if (err.message?.includes('already booked')) setStatus('conflict');
       else setStatus('error');
@@ -65,9 +76,20 @@ export function BookingForm() {
     );
   }
 
-  const inputIcon = (icon: React.ReactNode) => (
-    <div className="absolute top-1/2 -translate-y-1/2 ltr:left-4 rtl:right-4 text-[var(--muted)]">
-      {icon}
+  const renderField = (icon: React.ReactNode, label: string, children: React.ReactNode) => (
+    <div className="space-y-1">
+      <label className={cn("block text-sm font-bold text-white mb-2", isAr ? "text-right" : "text-left")}>
+        {label}
+      </label>
+      <div className="relative group">
+        <div className={cn(
+          "absolute top-1/2 -translate-y-1/2 text-[var(--muted)] pointer-events-none z-10 group-focus-within:text-[var(--primary)] transition-colors",
+          isAr ? "right-4" : "left-4"
+        )}>
+          {icon}
+        </div>
+        {children}
+      </div>
     </div>
   );
 
@@ -97,120 +119,135 @@ export function BookingForm() {
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Name */}
-          <div className="relative">
-            <div className={cn("absolute top-1/2 -translate-y-1/2 text-[var(--muted)]", isAr ? "right-4" : "left-4")}>
-              <User size={16} />
-            </div>
+          {renderField(
+            <User size={16} />,
+            t('name'),
             <Input
               id="patientName"
-              label={t('name')}
               placeholder={isAr ? 'الاسم بالكامل' : 'Full Name'}
               value={form.patientName}
               onChange={(e) => setForm({ ...form, patientName: e.target.value })}
               required
-              labelClassName="text-white font-bold mb-2 block"
-              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20", isAr ? "pr-10" : "pl-10")}
+              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20 h-12", isAr ? "pr-11" : "pl-11")}
             />
-          </div>
+          )}
 
           {/* Phone */}
-          <div className="relative">
-            <div className={cn("absolute top-1/2 -translate-y-1/2 text-[var(--muted)]", isAr ? "right-4" : "left-4")}>
-              <Phone size={16} />
-            </div>
+          {renderField(
+            <Phone size={16} />,
+            t('phone'),
             <Input
               id="patientPhone"
-              label={t('phone')}
               placeholder={isAr ? 'رقم الهاتف' : 'Phone Number'}
               type="tel"
               value={form.patientPhone}
               onChange={(e) => setForm({ ...form, patientPhone: e.target.value })}
               required
-              labelClassName="text-white font-bold mb-2 block"
-              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20", isAr ? "pr-10" : "pl-10")}
+              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20 h-12", isAr ? "pr-11" : "pl-11")}
             />
-          </div>
+          )}
         </div>
 
         {/* Email */}
-        <div className="relative">
-          <div className={cn("absolute top-1/2 -translate-y-1/2 text-[var(--muted)]", isAr ? "right-4" : "left-4")}>
-            <Mail size={16} />
-          </div>
+        {renderField(
+          <Mail size={16} />,
+          t('email'),
           <Input
             id="patientEmail"
-            label={t('email')}
             placeholder={isAr ? 'البريد الإلكتروني' : 'Email Address'}
             type="email"
             value={form.patientEmail}
             onChange={(e) => setForm({ ...form, patientEmail: e.target.value })}
             required
-            labelClassName="text-white font-bold mb-2 block"
-            className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20", isAr ? "pr-10" : "pl-10")}
+            className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20 h-12", isAr ? "pr-11" : "pl-11")}
           />
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Clinic */}
+          {renderField(
+            <Building2 size={16} />,
+            isAr ? 'العيادة' : 'Clinic',
+            <select
+              value={form.clinicId}
+              onChange={(e) => setForm({ ...form, clinicId: e.target.value })}
+              required
+              className={cn(
+                "w-full h-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-white transition-colors appearance-none",
+                isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"
+              )}
+            >
+              <option value="" className="bg-[#050e1a]">{isAr ? 'اختر العيادة' : 'Select Clinic'}</option>
+              {clinics.filter(c => c.id !== 'clinic-online').map((c) => (
+                <option key={c.id} value={c.id} className="bg-[#050e1a]">{isAr ? c.nameAr : c.nameEn}</option>
+              ))}
+            </select>
+          )}
+
+          {/* Birth Date */}
+          {renderField(
+            <BabyIcon size={16} />,
+            isAr ? 'تاريخ الميلاد' : 'Date of Birth',
+            <Input
+              id="birthDate"
+              type="date"
+              value={form.birthDate}
+              onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
+              required
+              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors [color-scheme:dark] h-12", isAr ? "pr-11" : "pl-11")}
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Date */}
-          <div className="relative">
-            <div className={cn("absolute top-1/2 -translate-y-1/2 text-[var(--muted)]", isAr ? "right-4" : "left-4")}>
-              <Calendar size={16} />
-            </div>
+          {renderField(
+            <Calendar size={16} />,
+            t('date'),
             <Input
               id="date"
-              label={t('date')}
               type="date"
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
               required
               min={new Date().toISOString().split('T')[0]}
-              labelClassName="text-white font-bold mb-2 block"
-              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors [color-scheme:dark]", isAr ? "pr-10" : "pl-10")}
+              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors [color-scheme:dark] h-12", isAr ? "pr-11" : "pl-11")}
             />
-          </div>
+          )}
 
           {/* Time Slot */}
-          <div className="space-y-1">
-            <label className={cn("block text-sm font-bold text-white", isAr ? "text-right" : "text-left")}>
-              {t('time')}
-            </label>
-            <div className="relative">
-              <div className={cn("absolute top-1/2 -translate-y-1/2 text-[var(--muted)] pointer-events-none z-10", isAr ? "right-4" : "left-4")}>
-                <Clock size={16} />
-              </div>
-              <select
-                value={form.timeSlot}
-                onChange={(e) => setForm({ ...form, timeSlot: e.target.value })}
-                required
-                className={cn(
-                  "w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-white transition-colors appearance-none",
-                  isAr ? "pr-10 pl-4 text-right" : "pl-10 pr-4 text-left"
-                )}
-              >
-                <option value="" className="bg-[#050e1a]">{isAr ? 'اختر وقتاً' : 'Select a time'}</option>
-                {TIME_SLOTS.map((slot) => (
-                  <option key={slot} value={slot} className="bg-[#050e1a]">{slot}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          {renderField(
+            <Clock size={16} />,
+            t('time'),
+            <select
+              value={form.timeSlot}
+              onChange={(e) => setForm({ ...form, timeSlot: e.target.value })}
+              required
+              className={cn(
+                "w-full h-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-white transition-colors appearance-none",
+                isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"
+              )}
+            >
+              <option value="" className="bg-[#050e1a]">{isAr ? 'اختر وقتاً' : 'Select a time'}</option>
+              {TIME_SLOTS.map((slot) => (
+                <option key={slot} value={slot} className="bg-[#050e1a]">{slot}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Notes */}
-        <div className="relative">
-          <div className={cn("absolute top-4 text-[var(--muted)]", isAr ? "right-4" : "left-4")}>
-            <FileText size={16} />
-          </div>
+        {renderField(
+          <FileText size={16} />,
+          t('notes'),
           <Textarea
             id="notes"
-            label={t('notes')}
             placeholder={isAr ? 'أضف أي ملاحظات إضافية هنا...' : 'Add any additional notes here...'}
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            labelClassName="text-white font-bold mb-2 block"
-            className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors resize-none placeholder:text-white/20", isAr ? "pr-10" : "pl-10")}
+            className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors resize-none placeholder:text-white/20 min-h-[100px]", isAr ? "pr-11" : "pl-11")}
           />
-        </div>
+        )}
 
         {/* Error states */}
         {status === 'error' && (
