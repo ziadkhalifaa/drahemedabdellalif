@@ -257,18 +257,25 @@ export class AuthService {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
     }
-    const token = await this.prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
-      include: { user: true },
-    });
+    try {
+      const token = await this.prisma.refreshToken.findUnique({
+        where: { token: refreshToken },
+        include: { user: true },
+      });
 
-    if (!token || token.expiresAt < new Date()) {
-      if (token) await this.prisma.refreshToken.delete({ where: { id: token.id } });
+      if (!token || token.expiresAt < new Date()) {
+        if (token) {
+          await this.prisma.refreshToken.delete({ where: { id: token.id } }).catch(() => {});
+        }
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      await this.prisma.refreshToken.delete({ where: { id: token.id } }).catch(() => {});
+      return this.generateTokens(token.user);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
-
-    await this.prisma.refreshToken.delete({ where: { id: token.id } });
-    return this.generateTokens(token.user);
   }
 
   async getUsers(role?: string) {

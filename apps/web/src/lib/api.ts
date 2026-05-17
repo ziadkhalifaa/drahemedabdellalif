@@ -26,30 +26,51 @@ async function getResponseData(res: Response): Promise<any> {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
+let refreshPromise: Promise<string | null> | null = null;
+
+async function getNewToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        if (refreshRes.ok) {
+          const { accessToken } = await refreshRes.json();
+          
+          // Notify application of the new token
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('token-refreshed', { detail: accessToken }));
+          }
+          return accessToken;
+        }
+      } catch (e) {
+        console.error('Error refreshing token:', e);
+      } finally {
+        refreshPromise = null;
+      }
+      return null;
+    })();
+  }
+  return refreshPromise;
+}
+
 async function fetchWithRefresh(url: string, options: RequestInit, token?: string): Promise<Response> {
   const res = await fetch(url, options);
   
   if (res.status === 401 && token) {
-    // Try to refresh token via /api/auth/refresh
-    const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    // Try to refresh token via shared /api/auth/refresh promise
+    const newAccessToken = await getNewToken();
     
-    if (refreshRes.ok) {
-      const { accessToken } = await refreshRes.json();
-      
-      // Notify application of the new token
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('token-refreshed', { detail: accessToken }));
-      }
-      
+    if (newAccessToken) {
       // Update the options with the new token
       const newOptions = {
         ...options,
         headers: {
           ...options.headers,
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${newAccessToken}`,
         },
       };
       
