@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { WhatsAppButton } from '@/components/layout/whatsapp-button';
-import { Card } from '@/components/ui';
+import { Card, Button } from '@/components/ui';
 import { api, getMediaUrl } from '@/lib/api';
 import type { BlogPost } from '@dr-ahmed/shared';
 import { Calendar, ArrowLeft } from 'lucide-react';
