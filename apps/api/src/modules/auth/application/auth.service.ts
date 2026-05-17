@@ -290,4 +290,40 @@ export class AuthService {
     });
     return users;
   }
+
+  async deleteUser(userId: string) {
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Delete prescriptions
+      await tx.prescription.deleteMany({ where: { patientId: userId } });
+
+      // 2. Delete payments
+      await tx.payment.deleteMany({ where: { userId } });
+
+      // 3. Delete medical reports
+      await tx.medicalReport.deleteMany({ where: { patientId: userId } });
+
+      // 4. Delete audit logs
+      await tx.auditLog.deleteMany({ where: { userId } });
+
+      // 5. Delete appointment reviews connected to patient appointments
+      await tx.appointmentReview.deleteMany({
+        where: {
+          appointment: {
+            patientId: userId,
+          },
+        },
+      });
+
+      // 6. Delete appointments
+      await tx.appointment.deleteMany({ where: { patientId: userId } });
+
+      // 7. Delete refresh tokens
+      await tx.refreshToken.deleteMany({ where: { userId } });
+
+      // 8. Finally delete the user
+      await tx.user.delete({ where: { id: userId } });
+    });
+
+    return { message: 'User and all associated data deleted successfully' };
+  }
 }

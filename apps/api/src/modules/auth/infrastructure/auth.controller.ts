@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Req, Res, UnauthorizedException, Query } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UseGuards, Req, Res, UnauthorizedException, Query } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
@@ -83,5 +83,12 @@ export class AuthController {
       path: '/',
     });
     return { accessToken: data.accessToken };
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string) {
+    return this.authService.deleteUser(id);
   }
 }

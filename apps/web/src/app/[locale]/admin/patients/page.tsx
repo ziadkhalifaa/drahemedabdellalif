@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
-import { Users, Search, Mail, Phone, Calendar, FileText, Download } from 'lucide-react';
+import { Users, Search, Mail, Phone, Calendar, FileText, Download, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { exportToExcel } from '@/lib/export-utils';
 
@@ -26,6 +26,23 @@ export default function PatientsManagementPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDeleteClick = async (patientId: string, patientName: string) => {
+    const confirmDelete = window.confirm(`Are you absolutely sure you want to delete patient "${patientName}"? This will permanently delete ALL of their appointments, prescriptions, medical reports, payments, and account data. This action is irreversible!`);
+    if (!confirmDelete) return;
+
+    setDeletingId(patientId);
+    try {
+      await api.delete(`/auth/users/${patientId}`, token);
+      toast.success('Patient and all associated records deleted successfully!');
+      setPatients(prev => prev.filter(p => p.id !== patientId));
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete patient');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -151,7 +168,7 @@ export default function PatientsManagementPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -162,13 +179,27 @@ export default function PatientsManagementPage() {
                       >
                         <FileText size={14} /> Reports
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:bg-red-500/5 hover:text-red-600 rounded-lg h-8 px-3 text-xs font-bold gap-1"
+                        onClick={() => handleDeleteClick(patient.id, patient.name)}
+                        disabled={deletingId === patient.id}
+                      >
+                        {deletingId === patient.id ? (
+                          <div className="h-3.5 w-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                        Delete
+                      </Button>
                     </div>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-16 text-center text-[var(--muted)] font-medium">
+                  <td colSpan={5} className="py-16 text-center text-[var(--muted)] font-medium">
                     No patients found.
                   </td>
                 </tr>
