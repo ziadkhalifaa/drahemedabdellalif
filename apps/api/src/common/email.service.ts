@@ -7,16 +7,14 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    const port = Number(process.env.SMTP_PORT) || 587;
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port,
-      secure: port === 465,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: Number(process.env.SMTP_PORT) === 465,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 10000, // Prevent serverless function timeout hanging
     });
   }
 
@@ -88,7 +86,7 @@ export class EmailService {
     const isApproved = status === 'approved';
     const statusColor = isApproved ? '#10b981' : '#ef4444';
     const statusText = isApproved ? 'تم تأكيد موعدك بنجاح' : 'نعتذر، تم إلغاء موعدك';
-    
+
     const html = `
       <!DOCTYPE html>
       <html dir="rtl" lang="ar">
@@ -118,9 +116,9 @@ export class EmailService {
               ${meetingUrl ? `<div><strong>رابط الاستشارة:</strong> <a href="${meetingUrl}" style="color: #3b82f6; text-decoration: none;">انقر هنا للإنضمام</a></div>` : ''}
             </div>
 
-            ${isApproved 
-              ? `<p style="color: #64748b; font-size: 14px;">يرجى التواجد قبل الموعد بـ 15 دقيقة، أو تجهيز اتصال الإنترنت إذا كانت استشارة أونلاين.</p>` 
-              : `<p style="color: #64748b; font-size: 14px;">يرجى التواصل معنا عبر الواتساب لتحديد موعد بديل يناسبك.</p>`}
+            ${isApproved
+        ? `<p style="color: #64748b; font-size: 14px;">يرجى التواجد قبل الموعد بـ 15 دقيقة، أو تجهيز اتصال الإنترنت إذا كانت استشارة أونلاين.</p>`
+        : `<p style="color: #64748b; font-size: 14px;">يرجى التواصل معنا عبر الواتساب لتحديد موعد بديل يناسبك.</p>`}
           </div>
         </div>
       </body>

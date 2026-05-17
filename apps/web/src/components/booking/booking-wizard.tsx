@@ -134,7 +134,7 @@ export default function BookingWizard() {
   const getPrice = () => paymentSettings['payment.price']?.amount || 400;
 
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md shadow-2xl relative overflow-hidden">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 bg-[#0b1329] border border-white/15 rounded-3xl backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden text-white">
       
       {/* Decorative Glows */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full pointer-events-none" />
