@@ -94,17 +94,18 @@ export function HeroSection() {
   const locale = useLocale();
   const { isEditing } = useEditor();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const { data: slidesData, isLoading } = useSWR<Slide[]>('/hero-slides', api.get);
   const slides = slidesData && slidesData.length > 0 ? slidesData : [];
 
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (slides.length <= 1 || isPaused) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [slides.length, isPaused]);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
@@ -119,7 +120,11 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-black flex items-center">
+    <section 
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-black flex items-center"
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide}
@@ -214,17 +219,49 @@ export function HeroSection() {
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <Link href="/booking">
-                  <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
-                    <Calendar size={20} />
-                    {t('cta')}
-                  </Button>
-                </Link>
-                <Link href="/services">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
-                    {t('learnMore')}
-                  </Button>
-                </Link>
+                {currentSlide === 0 ? (
+                  <>
+                    <Link href="/booking">
+                      <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
+                        <Calendar size={20} />
+                        {locale === 'ar' ? 'احجز موعدك الآن' : 'Book Appointment'}
+                      </Button>
+                    </Link>
+                    <Link href="/about">
+                      <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
+                        {locale === 'ar' ? 'تعرف علينا' : 'About Us'}
+                      </Button>
+                    </Link>
+                  </>
+                ) : currentSlide === 1 ? (
+                  <>
+                    <Link href="/services">
+                      <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
+                        <Calendar size={20} />
+                        {locale === 'ar' ? 'خدماتنا العلاجية' : 'Our Services'}
+                      </Button>
+                    </Link>
+                    <Link href="/techniques">
+                      <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
+                        {locale === 'ar' ? 'التقنيات العلاجية' : 'Treatment Techniques'}
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/testimonials">
+                      <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
+                        <Calendar size={20} />
+                        {locale === 'ar' ? 'آراء المرضى' : 'Patient Reviews'}
+                      </Button>
+                    </Link>
+                    <Link href="/booking">
+                      <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
+                        {locale === 'ar' ? 'اتصل بنا' : 'Contact Us'}
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
