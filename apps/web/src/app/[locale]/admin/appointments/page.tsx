@@ -36,27 +36,36 @@ export default function AdminAppointmentsPage() {
   };
 
   const handleExportExcel = () => {
-    const data = appointments.map(a => ({
-      Patient: a.patientName,
-      Phone: a.patientPhone,
-      Email: a.patientEmail,
-      Date: new Date(a.date).toLocaleDateString(),
-      Time: a.timeSlot,
-      Status: a.status,
-      Notes: a.notes || ''
-    }));
+    const data = appointments.map(a => {
+      const name = a.guestName || a.patient?.name || '—';
+      const phone = a.guestPhone || a.patient?.phone || '—';
+      const email = a.guestEmail || a.patient?.email || '—';
+      return {
+        Patient: name,
+        Phone: phone,
+        Email: email,
+        Date: new Date(a.date).toLocaleDateString(),
+        Time: a.timeSlot,
+        Status: a.status,
+        Notes: a.notes || ''
+      };
+    });
     exportToExcel(data, 'Appointments_Report');
   };
 
   const handleExportPDF = () => {
     const headers = ['Patient', 'Phone', 'Date', 'Time', 'Status'];
-    const data = appointments.map(a => [
-      a.patientName,
-      a.patientPhone,
-      new Date(a.date).toLocaleDateString(),
-      a.timeSlot,
-      a.status
-    ]);
+    const data = appointments.map(a => {
+      const name = a.guestName || a.patient?.name || '—';
+      const phone = a.guestPhone || a.patient?.phone || '—';
+      return [
+        name,
+        phone,
+        new Date(a.date).toLocaleDateString(),
+        a.timeSlot,
+        a.status
+      ];
+    });
     exportToPDF(headers, data, 'Appointments_Report', 'Appointments List');
   };
 
@@ -116,13 +125,17 @@ export default function AdminAppointmentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {filteredAppointments.map((apt) => (
-                <tr key={apt.id} className="hover:bg-[var(--card-hover)] transition-colors">
-                  <td className="p-4">
-                    <p className="font-bold text-[var(--foreground)]">{apt.patientName}</p>
-                    <p className="text-[10px] text-[var(--muted)]">{apt.patientEmail}</p>
-                  </td>
-                  <td className="p-4 text-[var(--muted)] font-medium">{apt.patientPhone}</td>
+              {filteredAppointments.map((apt) => {
+                const name = apt.guestName || apt.patient?.name || '—';
+                const email = apt.guestEmail || apt.patient?.email || '—';
+                const phone = apt.guestPhone || apt.patient?.phone || '—';
+                return (
+                  <tr key={apt.id} className="hover:bg-[var(--card-hover)] transition-colors">
+                    <td className="p-4">
+                      <p className="font-bold text-[var(--foreground)]">{name}</p>
+                      <p className="text-[10px] text-[var(--muted)]">{email}</p>
+                    </td>
+                    <td className="p-4 text-[var(--muted)] font-medium">{phone}</td>
                   <td className="p-4 text-[var(--muted)]">{new Date(apt.date).toLocaleDateString()}</td>
                   <td className="p-4 text-[var(--muted)]">{apt.timeSlot}</td>
                   <td className="p-4">
@@ -163,7 +176,7 @@ export default function AdminAppointmentsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              ); })}
               {filteredAppointments.length === 0 && (
                 <tr><td colSpan={6} className="py-12 text-center text-[var(--muted)] font-medium">No appointments found</td></tr>
               )}
