@@ -457,7 +457,9 @@
     "draft": "مسودة",
     "published": "منشور",
     "contactUs": "تواصل معنا",
-    "verifyWhatsApp": "لقد أرسلنا رمز التحقق إلى رقم الواتساب الخاص بك"
+    "verifyWhatsApp": "لقد أرسلنا رمز التحقق إلى رقم الواتساب الخاص بك",
+    "verificationMethod": "طريقة تفعيل الحساب",
+    "email": "البريد الإلكتروني"
   },
   "admin": {
     "dashboard_overview": "نظرة عامة للوحة التحكم",

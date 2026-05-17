@@ -457,7 +457,9 @@
     "draft": "Draft",
     "published": "Published",
     "contactUs": "Contact Us",
-    "verifyWhatsApp": "We sent a verification code to your WhatsApp number"
+    "verifyWhatsApp": "We sent a verification code to your WhatsApp number",
+    "verificationMethod": "Verification Method",
+    "email": "Email"
   },
   "admin": {
     "dashboard_overview": "Dashboard Overview",
