@@ -21,7 +21,7 @@ interface Service {
   image: string | null;
 }
 
-export function ServicesCarouselSection() {
+export function ServicesCarouselSection({ fallbackData }: { fallbackData?: Service[] }) {
   const locale = useLocale();
   const isAr = locale === 'ar';
 
@@ -32,7 +32,7 @@ export function ServicesCarouselSection() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
 
-  const { data: servicesData, isLoading } = useSWR<Service[]>('/services', api.get);
+  const { data: servicesData, isLoading } = useSWR<Service[]>('/services', api.get, { fallbackData });
   const services = servicesData && servicesData.length > 0 ? servicesData : [];
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);

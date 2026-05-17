@@ -1,7 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
+import * as dotenv from 'dotenv';
 
-const prisma = new PrismaClient();
+dotenv.config();
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DIRECT_URL || process.env.DATABASE_URL
+    }
+  }
+});
 
 async function fullBackup() {
   console.log('🚀 Starting Full Database Export...');

@@ -27,6 +27,12 @@ export default function AdminSettingsPage() {
       email: 'info@drahmedabdellatif.com',
       addressBeniSuef: 'بني سويف، مصر',
       addressOctober: 'الحي المتميز، 6 أكتوبر',
+    },
+    social: {
+      facebook: 'https://www.facebook.com/DrAhmedAbdellatifClinic/',
+      youtube: 'https://www.youtube.com/@DrAhmedAbdellatif',
+      instagram: '',
+      whatsapp: ''
     }
   });
 
@@ -107,6 +113,22 @@ export default function AdminSettingsPage() {
            <Input label="Email Address" value={settings.contact.email} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, email: e.target.value } })} />
            <Input label="Address (Beni Suef)" value={settings.contact.addressBeniSuef} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, addressBeniSuef: e.target.value } })} />
            <Input label="Address (6 October)" value={settings.contact.addressOctober} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, addressOctober: e.target.value } })} />
+        </div>
+      </Card>
+
+      {/* Social Links Settings */}
+      <Card className="p-6 space-y-6">
+        <div className="flex items-center justify-between border-b pb-4">
+           <h3 className="text-lg font-bold">Social Media Links</h3>
+           <Button onClick={() => handleSave('social')} disabled={loading} className="gap-2">
+              <Save size={16} /> Save Social Links
+           </Button>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+           <Input label="Facebook URL" value={settings.social?.facebook || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, facebook: e.target.value } })} />
+           <Input label="YouTube URL" value={settings.social?.youtube || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, youtube: e.target.value } })} />
+           <Input label="Instagram URL" value={settings.social?.instagram || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, instagram: e.target.value } })} />
+           <Input label="WhatsApp URL" value={settings.social?.whatsapp || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, whatsapp: e.target.value } })} />
         </div>
       </Card>
     </div>

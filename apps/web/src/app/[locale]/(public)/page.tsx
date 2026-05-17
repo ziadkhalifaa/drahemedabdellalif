@@ -13,6 +13,7 @@ import { WhyUsSection } from '@/components/sections/why-us-section';
 import { TestimonialsSection } from '@/components/sections/testimonials-section';
 import { BookingCTASection } from '@/components/sections/booking-cta-section';
 import { BookingForm } from '@/components/sections/booking-form';
+import { api } from '@/lib/api';
 
 import { Stethoscope, Zap, ShieldCheck, Headphones } from 'lucide-react';
 
@@ -41,6 +42,9 @@ export default async function HomePage() {
   const locale = await getLocale();
   const isAr = locale === 'ar';
 
+  const servicesFallback = await api.get<any[]>('/services').catch(() => []);
+  const techniquesFallback = await api.get<any[]>('/techniques').catch(() => []);
+
   const bookingFeatures = isAr ? [
     { icon: Stethoscope, text: 'كشف وتشخيص دقيق بأحدث الأجهزة' },
     { icon: Zap, text: 'تقنيات ليزر متقدمة بدون جراحة تقليدية' },
@@ -60,13 +64,13 @@ export default async function HomePage() {
         {/* 1 - Hero */}
         <HeroSection />
         {/* 2 - Services */}
-        <ServicesCarouselSection />
+        <ServicesCarouselSection fallbackData={servicesFallback} />
         {/* 3 - About */}
         <AboutSection />
         {/* 4 - Statistics */}
         <StatisticsSection />
         {/* 5 - Core Techniques */}
-        <CoreTechniquesSection />
+        <CoreTechniquesSection fallbackData={techniquesFallback} />
         {/* 6 - Why Us */}
         <WhyUsSection />
         {/* 7 - Testimonials */}

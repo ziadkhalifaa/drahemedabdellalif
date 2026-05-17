@@ -19,10 +19,10 @@ interface Technique {
   isActive: boolean;
 }
 
-export function CoreTechniquesSection() {
+export function CoreTechniquesSection({ fallbackData }: { fallbackData?: Technique[] }) {
   const locale = useLocale();
   const isAr = locale === 'ar';
-  const { data: techniques, isLoading } = useSWR<Technique[]>('/techniques', api.get);
+  const { data: techniques, isLoading } = useSWR<Technique[]>('/techniques', api.get, { fallbackData });
 
   if (isLoading) {
     return (

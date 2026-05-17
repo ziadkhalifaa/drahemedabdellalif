@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Input, Textarea, Button } from '@/components/ui';
-import { api } from '@/lib/api';
-import { Calendar, CheckCircle2, AlertCircle, Clock, Phone, Mail, User, FileText, Building2, BabyIcon } from 'lucide-react';
-import { clinicsApi } from '@/lib/api';
+import { api, clinicsApi, appointmentsApi, siteSettingsApi } from '@/lib/api';
+import { Calendar, CheckCircle2, AlertCircle, Clock, Phone, Mail, User, FileText, Building2, BabyIcon, CreditCard, UploadCloud } from 'lucide-react';
 import { TIME_SLOTS } from '@dr-ahmed/shared';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -32,6 +31,10 @@ export function BookingForm() {
   });
   const [gender, setGender] = useState('');
   const [clinics, setClinics] = useState<any[]>([]);
+  const [paymentSettings, setPaymentSettings] = useState<any>({});
+  const [paymentMethod, setPaymentMethod] = useState<'VODAFONE_CASH' | 'INSTAPAY' | 'CASH'>('CASH');
+  const [senderPhone, setSenderPhone] = useState('');
+  const [proofFile, setProofFile] = useState<File | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -39,6 +42,13 @@ export function BookingForm() {
 
   useEffect(() => {
     clinicsApi.getAll().then(setClinics).catch(console.error);
+    siteSettingsApi.getAllPublic().then(data => {
+      const settings = data.reduce((acc: any, curr: any) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      }, {});
+      setPaymentSettings(settings);
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -86,6 +96,17 @@ export function BookingForm() {
       return;
     }
 
+    if (paymentMethod !== 'CASH') {
+      if (!senderPhone) {
+        toast.error(isAr ? 'الرجاء إدخال رقم المحول منه' : 'Please enter sender phone number');
+        return;
+      }
+      if (!proofFile) {
+        toast.error(isAr ? 'الرجاء رفع صورة الإيصال' : 'Please upload payment receipt');
+        return;
+      }
+    }
+
     setStatus('loading');
     try {
       // 1. Update patient profile in DB
@@ -97,11 +118,20 @@ export function BookingForm() {
       }, token);
 
       // 2. Create Appointment
-      await api.post('/appointments', {
+      const apt = await appointmentsApi.create({
         ...form,
+        guestName: form.patientName,
+        guestPhone: form.patientPhone,
+        guestEmail: form.patientEmail,
         patientId: user?.id,
-        type: 'IN_CLINIC' // This simple form is for clinic visits
-      }, token);
+        type: 'IN_CLINIC',
+        paymentMethod,
+        paymentSenderNum: senderPhone || undefined,
+      });
+
+      if (proofFile && paymentMethod !== 'CASH') {
+        await appointmentsApi.uploadPaymentProof(apt.id, proofFile, senderPhone);
+      }
 
       setStatus('success');
       setForm({ patientName: '', patientPhone: '', patientEmail: '', birthDate: '', clinicId: '', date: '', timeSlot: '', notes: '' });
@@ -131,7 +161,12 @@ export function BookingForm() {
             : 'We will contact you soon to confirm the appointment. Thank you for your trust.'}
         </p>
         <button
-          onClick={() => setStatus('idle')}
+          onClick={() => {
+            setStatus('idle');
+            setPaymentMethod('CASH');
+            setSenderPhone('');
+            setProofFile(null);
+          }}
           className="mt-8 text-sm text-green-700 dark:text-green-400 font-bold underline"
         >
           {isAr ? 'حجز موعد آخر' : 'Book another appointment'}
@@ -380,6 +415,92 @@ export function BookingForm() {
                 form.date && form.clinicId && !slotsLoading && <option value="" disabled className="bg-[#050e1a]">{isAr ? 'لا توجد مواعيد متاحة' : 'No available slots'}</option>
               )}
             </select>
+          )}
+        </div>
+
+        {/* Payment Method */}
+        <div className="space-y-4">
+          <label className={cn("block text-sm font-bold text-white mb-2", isAr ? "text-right" : "text-left")}>
+            {isAr ? 'طريقة الدفع' : 'Payment Method'}
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('CASH')}
+              className={cn(
+                'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all text-sm',
+                paymentMethod === 'CASH' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              )}
+            >
+              {isAr ? 'الدفع بالعيادة' : 'Pay at Clinic'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('VODAFONE_CASH')}
+              className={cn(
+                'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all text-sm',
+                paymentMethod === 'VODAFONE_CASH' ? 'bg-red-600 border-red-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              )}
+            >
+              {isAr ? 'فودافون كاش' : 'Vodafone Cash'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('INSTAPAY')}
+              className={cn(
+                'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all text-sm col-span-2 sm:col-span-1',
+                paymentMethod === 'INSTAPAY' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+              )}
+            >
+              {isAr ? 'انستا باي' : 'InstaPay'}
+            </button>
+          </div>
+
+          {paymentMethod !== 'CASH' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 pt-4 border-t border-white/10 mt-4">
+              <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-center">
+                <p className="text-sm text-white/70 mb-2">
+                  {isAr ? 'الرجاء تحويل المبلغ إلى الرقم/الحساب التالي:' : 'Please transfer the amount to:'}
+                </p>
+                <p className="text-xl font-bold text-white" dir="ltr">
+                  {paymentMethod === 'VODAFONE_CASH' ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882') : (paymentSettings['payment.instapay']?.number || '+20 10 01516882@instapay')}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {renderField(
+                  <Phone size={16} />,
+                  isAr ? 'رقم المحول منه' : 'Sender Phone',
+                  <Input
+                    id="senderPhone"
+                    dir="ltr"
+                    value={senderPhone}
+                    onChange={e => setSenderPhone(e.target.value)}
+                    placeholder="010XXXXXXXX"
+                    required
+                    className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20 h-12 text-left", isAr ? "pr-11" : "pl-11")}
+                  />
+                )}
+
+                <div className="space-y-1">
+                  <label className={cn("block text-sm font-bold text-white mb-2", isAr ? "text-right" : "text-left")}>
+                    {isAr ? 'صورة الإيصال' : 'Receipt Image'}
+                  </label>
+                  <label className="flex flex-col items-center justify-center w-full h-12 border border-white/10 bg-white/5 hover:bg-white/10 rounded-xl cursor-pointer transition-colors relative overflow-hidden">
+                    {proofFile ? (
+                      <span className="text-emerald-400 font-bold text-sm px-4 truncate w-full text-center flex items-center justify-center gap-2">
+                        <CheckCircle2 size={16} /> {proofFile.name}
+                      </span>
+                    ) : (
+                      <span className="text-white/60 text-sm font-medium flex items-center gap-2">
+                        <UploadCloud size={16} /> {isAr ? 'اضغط لرفع الصورة' : 'Upload image'}
+                      </span>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={e => setProofFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
 

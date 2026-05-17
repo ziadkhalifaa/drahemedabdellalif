@@ -8,7 +8,7 @@ import { Card, Button } from '@/components/ui';
 import { api, getMediaUrl } from '@/lib/api';
 import type { BlogPost } from '@dr-ahmed/shared';
 import { Calendar, ArrowLeft } from 'lucide-react';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
 interface Props {
@@ -19,6 +19,7 @@ interface Props {
 
 export function BlogArticleContent({ post: initialPost, locale, slug }: Props) {
   const t = useTranslations('blog');
+  const router = useRouter();
   const [post, setPost] = useState<BlogPost | null>(initialPost);
   const [loading, setLoading] = useState(initialPost === null);
 
@@ -39,6 +40,15 @@ export function BlogArticleContent({ post: initialPost, locale, slug }: Props) {
       setPost(initialPost);
     }
   }, [initialPost, slug]);
+
+  useEffect(() => {
+    if (post && !loading) {
+      const expectedSlug = locale === 'ar' ? post.slugAr : post.slugEn;
+      if (slug !== expectedSlug) {
+        router.replace(`/blog/${expectedSlug}`);
+      }
+    }
+  }, [locale, slug, post, loading, router]);
 
   if (loading) {
     return (

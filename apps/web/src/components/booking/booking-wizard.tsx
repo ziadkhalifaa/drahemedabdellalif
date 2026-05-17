@@ -557,7 +557,7 @@ export default function BookingWizard() {
                       {isRTL ? 'الرجاء تحويل المبلغ إلى الرقم/الحساب التالي:' : 'Please transfer the amount to:'}
                     </p>
                     <p className="text-xl font-bold text-white" dir="ltr">
-                      {paymentMethod === 'VODAFONE_CASH' ? (paymentSettings['payment.vodafone']?.number || '01032238095') : (paymentSettings['payment.instapay']?.number || '01032238095@instapay')}
+                      {paymentMethod === 'VODAFONE_CASH' ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882') : (paymentSettings['payment.instapay']?.number || '+20 10 01516882@instapay')}
                     </p>
                   </div>
 

@@ -260,6 +260,7 @@ export default function AdminBlogPage() {
                       else setForm({ ...form, contentEn: html });
                     }}
                     className={activeLang === 'ar' ? 'text-right' : 'text-left'}
+                    dir={activeLang === 'ar' ? 'rtl' : 'ltr'}
                   />
                 </div>
               </div>

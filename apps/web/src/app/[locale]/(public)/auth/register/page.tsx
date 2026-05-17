@@ -53,7 +53,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const data: any = await api.post('/auth/verify-email', { email: formData.email, code });
-      login(data.accessToken, data.user, data.refreshToken);
+      login(data.accessToken, data.user);
       toast.success('Email verified successfully!');
       router.push('/dashboard');
     } catch (error: any) {

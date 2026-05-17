@@ -17,6 +17,7 @@ interface TiptapEditorProps {
   onChange: (html: string) => void;
   placeholder?: string;
   className?: string;
+  dir?: 'ltr' | 'rtl';
 }
 
 const MenuButton = ({ 
@@ -49,7 +50,7 @@ const MenuButton = ({
   </button>
 );
 
-export function TiptapEditor({ content, onChange, placeholder, className }: TiptapEditorProps) {
+export function TiptapEditor({ content, onChange, placeholder, className, dir = 'ltr' }: TiptapEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -77,6 +78,7 @@ export function TiptapEditor({ content, onChange, placeholder, className }: Tipt
           'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-6',
           className
         ),
+        dir: dir,
       },
     },
   });

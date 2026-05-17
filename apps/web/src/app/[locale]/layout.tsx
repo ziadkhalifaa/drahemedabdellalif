@@ -10,7 +10,7 @@ import { api } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Tajawal, Inter } from 'next/font/google';
-// import { GoogleAnalytics } from '@next/third-parties/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import '../../styles/globals.css';
 
 const tajawal = Tajawal({
@@ -99,6 +99,9 @@ export default async function LocaleLayout({
         />
       </head>
       <body className="min-h-screen bg-[var(--background)] font-sans antialiased">
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
         <Providers messages={messages} locale={locale} initialSettings={initialSettings}>
           <Preloader />
           <AnalyticsTracker />

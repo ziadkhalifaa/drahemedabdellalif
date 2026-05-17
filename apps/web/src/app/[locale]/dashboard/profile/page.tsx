@@ -110,6 +110,10 @@ export default function ProfilePage() {
                     <FileText size={20} />
                     {t('menu.reports')}
                   </Link>
+                  <Link href="/dashboard/prescriptions" className="flex items-center gap-3 w-full p-3 rounded-xl text-[var(--muted)] hover:bg-[var(--primary)]/5 hover:text-[var(--primary)] transition-all font-bold">
+                    <FileText size={20} />
+                    Prescriptions
+                  </Link>
                   <Link href="/dashboard/profile" className="flex items-center gap-3 w-full p-3 rounded-xl bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20 transition-all font-bold">
                     <User size={20} />
                     {t('menu.profile')}

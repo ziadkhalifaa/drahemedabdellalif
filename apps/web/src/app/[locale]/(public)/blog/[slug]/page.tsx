@@ -52,8 +52,8 @@ export async function generateMetadata({
     alternates: {
       canonical: `/${locale}/blog/${slug}`,
       languages: {
-        ar: `/ar/blog/${slug}`,
-        en: `/en/blog/${slug}`,
+        ar: `/ar/blog/${post.slugAr}`,
+        en: `/en/blog/${post.slugEn}`,
       },
     },
   };

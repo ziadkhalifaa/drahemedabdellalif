@@ -27,7 +27,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const data: any = await api.post('/auth/login', { email, password });
-      login(data.accessToken, data.user, data.refreshToken);
+      login(data.accessToken, data.user);
       toast.success(tCommon('success') || 'Login Successful');
       if (data.user?.role === 'admin' || data.user?.role === 'editor') {
         router.push('/admin/dashboard');

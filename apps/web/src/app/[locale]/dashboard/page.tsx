@@ -86,6 +86,7 @@ export default function DashboardPage() {
     { id: 'timeline', icon: <History size={20} />, label: t('menu.medicalJourney'), onClick: () => setActiveTab('timeline'), active: activeTab === 'timeline' },
     { id: 'appointments', icon: <Calendar size={20} />, label: t('menu.appointments'), href: '/dashboard/appointments' },
     { id: 'reports', icon: <FileText size={20} />, label: t('menu.reports'), href: '/dashboard/reports' },
+    { id: 'prescriptions', icon: <FileText size={20} />, label: 'Prescriptions', href: '/dashboard/prescriptions' },
     { id: 'profile', icon: <UserIcon size={20} />, label: t('menu.profile'), href: '/dashboard/profile' },
   ];
 

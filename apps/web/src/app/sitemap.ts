@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const posts = await res.json();
       blogPosts = posts.flatMap((post: any) => 
         locales.map(locale => ({
-          url: `${BASE_URL}/${locale}/blog/${post.slug}`,
+          url: `${BASE_URL}/${locale}/blog/${locale === 'ar' ? post.slugAr : post.slugEn}`,
           lastModified: new Date(post.updatedAt),
           changeFrequency: 'weekly' as const,
           priority: 0.6,

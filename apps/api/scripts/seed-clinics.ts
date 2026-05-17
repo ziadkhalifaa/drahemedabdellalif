@@ -126,14 +126,14 @@ async function main() {
   // ─── Payment settings in SiteSettings ─────────────────────────────────
   await prisma.siteSettings.upsert({
     where: { key: 'payment.vodafone' },
-    update: { value: { number: '01032238095', enabled: true } },
-    create: { key: 'payment.vodafone', value: { number: '01032238095', enabled: true } },
+    update: { value: { number: '+20 10 01516882', enabled: true } },
+    create: { key: 'payment.vodafone', value: { number: '+20 10 01516882', enabled: true } },
   });
 
   await prisma.siteSettings.upsert({
     where: { key: 'payment.instapay' },
-    update: { value: { number: '01032238095@instapay', enabled: true } },
-    create: { key: 'payment.instapay', value: { number: '01032238095@instapay', enabled: true } },
+    update: { value: { number: '+20 10 01516882@instapay', enabled: true } },
+    create: { key: 'payment.instapay', value: { number: '+20 10 01516882@instapay', enabled: true } },
   });
 
   await prisma.siteSettings.upsert({

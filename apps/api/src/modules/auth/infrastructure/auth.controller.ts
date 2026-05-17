@@ -20,7 +20,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
-    return { accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user };
+    return { accessToken: data.accessToken, user: data.user };
   }
 
   @Post('register')
@@ -38,7 +38,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
-    return { accessToken: data.accessToken, refreshToken: data.refreshToken, user: data.user };
+    return { accessToken: data.accessToken, user: data.user };
   }
 
   @Post('resend-code')
@@ -90,7 +90,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
-    return { accessToken: data.accessToken, refreshToken: data.refreshToken };
+    return { accessToken: data.accessToken };
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

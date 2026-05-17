@@ -19,6 +19,7 @@ import {
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/lib/api';
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations('admin');
@@ -29,8 +30,23 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const [notifCount, setNotifCount] = useState(0);
 
   const isLoginPage = pathname.includes('/login');
+
+  useEffect(() => {
+    if (!token) return;
+    
+    const fetchNotifications = () => {
+      api.get<{ total: number }>('/analytics/notifications', token)
+        .then(data => setNotifCount(data.total))
+        .catch(() => {});
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60_000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   useEffect(() => {
     if (!token && !isLoginPage) {
@@ -121,7 +137,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
              {/* Notifications */}
              <button className="relative h-9 w-9 rounded-xl flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/5 transition-all group">
                <Bell size={18} className="text-muted group-hover:text-foreground transition-colors" />
-               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-950" />
+               {notifCount > 0 && (
+                 <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 rounded-full border-2 border-white dark:border-slate-950 text-[9px] text-white font-bold flex items-center justify-center px-0.5">
+                   {notifCount > 99 ? '99+' : notifCount}
+                 </span>
+               )}
              </button>
           </div>
         </header>

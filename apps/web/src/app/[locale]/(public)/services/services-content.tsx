@@ -106,7 +106,7 @@ export function ServicesContent({ services: initialServices, locale }: Props) {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: i * 0.1 }}
                   >
-                    <Link href={`/services/${service.id}`} className="block h-full">
+                    <Link href={`/services/${service.slug || service.id}`} className="block h-full">
                       <Card className="group h-full flex flex-col sm:flex-row overflow-hidden rounded-[2rem] border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white/5 backdrop-blur-xl dark:bg-white/5">
                         <div className="relative sm:w-2/5 aspect-video sm:aspect-auto overflow-hidden bg-slate-100 dark:bg-slate-900/50">
                           <EditableImage 

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/context/auth-context';
+import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 import { FileText, Upload, Search, User, FileUp, X } from 'lucide-react';

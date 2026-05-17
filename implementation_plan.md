@@ -4,8 +4,8 @@
 
 This plan covers a comprehensive upgrade of the Dr. Ahmed medical platform across **39 issues** organized in **6 phases**.
 - **Frontend URL**: `http://gold-buffalo-912779.hostingersite.com/`
-- **UltraMsg**: Instance `instance174882`, Token `8xs47mo4xtkktjfl`
-- **Daily.co**: Key `f23110b62ea2208d4461ac0bdc48588ea85095a400a08cb97ae46577b754ed35`
+- **UltraMsg**: Instance `[ULTRAMSG_INSTANCE]`, Token `[ULTRAMSG_TOKEN]`
+- **Daily.co**: Key `[DAILY_CO_API_KEY]`
 
 ---
 

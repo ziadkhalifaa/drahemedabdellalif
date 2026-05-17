@@ -58,6 +58,7 @@ export default function ReportsPage() {
     { icon: <LayoutDashboard size={20} />, label: t('menu.overview'), href: '/dashboard' },
     { icon: <Calendar size={20} />, label: t('menu.appointments'), href: '/dashboard/appointments' },
     { icon: <FileText size={20} />, label: t('menu.reports'), href: '/dashboard/reports', active: true },
+    { icon: <FileText size={20} />, label: 'Prescriptions', href: '/dashboard/prescriptions' },
     { icon: <UserIcon size={20} />, label: t('menu.profile'), href: '/dashboard/profile' },
   ];
 
