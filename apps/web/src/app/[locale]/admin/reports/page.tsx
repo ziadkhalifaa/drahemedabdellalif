@@ -88,18 +88,7 @@ export default function AdminReportsPage() {
       formData.append('patientId', selectedPatient.id);
       formData.append('file', file);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/reports`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to upload report');
-      }
+      await api.postFormData('/reports', formData, token);
 
       toast.success('Medical report uploaded successfully!');
       setIsUploadModalOpen(false);
