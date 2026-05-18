@@ -25,6 +25,9 @@ async function bootstrap() {
       });
       console.log('[BOOTSTRAP-DEBUG] NestJS application created successfully.');
 
+      // Trust reverse proxy (e.g. Hostinger, Cloudflare) headers to parse actual client IP for ThrottlerGuard
+      app.set('trust proxy', 1);
+
       // Security & Middleware
       app.use(helmet({
         crossOriginResourcePolicy: { policy: "cross-origin" },
