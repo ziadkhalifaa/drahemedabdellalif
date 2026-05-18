@@ -9,6 +9,7 @@ import { api, getMediaUrl } from '@/lib/api';
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Layout, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MediaPickerModal } from '@/components/media-picker';
+import { toast } from 'sonner';
 
 interface Technique {
   id: string;
@@ -17,7 +18,6 @@ interface Technique {
   titleEn: string;
   descriptionAr: string;
   descriptionEn: string;
-  icon: string;
   image: string;
   order: number;
   isActive: boolean;
@@ -41,7 +41,7 @@ export default function AdminTechniquesPage() {
     slug: '',
     titleAr: '', titleEn: '', 
     descriptionAr: '', descriptionEn: '', 
-    icon: 'Stethoscope', image: '', order: 0, isActive: true,
+    image: '', order: 0, isActive: true,
     metaTitleAr: '', metaTitleEn: '',
     metaDescriptionAr: '', metaDescriptionEn: ''
   });
@@ -60,15 +60,22 @@ export default function AdminTechniquesPage() {
 
   const handleSave = async () => {
     if (!token) return;
-    if (editing) {
-      await api.patch(`/techniques/${editing.id}`, form, token);
-    } else {
-      await api.post('/techniques', form, token);
+    try {
+      if (editing) {
+        await api.patch(`/techniques/${editing.id}`, form, token);
+        toast.success(locale === 'ar' ? 'تم تحديث التقنية بنجاح' : 'Technique updated successfully');
+      } else {
+        await api.post('/techniques', form, token);
+        toast.success(locale === 'ar' ? 'تم إنشاء التقنية بنجاح' : 'Technique created successfully');
+      }
+      setShowForm(false);
+      setEditing(null);
+      resetForm();
+      fetchTechniques();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(locale === 'ar' ? 'حدث خطأ أثناء الحفظ' : 'Failed to save technique');
     }
-    setShowForm(false);
-    setEditing(null);
-    resetForm();
-    fetchTechniques();
   };
 
   const resetForm = () => {
@@ -76,7 +83,7 @@ export default function AdminTechniquesPage() {
       slug: '',
       titleAr: '', titleEn: '', 
       descriptionAr: '', descriptionEn: '', 
-      icon: 'Stethoscope', image: '', order: 0, isActive: true,
+      image: '', order: 0, isActive: true,
       metaTitleAr: '', metaTitleEn: '',
       metaDescriptionAr: '', metaDescriptionEn: ''
     });
@@ -98,7 +105,6 @@ export default function AdminTechniquesPage() {
       titleEn: technique.titleEn,
       descriptionAr: technique.descriptionAr || '',
       descriptionEn: technique.descriptionEn || '',
-      icon: technique.icon || 'Stethoscope',
       image: technique.image || '',
       order: technique.order,
       isActive: technique.isActive,
@@ -199,15 +205,9 @@ export default function AdminTechniquesPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="text-xs font-bold text-[var(--muted)] uppercase mb-1 block">Icon Name</label>
-                    <Input value={form.icon} onChange={e => setForm({...form, icon: e.target.value})} placeholder="Lucide icon name" dir="ltr" />
-                  </div>
-                  <div className="w-24">
-                    <label className="text-xs font-bold text-[var(--muted)] uppercase mb-1 block">Order</label>
-                    <Input type="number" value={form.order} onChange={e => setForm({...form, order: parseInt(e.target.value)})} dir="ltr" />
-                  </div>
+                <div>
+                  <label className="text-xs font-bold text-[var(--muted)] uppercase mb-1 block">Order</label>
+                  <Input type="number" value={form.order} onChange={e => setForm({...form, order: parseInt(e.target.value) || 0})} dir="ltr" />
                 </div>
               </div>
 
