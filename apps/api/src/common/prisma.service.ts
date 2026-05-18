@@ -4,13 +4,14 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
-    try {
-      await this.$connect();
-      console.log('Database connected successfully');
-    } catch (error) {
-      console.error('Database connection failed:', (error as Error).message);
-      // لا نوقف الـ app - هيتوصل تلقائي أول request
-    }
+    console.log('[PRISMA-DEBUG] Initiating background database connection...');
+    this.$connect()
+      .then(() => {
+        console.log('[PRISMA-DEBUG] Database connected successfully!');
+      })
+      .catch((error) => {
+        console.error('[PRISMA-DEBUG] Database connection failed:', (error as Error).message);
+      });
   }
 
   async onModuleDestroy() {
