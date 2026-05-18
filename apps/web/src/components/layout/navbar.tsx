@@ -24,7 +24,8 @@ import {
   Stethoscope,
   Newspaper,
   PlayCircle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Check
 } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
@@ -53,6 +54,8 @@ export function Navbar() {
   const { user, token, isLoading: isAuthLoading, logout } = useAuth();
   const isLoggedIn = !!token;
 
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -60,7 +63,17 @@ export function Navbar() {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const toggleLanguage = () => {
@@ -186,13 +199,69 @@ export function Navbar() {
               </AnimatePresence>
             </Button>
             
-            <button 
-              onClick={toggleLanguage} 
-              className="flex items-center gap-2 px-3 py-1 text-[10px] font-black tracking-widest hover:text-primary transition-colors text-foreground"
-            >
-              <Languages size={14} className="text-primary" />
-              <span>{locale.toUpperCase()}</span>
-            </button>
+            {/* Premium Language Dropdown Selector */}
+            <div ref={langRef} className="relative flex items-center">
+              <button 
+                onClick={() => setLangOpen(!langOpen)} 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-white dark:hover:bg-slate-800 text-foreground transition-all duration-300 text-[10px] font-black tracking-wider"
+              >
+                <span>{locale === 'ar' ? '🇸🇦 AR' : '🇬🇧 EN'}</span>
+                <ChevronDown size={10} className={cn("transition-transform duration-300 opacity-60 text-primary", langOpen && "rotate-180")} />
+              </button>
+
+              <AnimatePresence>
+                {langOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className={cn(
+                      "absolute top-full mt-2 w-32 glass rounded-2xl border border-white/20 dark:border-white/10 shadow-2xl p-1.5 z-[100] flex flex-col gap-1",
+                      isRTL ? "left-0 origin-top-left" : "right-0 origin-top-right"
+                    )}
+                  >
+                    <button
+                      onClick={() => {
+                        if (locale !== 'ar') {
+                          router.replace(pathname as any, { locale: 'ar' });
+                        }
+                        setLangOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2.5 py-1.5 rounded-xl text-[10px] font-black transition-all hover:bg-primary/10 text-right",
+                        locale === 'ar' ? "text-primary bg-primary/5" : "text-foreground/80 hover:text-foreground"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>🇸🇦</span>
+                        <span>العربية</span>
+                      </span>
+                      {locale === 'ar' && <Check size={10} className="text-primary font-black" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (locale !== 'en') {
+                          router.replace(pathname as any, { locale: 'en' });
+                        }
+                        setLangOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center justify-between w-full px-2.5 py-1.5 rounded-xl text-left text-[10px] font-black transition-all hover:bg-primary/10",
+                        locale === 'en' ? "text-primary bg-primary/5" : "text-foreground/80 hover:text-foreground"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>🇬🇧</span>
+                        <span>EN</span>
+                      </span>
+                      {locale === 'en' && <Check size={10} className="text-primary font-black" />}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <div className="w-[1px] h-4 bg-border mx-1" />
 
