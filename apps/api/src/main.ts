@@ -40,7 +40,7 @@ async function bootstrap() {
 
       app.use(cookieParser());
 
-      const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
+      const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://drahmedabdellatif.com')
         .split(',')
         .map(o => o.trim());
 
