@@ -1,5 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
@@ -8,7 +9,15 @@ import * as path from 'path';
 export class StorageService {
   private supabase = createClient(
     process.env.SUPABASE_URL || 'https://dkqmympallxpdfypwxlr.supabase.co',
-    process.env.SUPABASE_SERVICE_KEY || 'placeholder'
+    process.env.SUPABASE_SERVICE_KEY || 'placeholder',
+    {
+      auth: {
+        persistSession: false,
+      },
+      realtime: {
+        transport: WebSocket,
+      },
+    }
   );
   private bucket = 'media';
 
