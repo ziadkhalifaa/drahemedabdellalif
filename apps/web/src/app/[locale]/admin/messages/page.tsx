@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
@@ -15,17 +15,27 @@ export default function AdminMessagesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const fetchMessages = () => {
+  const fetchMessages = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<any>('/contact', token)
-      .then(res => setMessages(Array.isArray(res) ? res : (res?.data || [])))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setMessages(Array.isArray(res) ? res : (res?.data || []));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch contact messages (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchMessages(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchMessages(); }, [token]);
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
   const markAsRead = async (id: string) => {
     if (!token) return;

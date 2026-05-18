@@ -21,20 +21,40 @@ export function TechniquesContent({ techniques: initialTechniques, locale }: Pro
   const tNav = useTranslations('nav');
   const [techniques, setTechniques] = useState<any[]>(initialTechniques);
   const [loading, setLoading] = useState(initialTechniques.length === 0);
+  const [fetchError, setFetchError] = useState(false);
 
-  useEffect(() => {
-    if (initialTechniques.length === 0) {
-      setLoading(true);
+  const fetchTechniques = (delay = 0) => {
+    setLoading(true);
+    setFetchError(false);
+    const run = () =>
       api.get<any[]>('/techniques')
         .then(res => {
           setTechniques(res);
+          // If still empty after client fetch, retry once more after 1.5s (API cold start)
+          if (res.length === 0) {
+            setTimeout(() => {
+              api.get<any[]>('/techniques')
+                .then(setTechniques)
+                .catch(() => setFetchError(true))
+                .finally(() => setLoading(false));
+            }, 1500);
+          } else {
+            setLoading(false);
+          }
         })
         .catch(err => {
           console.error("Failed to fetch techniques client-side:", err);
-        })
-        .finally(() => {
+          setFetchError(true);
           setLoading(false);
         });
+
+    if (delay > 0) setTimeout(run, delay);
+    else run();
+  };
+
+  useEffect(() => {
+    if (initialTechniques.length === 0) {
+      fetchTechniques();
     } else {
       setTechniques(initialTechniques);
     }
@@ -80,6 +100,18 @@ export function TechniquesContent({ techniques: initialTechniques, locale }: Pro
                   </div>
                 </div>
               ))}
+            </div>
+          ) : fetchError ? (
+            <div className="text-center py-20 bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-xl">
+              <p className="text-[var(--muted)] text-lg mb-4">
+                {locale === 'ar' ? 'حدث خطأ في تحميل التقنيات الطبية.' : 'Failed to load medical techniques.'}
+              </p>
+              <button
+                onClick={() => fetchTechniques()}
+                className="px-6 py-3 rounded-xl bg-[var(--primary)] text-white font-bold hover:opacity-90 transition-opacity"
+              >
+                {locale === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
+              </button>
             </div>
           ) : techniques.length === 0 ? (
             <div className="text-center py-20 bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-xl">

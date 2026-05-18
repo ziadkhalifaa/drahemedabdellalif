@@ -26,18 +26,25 @@ export function BlogArticleContent({ post: initialPost, locale, slug }: Props) {
   useEffect(() => {
     if (initialPost === null) {
       setLoading(true);
-      api.get<BlogPost>(`/blog/${slug}`)
-        .then(res => {
-          setPost(res);
-        })
-        .catch(err => {
-          console.error("Failed to fetch blog article client-side:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      const fetchDetail = (attempt = 1) => {
+        api.get<BlogPost>(`/blog/${slug}`)
+          .then(res => {
+            setPost(res);
+            setLoading(false);
+          })
+          .catch(err => {
+            console.error(`Failed to fetch blog article client-side (attempt ${attempt}):`, err);
+            if (attempt < 2) {
+              setTimeout(() => fetchDetail(attempt + 1), 1500);
+            } else {
+              setLoading(false);
+            }
+          });
+      };
+      fetchDetail();
     } else {
       setPost(initialPost);
+      setLoading(false);
     }
   }, [initialPost, slug]);
 

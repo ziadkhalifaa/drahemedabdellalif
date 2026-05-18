@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Input } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api, getMediaUrl } from '@/lib/api';
@@ -27,17 +27,27 @@ export default function AdminMediaPage() {
     order: 0
   });
 
-  const fetchItems = () => {
+  const fetchItems = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<any[]>('/media/all', token)
-      .then(setItems)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setItems(res);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch media items (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchItems(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchItems(); }, [token]);
+  useEffect(() => { fetchItems(); }, [fetchItems]);
 
   const compressImage = (file: File): Promise<Blob> => {
     return new Promise((resolve) => {

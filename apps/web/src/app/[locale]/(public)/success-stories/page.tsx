@@ -20,10 +20,18 @@ export default async function SuccessStoriesPage({ params: { locale } }: { param
   const t = await getTranslations('testimonials');
   
   let stories = [];
-  try {
-    stories = await api.get<any[]>('/testimonials/success-stories');
-  } catch (error) {
-    console.error('Failed to fetch success stories:', error);
+  // Retry up to 3 times to handle cold starts on Hostinger
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      stories = await api.get<any[]>('/testimonials/success-stories');
+      break;
+    } catch (error) {
+      if (attempt < 3) {
+        await new Promise((r) => setTimeout(r, 500));
+        continue;
+      }
+      console.error('Failed to fetch success stories:', error);
+    }
   }
 
   const isAr = locale === 'ar';

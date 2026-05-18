@@ -26,18 +26,25 @@ export function TechniqueDetailContent({ technique: initialTechnique, locale, sl
   useEffect(() => {
     if (initialTechnique === null) {
       setLoading(true);
-      api.get<any>(`/techniques/${slug}`)
-        .then(res => {
-          setTechnique(res);
-        })
-        .catch(err => {
-          console.error("Failed to fetch technique detail client-side:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      const fetchDetail = (attempt = 1) => {
+        api.get<any>(`/techniques/${slug}`)
+          .then(res => {
+            setTechnique(res);
+            setLoading(false);
+          })
+          .catch(err => {
+            console.error(`Failed to fetch technique detail client-side (attempt ${attempt}):`, err);
+            if (attempt < 2) {
+              setTimeout(() => fetchDetail(attempt + 1), 1500);
+            } else {
+              setLoading(false);
+            }
+          });
+      };
+      fetchDetail();
     } else {
       setTechnique(initialTechnique);
+      setLoading(false);
     }
   }, [initialTechnique, slug]);
 

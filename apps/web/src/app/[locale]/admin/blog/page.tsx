@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api, getMediaUrl } from '@/lib/api';
@@ -39,17 +39,27 @@ export default function AdminBlogPage() {
     showOnHomepage: false
   });
 
-  const fetchPosts = () => {
+  const fetchPosts = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<any>('/blog', token)
-      .then(res => setPosts(Array.isArray(res) ? res : (res?.data || [])))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setPosts(Array.isArray(res) ? res : (res?.data || []));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch blog posts (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchPosts(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchPosts(); }, [token]);
+  useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
   const handleSave = async (statusOverride?: 'draft' | 'published') => {
     if (!token) return;

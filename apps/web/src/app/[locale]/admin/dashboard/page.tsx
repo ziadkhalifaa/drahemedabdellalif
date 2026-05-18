@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/layout/admin-layout';
@@ -42,19 +42,29 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const fetchStats = () => {
+  const fetchStats = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1); // Only show main loader spinner on first attempt
     setError(false);
     api.get<DashboardStats>('/analytics/dashboard', token)
-      .then(setStats)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setStats(res);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch admin dashboard stats (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchStats(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
   useEffect(() => {
     fetchStats();
-  }, [token]);
+  }, [fetchStats]);
 
   const cards = [
     { 

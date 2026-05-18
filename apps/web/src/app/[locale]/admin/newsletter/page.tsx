@@ -1,7 +1,7 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button, Input } from '@/components/ui';
@@ -30,20 +30,28 @@ export default function NewsletterPage() {
 
   const [error, setError] = useState(false);
 
-  const fetchSubscribers = () => {
+  const fetchSubscribers = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<any>('/newsletter', token)
-      .then(res => setSubscribers(Array.isArray(res) ? res : (res?.data || [])))
-      .catch(err => {
-        toast.error('Failed to load subscribers');
-        setError(true);
+      .then(res => {
+        setSubscribers(Array.isArray(res) ? res : (res?.data || []));
+        setLoading(false);
       })
-      .finally(() => setLoading(false));
-  };
+      .catch(err => {
+        console.error(`Failed to fetch subscribers (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchSubscribers(attempt + 1), 1500);
+        } else {
+          toast.error('Failed to load subscribers');
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchSubscribers(); }, [token]);
+  useEffect(() => { fetchSubscribers(); }, [fetchSubscribers]);
 
   const filteredSubscribers = subscribers.filter(s =>
     s.email.toLowerCase().includes(searchTerm.toLowerCase())

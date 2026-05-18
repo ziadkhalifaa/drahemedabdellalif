@@ -91,11 +91,13 @@ async function fetchWithRefresh(url: string, options: RequestInit, token?: strin
 }
 
 export const api = {
-  async get<T>(path: string, token?: string): Promise<T> {
+  async get<T>(path: string, token?: string, options?: RequestInit): Promise<T> {
     const res = await fetchWithRefresh(`${API_BASE}${path}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       credentials: 'include',
-      cache: 'no-store',
+      cache: token ? 'no-store' : undefined,
+      ...(!token ? { next: { revalidate: 60 } } : {}),
+      ...options,
     }, token);
 
     const data = await getResponseData(res);

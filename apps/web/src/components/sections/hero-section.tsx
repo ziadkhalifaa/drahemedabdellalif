@@ -88,15 +88,14 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
   );
 }
 
-// ── Main Hero Section ────────────────────────────────────────────────────────
-export function HeroSection() {
+export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
   const t = useTranslations('hero');
   const locale = useLocale();
   const { isEditing } = useEditor();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  const { data: slidesData, isLoading } = useSWR<Slide[]>('/hero-slides', api.get);
+  const { data: slidesData, isLoading } = useSWR<Slide[]>('/hero-slides', api.get, { fallbackData });
   const slides = slidesData && slidesData.length > 0 ? slidesData : [];
 
   useEffect(() => {

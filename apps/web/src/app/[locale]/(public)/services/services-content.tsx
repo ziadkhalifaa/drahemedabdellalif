@@ -26,20 +26,40 @@ export function ServicesContent({ services: initialServices, locale }: Props) {
   const t = useTranslations('services');
   const [services, setServices] = useState<Service[]>(initialServices);
   const [loading, setLoading] = useState(initialServices.length === 0);
+  const [fetchError, setFetchError] = useState(false);
 
-  useEffect(() => {
-    if (initialServices.length === 0) {
-      setLoading(true);
+  const fetchServices = (delay = 0) => {
+    setLoading(true);
+    setFetchError(false);
+    const run = () =>
       api.get<Service[]>('/services')
         .then(res => {
           setServices(res);
+          // If still empty after client fetch, retry once more after 1.5s (API cold start)
+          if (res.length === 0) {
+            setTimeout(() => {
+              api.get<Service[]>('/services')
+                .then(setServices)
+                .catch(() => setFetchError(true))
+                .finally(() => setLoading(false));
+            }, 1500);
+          } else {
+            setLoading(false);
+          }
         })
         .catch(err => {
           console.error("Failed to fetch services client-side:", err);
-        })
-        .finally(() => {
+          setFetchError(true);
           setLoading(false);
         });
+
+    if (delay > 0) setTimeout(run, delay);
+    else run();
+  };
+
+  useEffect(() => {
+    if (initialServices.length === 0) {
+      fetchServices();
     } else {
       setServices(initialServices);
     }
@@ -85,6 +105,18 @@ export function ServicesContent({ services: initialServices, locale }: Props) {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : fetchError ? (
+            <div className="text-center py-20 bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl">
+              <p className="text-[var(--muted)] text-lg mb-4">
+                {locale === 'ar' ? 'حدث خطأ في تحميل الخدمات.' : 'Failed to load services.'}
+              </p>
+              <button
+                onClick={() => fetchServices()}
+                className="px-6 py-3 rounded-xl bg-[var(--primary)] text-white font-bold hover:opacity-90 transition-opacity"
+              >
+                {locale === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
+              </button>
             </div>
           ) : services.length === 0 ? (
             <div className="text-center py-20 bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl">

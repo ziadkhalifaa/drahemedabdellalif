@@ -38,13 +38,25 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     if (token) {
-      api.get<any>('/settings', token).then((data: any[]) => {
-        const s: any = { ...settings };
-        data.forEach(item => {
-          s[item.key] = item.value;
-        });
-        setSettings(s);
-      }).catch(() => {});
+      const fetchSettings = (attempt = 1) => {
+        api.get<any>('/settings', token)
+          .then((data: any[]) => {
+            setSettings((prevSettings: any) => {
+              const s = { ...prevSettings };
+              data.forEach(item => {
+                s[item.key] = item.value;
+              });
+              return s;
+            });
+          })
+          .catch(err => {
+            console.error(`Failed to fetch settings (attempt ${attempt}):`, err);
+            if (attempt < 2) {
+              setTimeout(() => fetchSettings(attempt + 1), 1500);
+            }
+          });
+      };
+      fetchSettings();
     }
   }, [token]);
 

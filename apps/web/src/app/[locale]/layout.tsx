@@ -26,10 +26,65 @@ const inter = Inter({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: 'Dr. Ahmed Abdellatif - Consultant Urologist',
-  description: 'Consultant of Urology, Kidney Surgery, Endoscopy, Andrology, and Sexual Health in Beni Suef, Egypt.',
-};
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  
+  const title = locale === 'ar' 
+    ? 'أ.د. أحمد عبد اللطيف - استشاري جراحة المسالك البولية والكلى والذكورة' 
+    : 'Prof. Dr. Ahmed Abdellatif - Professor & Consultant of Urology';
+    
+  const description = locale === 'ar'
+    ? 'عيادة الأستاذ الدكتور أحمد عبد اللطيف، استشاري جراحة المسالك البولية والكلى والذكورة والعقم. علاج أمراض الكلى، البروستاتا، الحصوات، السلس البولي، والضعف الجنسي بأحدث تقنيات الليزر والمناظير في مصر.'
+    : 'Clinic of Prof. Dr. Ahmed Abdellatif, Professor & Consultant of Urology, Andrology, Kidney Surgeries, and Male Infertility. High-quality laser and laparoscopic kidney stone treatments in Egypt.';
+
+  const baseUrl = 'https://drahmedabdellatif.com';
+
+  return {
+    title: {
+      template: `%s | ${locale === 'ar' ? 'أ.د. أحمد عبد اللطيف' : 'Prof. Dr. Ahmed Abdellatif'}`,
+      default: title,
+    },
+    description,
+    metadataBase: new URL(baseUrl),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        'ar': '/ar',
+        'en': '/en',
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/${locale}`,
+      siteName: locale === 'ar' ? 'أ.د. أحمد عبد اللطيف' : 'Prof. Dr. Ahmed Abdellatif',
+      images: [
+        {
+          url: `${baseUrl}/images/doctor.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      locale: locale === 'ar' ? 'ar_EG' : 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${baseUrl}/images/doctor.png`],
+    },
+    icons: {
+      icon: '/images/logo.png',
+      apple: '/images/logo.png',
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children,

@@ -6,13 +6,27 @@ import { BlogArticleContent } from './blog-article-content';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 async function getPost(slug: string): Promise<BlogPost | null> {
-  try {
-    const res = await fetch(`${API_BASE}/blog/${slug}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
+  // Retry up to 3 times to handle API cold starts on Hostinger
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE}/blog/${slug}`, {
+        next: { revalidate: 60 }, // Cache for 60s to prevent empty pages during API restarts
+      });
+      if (!res.ok) {
+        if (attempt < 3) continue;
+        return null;
+      }
+      return res.json();
+    } catch {
+      if (attempt < 3) {
+        // Wait 500ms before retry
+        await new Promise((r) => setTimeout(r, 500));
+        continue;
+      }
+      return null;
+    }
   }
+  return null;
 }
 
 export async function generateMetadata({

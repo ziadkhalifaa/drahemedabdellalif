@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button } from '@/components/ui';
@@ -21,22 +21,26 @@ export default function PrescriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const fetchPrescriptions = async () => {
+  const fetchPrescriptions = useCallback(async (attempt = 1) => {
     if (!token) return;
     try {
-      setLoading(true);
+      setLoading(attempt === 1);
       const data = await api.get<any[]>('/prescriptions', token);
       setPrescriptions(data);
-    } catch (error) {
-      console.error('Failed to fetch prescriptions:', error);
-    } finally {
       setLoading(false);
+    } catch (error) {
+      console.error(`Failed to fetch prescriptions (attempt ${attempt}):`, error);
+      if (attempt < 2) {
+        setTimeout(() => fetchPrescriptions(attempt + 1), 1500);
+      } else {
+        setLoading(false);
+      }
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchPrescriptions();
-  }, [token]);
+  }, [fetchPrescriptions]);
 
   const filteredPrescriptions = prescriptions.filter(p => 
     p.patient?.name?.toLowerCase().includes(search.toLowerCase()) ||

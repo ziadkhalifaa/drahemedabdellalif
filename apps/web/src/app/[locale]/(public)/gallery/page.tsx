@@ -20,14 +20,41 @@ export default function GalleryPage() {
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
 
+  const fetchItems = (delay = 0) => {
+    setLoading(true);
+    setFetchError(false);
+    const run = () =>
+      api.get<any[]>('/media')
+        .then(res => {
+          setItems(res);
+          // If still empty after client fetch, retry once more after 1.5s (API cold start)
+          if (res.length === 0) {
+            setTimeout(() => {
+              api.get<any[]>('/media')
+                .then(setItems)
+                .catch(() => setFetchError(true))
+                .finally(() => setLoading(false));
+            }, 1500);
+          } else {
+            setLoading(false);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch media client-side:", err);
+          setFetchError(true);
+          setLoading(false);
+        });
+
+    if (delay > 0) setTimeout(run, delay);
+    else run();
+  };
+
   useEffect(() => {
-    api.get<any[]>('/media')
-      .then(setItems)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    fetchItems();
   }, []);
 
   const filteredItems = items.filter(item => filter === 'all' || item.type === filter);
@@ -76,6 +103,25 @@ export default function GalleryPage() {
               Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
               ))
+            ) : fetchError ? (
+              <div className="col-span-full text-center py-20 bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl max-w-xl mx-auto p-10">
+                <ImageIcon size={48} className="text-[var(--muted)] mx-auto mb-4" />
+                <p className="text-[var(--muted)] text-lg mb-6">
+                  {locale === 'ar' ? 'حدث خطأ في تحميل المعرض.' : 'Failed to load gallery.'}
+                </p>
+                <button
+                  onClick={() => fetchItems()}
+                  className="px-8 py-3 rounded-xl bg-[var(--primary)] text-white font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  {locale === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
+                </button>
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="col-span-full text-center py-20">
+                <p className="text-[var(--muted)] text-lg">
+                  {locale === 'ar' ? 'لا توجد عناصر في المعرض حالياً.' : 'No items in the gallery at the moment.'}
+                </p>
+              </div>
             ) : (
               filteredItems.map((item, i) => {
                 const title = locale === 'ar' ? item.titleAr : item.titleEn;

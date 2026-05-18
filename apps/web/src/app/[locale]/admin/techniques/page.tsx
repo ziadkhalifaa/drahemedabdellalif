@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
@@ -46,17 +46,27 @@ export default function AdminTechniquesPage() {
     metaDescriptionAr: '', metaDescriptionEn: ''
   });
 
-  const fetchTechniques = () => {
+  const fetchTechniques = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<Technique[]>('/techniques/admin', token)
-      .then(setTechniques)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setTechniques(res);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch admin techniques (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchTechniques(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchTechniques(); }, [token]);
+  useEffect(() => { fetchTechniques(); }, [fetchTechniques]);
 
   const handleSave = async () => {
     if (!token) return;

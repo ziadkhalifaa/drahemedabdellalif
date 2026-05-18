@@ -26,13 +26,42 @@ export async function generateMetadata({
   const messages: any = await getMessages({ locale });
   const t = messages.hero;
 
+  const title = `${t.title} | ${t.subtitle}`;
+  const description = t.description;
+  const baseUrl = 'https://drahmedabdellatif.com';
+
   return {
-    title: `${t.title} | ${t.subtitle}`,
-    description: t.description,
+    title,
+    description,
+    metadataBase: new URL(baseUrl),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        'ar': '/ar',
+        'en': '/en',
+      },
+    },
     openGraph: {
-      title: t.title,
-      description: t.description,
+      title,
+      description,
+      url: `${baseUrl}/${locale}`,
+      siteName: locale === 'ar' ? 'أ.د. أحمد عبد اللطيف' : 'Prof. Dr. Ahmed Abdellatif',
+      images: [
+        {
+          url: `${baseUrl}/images/doctor.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      locale: locale === 'ar' ? 'ar_EG' : 'en_US',
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${baseUrl}/images/doctor.png`],
     },
   };
 }
@@ -44,6 +73,7 @@ export default async function HomePage() {
 
   const servicesFallback = await api.get<any[]>('/services').catch(() => []);
   const techniquesFallback = await api.get<any[]>('/techniques').catch(() => []);
+  const slidesFallback = await api.get<any[]>('/hero-slides').catch(() => []);
 
   const bookingFeatures = isAr ? [
     { icon: Stethoscope, text: 'كشف وتشخيص دقيق بأحدث الأجهزة' },
@@ -62,7 +92,7 @@ export default async function HomePage() {
       <Navbar />
       <main className="overflow-hidden">
         {/* 1 - Hero */}
-        <HeroSection />
+        <HeroSection fallbackData={slidesFallback} />
         {/* 2 - Services */}
         <ServicesCarouselSection fallbackData={servicesFallback} />
         {/* 3 - About */}

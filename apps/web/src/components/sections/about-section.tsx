@@ -46,7 +46,7 @@ export function AboutSection() {
             {/* Frame glow */}
             <div className="absolute -inset-4 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--accent)]/10 rounded-[2.5rem] blur-2xl z-0" />
 
-            <div className="relative rounded-[2rem] overflow-hidden shadow-2xl z-10 border border-[var(--primary)]/10">
+            <div className="relative rounded-[2rem] overflow-hidden shadow-2xl z-10 border border-[var(--primary)]/10 max-w-md mx-auto lg:max-w-none">
               <EditableImage
                 contentKey="about.image"
                 defaultSrc="/images/dr-ahmed.png"

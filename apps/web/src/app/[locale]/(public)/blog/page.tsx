@@ -19,12 +19,39 @@ export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+
+  const fetchPosts = (delay = 0) => {
+    setLoading(true);
+    setFetchError(false);
+    const run = () =>
+      api.get<BlogPost[]>('/blog/published')
+        .then(res => {
+          setPosts(res);
+          // If still empty after client fetch, retry once more after 1.5s (API cold start)
+          if (res.length === 0) {
+            setTimeout(() => {
+              api.get<BlogPost[]>('/blog/published')
+                .then(setPosts)
+                .catch(() => setFetchError(true))
+                .finally(() => setLoading(false));
+            }, 1500);
+          } else {
+            setLoading(false);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch blog posts client-side:", err);
+          setFetchError(true);
+          setLoading(false);
+        });
+
+    if (delay > 0) setTimeout(run, delay);
+    else run();
+  };
 
   useEffect(() => {
-    api.get<BlogPost[]>('/blog/published')
-      .then(setPosts)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    fetchPosts();
   }, []);
 
   const filteredPosts = posts.filter(post => {
@@ -87,6 +114,19 @@ export default function BlogPage() {
               {[1,2,3,4,5,6].map(i => (
                 <div key={i} className="h-80 rounded-[1.75rem] bg-white/5 animate-pulse" />
               ))}
+            </div>
+          ) : fetchError ? (
+            <div className="text-center py-24 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-2xl max-w-xl mx-auto p-10">
+              <BookOpen size={64} className="text-white/20 mx-auto mb-6" />
+              <p className="text-white/60 text-lg mb-6">
+                {isAr ? 'حدث خطأ أثناء تحميل المقالات الطبية.' : 'Failed to load medical blog articles.'}
+              </p>
+              <button
+                onClick={() => fetchPosts()}
+                className="px-8 py-3 rounded-xl bg-[var(--primary)] text-white font-bold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              >
+                {isAr ? 'إعادة المحاولة' : 'Try Again'}
+              </button>
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-24">

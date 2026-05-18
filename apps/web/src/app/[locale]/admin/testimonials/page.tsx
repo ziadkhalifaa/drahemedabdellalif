@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
@@ -16,17 +16,27 @@ export default function AdminTestimonialsPage() {
   const [error, setError] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('all');
 
-  const fetchTestimonials = () => {
+  const fetchTestimonials = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<any>('/testimonials/all', token)
-      .then(res => setTestimonials(Array.isArray(res) ? res : (res?.data || [])))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setTestimonials(Array.isArray(res) ? res : (res?.data || []));
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch testimonials (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchTestimonials(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchTestimonials(); }, [token]);
+  useEffect(() => { fetchTestimonials(); }, [fetchTestimonials]);
 
   const approve = async (id: string) => {
     if (!token) return;

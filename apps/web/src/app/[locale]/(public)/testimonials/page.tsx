@@ -18,6 +18,7 @@ export default function TestimonialsPage() {
   const locale = useLocale();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -28,12 +29,33 @@ export default function TestimonialsPage() {
     content: ''
   });
 
-  const fetchTestimonials = () => {
+  const fetchTestimonials = (delay = 0) => {
     setLoading(true);
-    api.get<Testimonial[]>('/testimonials')
-      .then(setTestimonials)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    setFetchError(false);
+    const run = () =>
+      api.get<Testimonial[]>('/testimonials')
+        .then(res => {
+          setTestimonials(res);
+          // If still empty after client fetch, retry once more after 1.5s (API cold start)
+          if (res.length === 0) {
+            setTimeout(() => {
+              api.get<Testimonial[]>('/testimonials')
+                .then(setTestimonials)
+                .catch(() => setFetchError(true))
+                .finally(() => setLoading(false));
+            }, 1500);
+          } else {
+            setLoading(false);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch testimonials client-side:", err);
+          setFetchError(true);
+          setLoading(false);
+        });
+
+    if (delay > 0) setTimeout(run, delay);
+    else run();
   };
 
   useEffect(() => {
@@ -69,6 +91,19 @@ export default function TestimonialsPage() {
             {loading ? (
               <div className="col-span-full py-20 text-center text-blue-500 animate-pulse font-bold">
                  Loading experiences...
+              </div>
+            ) : fetchError ? (
+              <div className="col-span-full text-center py-20 bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-xl max-w-xl mx-auto p-10">
+                <MessageSquare size={48} className="text-[var(--muted)] mx-auto mb-4" />
+                <p className="text-[var(--muted)] text-lg mb-6">
+                  {locale === 'ar' ? 'حدث خطأ في تحميل تجارب المرضى.' : 'Failed to load patient experiences.'}
+                </p>
+                <Button
+                  onClick={() => fetchTestimonials()}
+                  className="px-8 py-3 rounded-xl bg-[var(--primary)] text-white font-bold"
+                >
+                  {locale === 'ar' ? 'إعادة المحاولة' : 'Try Again'}
+                </Button>
               </div>
             ) : (
               testimonials.map((testimonial, i) => (
@@ -110,7 +145,7 @@ export default function TestimonialsPage() {
                 </motion.div>
               ))
             )}
-            {!loading && testimonials.length === 0 && (
+            {!loading && !fetchError && testimonials.length === 0 && (
               <div className="col-span-full py-20 text-center">
                 <p className="text-[var(--muted)]">No reviews yet. Be the first to share your experience!</p>
               </div>

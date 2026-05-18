@@ -26,18 +26,25 @@ export function ServiceDetailContent({ service: initialService, locale, serviceI
   useEffect(() => {
     if (initialService === null) {
       setLoading(true);
-      api.get<Service>(`/services/${serviceId}`)
-        .then(res => {
-          setService(res);
-        })
-        .catch(err => {
-          console.error("Failed to fetch service detail client-side:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      const fetchDetail = (attempt = 1) => {
+        api.get<Service>(`/services/${serviceId}`)
+          .then(res => {
+            setService(res);
+            setLoading(false);
+          })
+          .catch(err => {
+            console.error(`Failed to fetch service detail client-side (attempt ${attempt}):`, err);
+            if (attempt < 2) {
+              setTimeout(() => fetchDetail(attempt + 1), 1500);
+            } else {
+              setLoading(false);
+            }
+          });
+      };
+      fetchDetail();
     } else {
       setService(initialService);
+      setLoading(false);
     }
   }, [initialService, serviceId]);
 

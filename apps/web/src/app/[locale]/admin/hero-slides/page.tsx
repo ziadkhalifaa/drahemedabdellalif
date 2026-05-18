@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocale } from 'next-intl';
 import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
@@ -38,17 +38,27 @@ export default function AdminHeroSlidesPage() {
     image: '', isPortrait: false, order: 0, isActive: true 
   });
 
-  const fetchSlides = () => {
+  const fetchSlides = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(true);
+    setLoading(attempt === 1);
     setError(false);
     api.get<HeroSlide[]>('/hero-slides/admin', token)
-      .then(setSlides)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  };
+      .then(res => {
+        setSlides(res);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(`Failed to fetch admin hero slides (attempt ${attempt}):`, err);
+        if (attempt < 2) {
+          setTimeout(() => fetchSlides(attempt + 1), 1500);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      });
+  }, [token]);
 
-  useEffect(() => { fetchSlides(); }, [token]);
+  useEffect(() => { fetchSlides(); }, [fetchSlides]);
 
   const handleSave = async () => {
     if (!token) return;
