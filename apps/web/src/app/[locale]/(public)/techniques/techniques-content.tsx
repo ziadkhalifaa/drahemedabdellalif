@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Section, SectionHeader, Card } from '@/components/ui';
@@ -11,6 +10,7 @@ import { Link } from '@/i18n/routing';
 import { api, getMediaUrl } from '@/lib/api';
 import { Zap, ChevronRight, Activity, ShieldCheck } from 'lucide-react';
 import { EditableText } from '@/components/editor/editable-components';
+import useSWR from 'swr';
 
 interface Props {
   techniques: any[];
@@ -19,46 +19,17 @@ interface Props {
 
 export function TechniquesContent({ techniques: initialTechniques, locale }: Props) {
   const tNav = useTranslations('nav');
-  const [techniques, setTechniques] = useState<any[]>(initialTechniques);
-  const [loading, setLoading] = useState(initialTechniques.length === 0);
-  const [fetchError, setFetchError] = useState(false);
+  const { data: techniquesData, error, mutate } = useSWR<any[]>('/techniques', (url: string) => api.get<any[]>(url), {
+    fallbackData: initialTechniques && initialTechniques.length > 0 ? initialTechniques : undefined,
+  });
 
-  const fetchTechniques = (delay = 0) => {
-    setLoading(true);
-    setFetchError(false);
-    const run = () =>
-      api.get<any[]>('/techniques')
-        .then(res => {
-          setTechniques(res);
-          // If still empty after client fetch, retry once more after 1.5s (API cold start)
-          if (res.length === 0) {
-            setTimeout(() => {
-              api.get<any[]>('/techniques')
-                .then(setTechniques)
-                .catch(() => setFetchError(true))
-                .finally(() => setLoading(false));
-            }, 1500);
-          } else {
-            setLoading(false);
-          }
-        })
-        .catch(err => {
-          console.error("Failed to fetch techniques client-side:", err);
-          setFetchError(true);
-          setLoading(false);
-        });
+  const techniques = techniquesData || [];
+  const loading = !techniquesData && !error;
+  const fetchError = !!error;
 
-    if (delay > 0) setTimeout(run, delay);
-    else run();
+  const fetchTechniques = () => {
+    mutate();
   };
-
-  useEffect(() => {
-    if (initialTechniques.length === 0) {
-      fetchTechniques();
-    } else {
-      setTechniques(initialTechniques);
-    }
-  }, [initialTechniques]);
 
   return (
     <>

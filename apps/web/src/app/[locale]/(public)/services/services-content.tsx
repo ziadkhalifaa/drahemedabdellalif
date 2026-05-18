@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Section, SectionHeader, Card } from '@/components/ui';
 import { Navbar } from '@/components/layout/navbar';
@@ -12,6 +11,7 @@ import type { Service } from '@dr-ahmed/shared';
 import { Activity, Scan, Heart, Stethoscope, Shield, Gem, ChevronRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { EditableText, EditableImage } from '@/components/editor/editable-components';
+import useSWR from 'swr';
 
 const iconMap: Record<string, any> = {
   Stethoscope, Activity, Scan, Heart, Shield, Gem,
@@ -24,46 +24,17 @@ interface Props {
 
 export function ServicesContent({ services: initialServices, locale }: Props) {
   const t = useTranslations('services');
-  const [services, setServices] = useState<Service[]>(initialServices);
-  const [loading, setLoading] = useState(initialServices.length === 0);
-  const [fetchError, setFetchError] = useState(false);
+  const { data: servicesData, error, mutate } = useSWR<Service[]>('/services', (url: string) => api.get<Service[]>(url), {
+    fallbackData: initialServices && initialServices.length > 0 ? initialServices : undefined,
+  });
 
-  const fetchServices = (delay = 0) => {
-    setLoading(true);
-    setFetchError(false);
-    const run = () =>
-      api.get<Service[]>('/services')
-        .then(res => {
-          setServices(res);
-          // If still empty after client fetch, retry once more after 1.5s (API cold start)
-          if (res.length === 0) {
-            setTimeout(() => {
-              api.get<Service[]>('/services')
-                .then(setServices)
-                .catch(() => setFetchError(true))
-                .finally(() => setLoading(false));
-            }, 1500);
-          } else {
-            setLoading(false);
-          }
-        })
-        .catch(err => {
-          console.error("Failed to fetch services client-side:", err);
-          setFetchError(true);
-          setLoading(false);
-        });
+  const services = servicesData || [];
+  const loading = !servicesData && !error;
+  const fetchError = !!error;
 
-    if (delay > 0) setTimeout(run, delay);
-    else run();
+  const fetchServices = () => {
+    mutate();
   };
-
-  useEffect(() => {
-    if (initialServices.length === 0) {
-      fetchServices();
-    } else {
-      setServices(initialServices);
-    }
-  }, [initialServices]);
 
   return (
     <>
