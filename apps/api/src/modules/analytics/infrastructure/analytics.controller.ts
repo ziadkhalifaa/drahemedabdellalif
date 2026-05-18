@@ -1,11 +1,13 @@
 import { Controller, Get, Post, Body, UseGuards, Res } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AnalyticsService } from '../application/analytics.service';
 import { ExportService } from '../../../common/export.service';
 import { PrismaService } from '../../../common/prisma.service';
 import { RolesGuard, Roles } from '../../../common/decorators';
 
+@SkipThrottle()   // Admin-only controller, protected by JWT - no need for rate limiting
 @Controller('analytics')
 export class AnalyticsController {
   constructor(
