@@ -1,11 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
 export class CreatePrescriptionDto {
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   appointmentId!: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
   patientId!: string;
 
