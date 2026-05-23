@@ -71,6 +71,8 @@ export default function AdminClinicsPage() {
   // Modals / Input States
   const [blockingSlot, setBlockingSlot] = useState<string | null>(null);
   const [blockReasonText, setBlockReasonText] = useState('');
+  const [blockOptionType, setBlockOptionType] = useState<'clinic' | 'busy' | 'custom'>('clinic');
+  const [blockDayOptionType, setBlockDayOptionType] = useState<'vacation' | 'closed' | 'custom'>('vacation');
   const [selectedBlockedItem, setSelectedBlockedItem] = useState<any | null>(null);
   const [isBlockingWholeDay, setIsBlockingWholeDay] = useState(false);
 
@@ -299,6 +301,8 @@ export default function AdminClinicsPage() {
                     removeBlockedSlot(dayBlockedItem.id);
                   } else {
                     setIsBlockingWholeDay(true);
+                    setBlockDayOptionType('vacation');
+                    setBlockReasonText(isRTL ? 'إجازة طارئة للطبيب' : 'Emergency doctor vacation');
                   }
                 }}
                 className={cn(
@@ -428,7 +432,8 @@ export default function AdminClinicsPage() {
                               onClick={() => {
                                 if (status === 'available') {
                                   setBlockingSlot(slot);
-                                  setBlockReasonText('');
+                                  setBlockOptionType('clinic');
+                                  setBlockReasonText(isRTL ? 'محجوز بالعيادة' : 'Reserved by Clinic');
                                 } else if (status === 'blocked' && blockItem) {
                                   setSelectedBlockedItem(blockItem);
                                 }
@@ -650,17 +655,101 @@ export default function AdminClinicsPage() {
                 </div>
               </div>
 
-              {/* Note / Patient Input */}
-              <div className="space-y-2">
-                <label className="text-xs font-black text-white">{isRTL ? 'اسم المريض / الملاحظة (مثال: محجوز باسم أحمد محمد)' : 'Patient Name / Note'}</label>
-                <input
-                  type="text"
-                  placeholder={isRTL ? 'اكتب اسم المريض هنا...' : 'Type note or patient name...'}
-                  value={blockReasonText}
-                  onChange={e => setBlockReasonText(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm font-bold focus:outline-none focus:border-primary transition-colors placeholder:text-white/20"
-                />
+              {/* Preset Options */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-black text-white">{isRTL ? 'نوع الحجب / الحجز:' : 'Block/Booking Type:'}</label>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockOptionType('clinic');
+                      setBlockReasonText(isRTL ? 'محجوز بالعيادة' : 'Reserved by Clinic');
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all duration-300",
+                      blockOptionType === 'clinic'
+                        ? "border-orange-500 bg-orange-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      blockOptionType === 'clinic' ? "bg-orange-500/20 text-orange-400" : "bg-white/10 text-white/50"
+                    )}>
+                      <Building2 size={16} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black">{isRTL ? 'محجوز بالعيادة (أوفلاين)' : 'Reserved by Clinic'}</div>
+                      <div className="text-[9px] text-muted-foreground/80 mt-0.5">{isRTL ? 'حجز موعد داخلي لعدم إتاحته على الموقع' : 'Mark slot as booked physically in clinic'}</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockOptionType('busy');
+                      setBlockReasonText(isRTL ? 'الدكتور غير متفرغ' : 'Doctor is busy');
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all duration-300",
+                      blockOptionType === 'busy'
+                        ? "border-orange-500 bg-orange-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      blockOptionType === 'busy' ? "bg-orange-500/20 text-orange-400" : "bg-white/10 text-white/50"
+                    )}>
+                      <Clock size={16} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black">{isRTL ? 'الدكتور مش فاضي' : 'Doctor is Busy'}</div>
+                      <div className="text-[9px] text-muted-foreground/80 mt-0.5">{isRTL ? 'الطبيب غير متفرغ في هذا الوقت لعطلة أو موعد آخر' : 'Doctor has other commitments at this time'}</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockOptionType('custom');
+                      setBlockReasonText('');
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all duration-300",
+                      blockOptionType === 'custom'
+                        ? "border-orange-500 bg-orange-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      blockOptionType === 'custom' ? "bg-orange-500/20 text-orange-400" : "bg-white/10 text-white/50"
+                    )}>
+                      <UserPlus size={16} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black">{isRTL ? 'اسم مريض أو ملاحظة مخصصة' : 'Patient Name or Custom Note'}</div>
+                      <div className="text-[9px] text-muted-foreground/80 mt-0.5">{isRTL ? 'اكتب اسم المريض أو ملاحظة معينة يدوياً' : 'Enter a specific patient name or note'}</div>
+                    </div>
+                  </button>
+                </div>
               </div>
+
+              {/* Note / Patient Input */}
+              {blockOptionType === 'custom' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-white">{isRTL ? 'اسم المريض / الملاحظة:' : 'Patient Name / Note'}</label>
+                  <input
+                    type="text"
+                    placeholder={isRTL ? 'اكتب اسم المريض أو الملاحظة المخصصة...' : 'Type note or patient name...'}
+                    value={blockReasonText}
+                    onChange={e => setBlockReasonText(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm font-bold focus:outline-none focus:border-primary transition-colors placeholder:text-white/20"
+                    autoFocus
+                  />
+                </div>
+              )}
 
               {/* Submit Buttons */}
               <div className="flex items-center gap-3 pt-2">
@@ -793,17 +882,101 @@ export default function AdminClinicsPage() {
                 </div>
               </div>
 
-              {/* Note / Block Reason */}
-              <div className="space-y-2">
-                <label className="text-xs font-black text-white">{isRTL ? 'سبب الحجب (مثال: إجازة طارئة للطبيب)' : 'Reason for Blocking'}</label>
-                <input
-                  type="text"
-                  placeholder={isRTL ? 'اكتب سبب الحجب هنا...' : 'Type reason for blocking day...'}
-                  value={blockReasonText}
-                  onChange={e => setBlockReasonText(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm font-bold focus:outline-none focus:border-primary transition-colors placeholder:text-white/20"
-                />
+              {/* Preset Options for Day Block */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-black text-white">{isRTL ? 'سبب حجب اليوم بالكامل:' : 'Reason for Day Block:'}</label>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockDayOptionType('vacation');
+                      setBlockReasonText(isRTL ? 'إجازة طارئة للطبيب' : 'Emergency doctor vacation');
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all duration-300",
+                      blockDayOptionType === 'vacation'
+                        ? "border-red-500 bg-red-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      blockDayOptionType === 'vacation' ? "bg-red-500/20 text-red-400" : "bg-white/10 text-white/50"
+                    )}>
+                      <ShieldAlert size={16} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black">{isRTL ? 'إجازة طارئة للطبيب' : 'Doctor Emergency Vacation'}</div>
+                      <div className="text-[9px] text-muted-foreground/80 mt-0.5">{isRTL ? 'حجب اليوم لعدم تواجد الطبيب لظروف طارئة' : 'Block the day due to doctor emergency'}</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockDayOptionType('closed');
+                      setBlockReasonText(isRTL ? 'العيادة مغلقة' : 'Clinic is closed');
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all duration-300",
+                      blockDayOptionType === 'closed'
+                        ? "border-red-500 bg-red-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      blockDayOptionType === 'closed' ? "bg-red-500/20 text-red-400" : "bg-white/10 text-white/50"
+                    )}>
+                      <Building2 size={16} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black">{isRTL ? 'العيادة مغلقة' : 'Clinic is Closed'}</div>
+                      <div className="text-[9px] text-muted-foreground/80 mt-0.5">{isRTL ? 'العيادة ستكون مغلقة بالكامل في هذا التاريخ' : 'Clinic will be fully closed on this date'}</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBlockDayOptionType('custom');
+                      setBlockReasonText('');
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-2xl border text-start transition-all duration-300",
+                      blockDayOptionType === 'custom'
+                        ? "border-red-500 bg-red-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                      blockDayOptionType === 'custom' ? "bg-red-500/20 text-red-400" : "bg-white/10 text-white/50"
+                    )}>
+                      <UserPlus size={16} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-black">{isRTL ? 'سبب مخصص' : 'Custom Reason'}</div>
+                      <div className="text-[9px] text-muted-foreground/80 mt-0.5">{isRTL ? 'كتابة سبب مخصص لحجب اليوم' : 'Enter a specific custom reason'}</div>
+                    </div>
+                  </button>
+                </div>
               </div>
+
+              {/* Note / Block Reason */}
+              {blockDayOptionType === 'custom' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-white">{isRTL ? 'سبب الحجب المخصص:' : 'Custom Reason for Blocking'}</label>
+                  <input
+                    type="text"
+                    placeholder={isRTL ? 'اكتب سبب الحجب المخصص هنا...' : 'Type custom reason for blocking day...'}
+                    value={blockReasonText}
+                    onChange={e => setBlockReasonText(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm font-bold focus:outline-none focus:border-primary transition-colors placeholder:text-white/20"
+                    autoFocus
+                  />
+                </div>
+              )}
 
               {/* Submit Buttons */}
               <div className="flex items-center gap-3 pt-2">
