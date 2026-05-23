@@ -45,20 +45,25 @@ export class AuthService {
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
+      const { method: _, ...updateData } = data;
       await this.prisma.user.update({
         where: { id: existing.id },
         data: {
-          ...data,
+          ...updateData,
           password: hashedPassword,
           emailVerificationCode: verificationCode,
           emailVerificationExpiry,
         },
       });
 
-      if (method === 'whatsapp' && data.phone) {
-        await this.whatsappService.sendOTP(data.phone, verificationCode);
-      } else {
-        await this.emailService.sendOTP(data.email, verificationCode);
+      try {
+        if (method === 'whatsapp' && data.phone) {
+          await this.whatsappService.sendOTP(data.phone, verificationCode);
+        } else {
+          await this.emailService.sendOTP(data.email, verificationCode);
+        }
+      } catch (notifyErr) {
+        // Notification failed but user record is updated — they can request resend
       }
 
       return {
@@ -84,10 +89,14 @@ export class AuthService {
       },
     });
 
-    if (method === 'whatsapp' && data.phone) {
-      await this.whatsappService.sendOTP(data.phone, verificationCode);
-    } else {
-      await this.emailService.sendOTP(data.email, verificationCode);
+    try {
+      if (method === 'whatsapp' && data.phone) {
+        await this.whatsappService.sendOTP(data.phone, verificationCode);
+      } else {
+        await this.emailService.sendOTP(data.email, verificationCode);
+      }
+    } catch (notifyErr) {
+      // Notification failed but user is created — they can request resend from verify screen
     }
 
     return {
