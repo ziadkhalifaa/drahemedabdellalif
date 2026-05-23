@@ -224,11 +224,11 @@ export const clinicsApi = {
   getAll: (token?: string) => api.get<any[]>('/clinics', token),
   getOne: (id: string, token?: string) => api.get<any>(`/clinics/${id}`, token),
   getAvailableSlots: (clinicId: string, date: string) =>
-    api.get<string[]>(`/clinics/${clinicId}/available-slots?date=${date}`),
+    api.get<string[]>(`/clinics/${clinicId}/available-slots?date=${date}&_t=${Date.now()}`),
   getWorkingHours: (clinicId: string, token?: string) =>
-    api.get<any[]>(`/clinics/${clinicId}/working-hours`, token),
+    api.get<any[]>(`/clinics/${clinicId}/working-hours?_t=${Date.now()}`, token),
   getBlockedSlots: (clinicId: string, token?: string) =>
-    api.get<any[]>(`/clinics/${clinicId}/blocked-slots`, token),
+    api.get<any[]>(`/clinics/${clinicId}/blocked-slots?_t=${Date.now()}`, token),
   // Admin
   create: (data: any, token: string) => api.post<any>('/clinics', data, token),
   update: (id: string, data: any, token: string) => api.patch<any>(`/clinics/${id}`, data, token),

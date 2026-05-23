@@ -27,19 +27,16 @@ export class ClinicsController {
   }
 
   @Get(':id/available-slots')
-  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   getAvailableSlots(@Param('id') id: string, @Query('date') date: string) {
     return this.clinicsService.getAvailableSlots(id, date);
   }
 
   @Get(':id/working-hours')
-  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   getWorkingHours(@Param('id') id: string) {
     return this.clinicsService.getWorkingHours(id);
   }
 
   @Get(':id/blocked-slots')
-  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   getBlockedSlots(@Param('id') id: string) {
     return this.clinicsService.getBlockedSlots(id);
   }
