@@ -545,31 +545,43 @@ export default function BookingWizard() {
             <div className="space-y-6 max-w-lg mx-auto">
               <div className="text-center space-y-1">
                 <h2 className="text-2xl font-black text-white">
-                  {isRTL ? 'دفع عربون الحجز' : 'Pay Booking Deposit'}
+                  {type === AppointmentType.ONLINE
+                    ? (isRTL ? 'دفع قيمة الاستشارة' : 'Pay Consultation Fee')
+                    : (isRTL ? 'دفع عربون الحجز' : 'Pay Booking Deposit')}
                 </h2>
                 <p className="text-white/50 text-sm">
-                  {isRTL ? 'لتأكيد جدية الحجز يُطلب دفع عربون مسبق' : 'A deposit is required to confirm your booking'}
+                  {type === AppointmentType.ONLINE
+                    ? (isRTL ? 'لتأكيد الحجز يُرجى دفع قيمة الاستشارة' : 'A fee is required to confirm your booking')
+                    : (isRTL ? 'لتأكيد جدية الحجز يُطلب دفع عربون مسبق' : 'A deposit is required to confirm your booking')}
                 </p>
               </div>
 
               {/* Price Breakdown Card */}
               <div className="bg-gradient-to-br from-primary/15 to-blue-500/10 border border-primary/30 rounded-2xl p-5 space-y-3">
                 <div className="flex justify-between items-center text-sm text-white/70">
-                  <span>{isRTL ? 'إجمالي قيمة الكشف:' : 'Total consultation fee:'}</span>
+                  <span>{isRTL ? 'إجمالي قيمة الحجز:' : 'Total fee:'}</span>
                   <span className="font-bold text-white">{TOTAL_AMOUNT} {isRTL ? 'جنيه' : 'EGP'}</span>
                 </div>
                 <div className="border-t border-white/10" />
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-emerald-400 font-black text-lg">{isRTL ? '✅ المطلوب الآن (عربون):' : '✅ Required Now (Deposit):'}</p>
+                    <p className="text-emerald-400 font-black text-lg">
+                      {type === AppointmentType.ONLINE
+                        ? (isRTL ? '✅ المطلوب الآن:' : '✅ Required Now:')
+                        : (isRTL ? '✅ المطلوب الآن (عربون):' : '✅ Required Now (Deposit):')}
+                    </p>
                     <p className="text-white/50 text-xs mt-0.5">{isRTL ? 'يُدفع أونلاين الآن لتأكيد الحجز' : 'Paid online now to confirm booking'}</p>
                   </div>
-                  <span className="text-3xl font-black text-emerald-400">{DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}</span>
+                  <span className="text-3xl font-black text-emerald-400">
+                    {type === AppointmentType.ONLINE ? TOTAL_AMOUNT : DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center text-sm text-white/50">
-                  <span>{isRTL ? 'المتبقي يُدفع عند الحضور بالعيادة:' : 'Remaining paid at clinic:'}</span>
-                  <span className="font-bold">{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}</span>
-                </div>
+                {type !== AppointmentType.ONLINE && (
+                  <div className="flex justify-between items-center text-sm text-white/50">
+                    <span>{isRTL ? 'المتبقي يُدفع عند الحضور بالعيادة:' : 'Remaining paid at clinic:'}</span>
+                    <span className="font-bold">{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}</span>
+                  </div>
+                )}
               </div>
 
               {/* Method Selection */}
@@ -605,13 +617,19 @@ export default function BookingWizard() {
 
               {/* Transfer Details */}
               <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-1 text-center">
-                <p className="text-xs text-white/50">{isRTL ? 'حوّل مبلغ العربون إلى:' : 'Transfer the deposit amount to:'}</p>
+                <p className="text-xs text-white/50">
+                  {type === AppointmentType.ONLINE
+                    ? (isRTL ? 'حوّل قيمة الاستشارة إلى:' : 'Transfer the consultation fee to:')
+                    : (isRTL ? 'حوّل مبلغ العربون إلى:' : 'Transfer the deposit amount to:')}
+                </p>
                 <p className="text-xl font-black text-white" dir="ltr">
                   {paymentMethod === 'VODAFONE_CASH'
                     ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882')
                     : (paymentSettings['payment.instapay']?.number || '@instapay')}
                 </p>
-                <p className="text-emerald-400 font-bold text-sm">{DEPOSIT_AMOUNT} {isRTL ? 'جنيه فقط' : 'EGP only'}</p>
+                <p className="text-emerald-400 font-bold text-sm">
+                  {type === AppointmentType.ONLINE ? TOTAL_AMOUNT : DEPOSIT_AMOUNT} {isRTL ? (type === AppointmentType.ONLINE ? 'جنيه' : 'جنيه فقط') : 'EGP'}
+                </p>
               </div>
 
               {/* Sender Phone */}
@@ -710,11 +728,15 @@ export default function BookingWizard() {
                     <p className="font-bold text-white">
                       {paymentMethod === 'VODAFONE_CASH' ? 'فودافون كاش' : 'انستا باي'}
                     </p>
-                    {type === AppointmentType.IN_CLINIC && (
+                    {type === AppointmentType.IN_CLINIC ? (
                       <p className="text-xs text-white/60 mt-0.5">
                         <span className="text-emerald-400 font-bold">{DEPOSIT_AMOUNT} {isRTL ? 'ج عربون الآن' : 'EGP deposit now'}</span>
                         {' + '}
                         <span>{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج عند الحضور' : 'EGP at clinic'}</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-emerald-400 font-bold mt-0.5">
+                        {TOTAL_AMOUNT} {isRTL ? 'ج (تم تحويل كامل القيمة)' : 'EGP (Full amount transferred)'}
                       </p>
                     )}
                   </div>
