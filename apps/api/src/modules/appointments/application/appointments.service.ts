@@ -29,6 +29,7 @@ export class AppointmentsService {
     paymentMethod?: string;
     paymentSenderNum?: string;
     paymentProofUrl?: string;
+    depositAmount?: number;
   }) {
     const appointmentDate = new Date(data.date);
 
@@ -53,9 +54,19 @@ export class AppointmentsService {
       if (existing) throw new ConflictException('This time slot is already booked');
     }
 
+    // للحجوزات في العيادة: لا يُقبل الدفع نقداً ويجب رفع إيصال الدفع
+    if (data.type === AppointmentType.IN_CLINIC) {
+      if (!data.paymentMethod || data.paymentMethod === 'NONE' || data.paymentMethod === 'CASH') {
+        throw new BadRequestException('يجب اختيار طريقة دفع إلكترونية (فودافون كاش أو انستا باي) لتأكيد جدية الحجز');
+      }
+      if (!data.paymentProofUrl && !data.paymentSenderNum) {
+        throw new BadRequestException('يجب رفع إيصال الدفع وإدخال رقم الهاتف للتحقق');
+      }
+    }
+
     // تحديد حالة الدفع
     const paymentStatus = data.paymentMethod && data.paymentMethod !== 'NONE' && data.paymentMethod !== 'CASH'
-      ? (data.paymentProofUrl ? 'PENDING_REVIEW' : 'PENDING_REVIEW')
+      ? 'PENDING_REVIEW'
       : 'NOT_REQUIRED';
 
     // If ONLINE, generate a professional Daily.co meeting link
@@ -116,6 +127,7 @@ export class AppointmentsService {
         paymentSenderNum: data.paymentSenderNum,
         paymentProofUrl: data.paymentProofUrl,
         paymentStatus: paymentStatus as any,
+        depositAmount: data.depositAmount ?? (data.type === AppointmentType.IN_CLINIC ? 100 : null),
       },
       include: {
         patient: { select: { id: true, name: true, email: true } },

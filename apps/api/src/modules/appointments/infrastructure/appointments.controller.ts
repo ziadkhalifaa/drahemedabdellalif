@@ -42,6 +42,7 @@ export class AppointmentsController {
     paymentMethod?: string;
     paymentSenderNum?: string;
     paymentProofUrl?: string;
+    depositAmount?: number;
   }) {
     return this.appointmentsService.create(body);
   }

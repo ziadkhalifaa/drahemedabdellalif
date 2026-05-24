@@ -45,7 +45,7 @@ export default function BookingWizard() {
   const [birthDate, setBirthDate] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   
-  const [paymentMethod, setPaymentMethod] = useState<'VODAFONE_CASH' | 'INSTAPAY' | 'CASH'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<'VODAFONE_CASH' | 'INSTAPAY'>('VODAFONE_CASH');
   const [senderPhone, setSenderPhone] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   
@@ -150,10 +150,8 @@ export default function BookingWizard() {
       if (!birthDate) return toast.error(isRTL ? 'الرجاء إدخال تاريخ الميلاد' : 'Please enter date of birth');
     }
     if (currentStep === 4) {
-      if (paymentMethod !== 'CASH') {
-        if (!senderPhone) return toast.error(isRTL ? 'أدخل رقم المحول منه' : 'Enter sender phone number');
-        if (!proofFile) return toast.error(isRTL ? 'ارفع صورة الإثبات' : 'Upload payment proof');
-      }
+      if (!senderPhone) return toast.error(isRTL ? 'أدخل رقم الهاتف الذي حولت منه' : 'Enter sender phone number');
+      if (!proofFile) return toast.error(isRTL ? 'ارفع صورة إيصال التحويل — هذه خطوة إلزامية' : 'Upload payment receipt — this is required');
     }
     setCurrentStep(p => Math.min(p + 1, 5));
   };
@@ -186,10 +184,11 @@ export default function BookingWizard() {
         patientId: user?.id,
         paymentMethod,
         paymentSenderNum: senderPhone || undefined,
+        depositAmount: type === AppointmentType.IN_CLINIC ? 100 : undefined,
       });
       
-      // 3. Upload Proof if manual
-      if (proofFile && paymentMethod !== 'CASH') {
+      // 3. Upload Proof (mandatory for clinic bookings)
+      if (proofFile) {
         await appointmentsApi.uploadPaymentProof(apt.id, proofFile, senderPhone);
       }
       
@@ -205,7 +204,8 @@ export default function BookingWizard() {
     }
   };
 
-  const getPrice = () => paymentSettings['payment.price']?.amount || 400;
+  const DEPOSIT_AMOUNT = 100;
+  const TOTAL_AMOUNT = Number(paymentSettings['payment.price']?.amount || 400);
 
   if (isLoading) {
     return (
@@ -540,93 +540,125 @@ export default function BookingWizard() {
             </div>
           )}
 
-          {/* STEP 4: PAYMENT */}
+          {/* STEP 4: PAYMENT — عربون الحجز */}
           {currentStep === 4 && (
             <div className="space-y-6 max-w-lg mx-auto">
-              <h2 className="text-2xl font-black text-white text-center">
-                {isRTL ? 'طريقة الدفع' : 'Payment Method'}
-              </h2>
-              
-              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 text-center">
-                <p className="text-white/80 text-sm mb-1">{isRTL ? 'قيمة الكشف / الاستشارة:' : 'Consultation Fee:'}</p>
-                <p className="text-3xl font-black text-primary">{getPrice()} {isRTL ? 'جنيه' : 'EGP'}</p>
+              <div className="text-center space-y-1">
+                <h2 className="text-2xl font-black text-white">
+                  {isRTL ? 'دفع عربون الحجز' : 'Pay Booking Deposit'}
+                </h2>
+                <p className="text-white/50 text-sm">
+                  {isRTL ? 'لتأكيد جدية الحجز يُطلب دفع عربون مسبق' : 'A deposit is required to confirm your booking'}
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPaymentMethod('VODAFONE_CASH')}
-                  className={cn(
-                    'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all',
-                    paymentMethod === 'VODAFONE_CASH' ? 'bg-red-600 border-red-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                  )}
-                >
-                  {isRTL ? 'فودافون كاش' : 'Vodafone Cash'}
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('INSTAPAY')}
-                  className={cn(
-                    'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all',
-                    paymentMethod === 'INSTAPAY' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                  )}
-                >
-                  {isRTL ? 'انستا باي' : 'InstaPay'}
-                </button>
-                {type === AppointmentType.IN_CLINIC && (
+              {/* Price Breakdown Card */}
+              <div className="bg-gradient-to-br from-primary/15 to-blue-500/10 border border-primary/30 rounded-2xl p-5 space-y-3">
+                <div className="flex justify-between items-center text-sm text-white/70">
+                  <span>{isRTL ? 'إجمالي قيمة الكشف:' : 'Total consultation fee:'}</span>
+                  <span className="font-bold text-white">{TOTAL_AMOUNT} {isRTL ? 'جنيه' : 'EGP'}</span>
+                </div>
+                <div className="border-t border-white/10" />
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-emerald-400 font-black text-lg">{isRTL ? '✅ المطلوب الآن (عربون):' : '✅ Required Now (Deposit):'}</p>
+                    <p className="text-white/50 text-xs mt-0.5">{isRTL ? 'يُدفع أونلاين الآن لتأكيد الحجز' : 'Paid online now to confirm booking'}</p>
+                  </div>
+                  <span className="text-3xl font-black text-emerald-400">{DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm text-white/50">
+                  <span>{isRTL ? 'المتبقي يُدفع عند الحضور بالعيادة:' : 'Remaining paid at clinic:'}</span>
+                  <span className="font-bold">{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}</span>
+                </div>
+              </div>
+
+              {/* Method Selection */}
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-white/80">{isRTL ? 'اختر طريقة الدفع:' : 'Choose payment method:'}</p>
+                <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setPaymentMethod('CASH')}
+                    onClick={() => setPaymentMethod('VODAFONE_CASH')}
                     className={cn(
-                      'col-span-2 p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all',
-                      paymentMethod === 'CASH' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      'p-4 rounded-xl border-2 flex flex-col items-center gap-2 font-bold transition-all',
+                      paymentMethod === 'VODAFONE_CASH'
+                        ? 'bg-red-600/20 border-red-500 text-white shadow-lg shadow-red-500/10'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:border-white/20'
                     )}
                   >
-                    {isRTL ? 'الدفع نقداً في العيادة' : 'Pay Cash in Clinic'}
+                    <span className="text-2xl">📱</span>
+                    <span className="text-sm">{isRTL ? 'فودافون كاش' : 'Vodafone Cash'}</span>
                   </button>
-                )}
+                  <button
+                    onClick={() => setPaymentMethod('INSTAPAY')}
+                    className={cn(
+                      'p-4 rounded-xl border-2 flex flex-col items-center gap-2 font-bold transition-all',
+                      paymentMethod === 'INSTAPAY'
+                        ? 'bg-purple-600/20 border-purple-500 text-white shadow-lg shadow-purple-500/10'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:border-white/20'
+                    )}
+                  >
+                    <span className="text-2xl">💜</span>
+                    <span className="text-sm">{isRTL ? 'انستا باي' : 'InstaPay'}</span>
+                  </button>
+                </div>
               </div>
 
-              {paymentMethod !== 'CASH' && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 pt-4 border-t border-white/10">
-                  <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-center">
-                    <p className="text-sm text-white/70 mb-2">
-                      {isRTL ? 'الرجاء تحويل المبلغ إلى الرقم/الحساب التالي:' : 'Please transfer the amount to:'}
-                    </p>
-                    <p className="text-xl font-bold text-white" dir="ltr">
-                      {paymentMethod === 'VODAFONE_CASH' ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882') : (paymentSettings['payment.instapay']?.number || '+20 10 01516882@instapay')}
-                    </p>
-                  </div>
+              {/* Transfer Details */}
+              <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-1 text-center">
+                <p className="text-xs text-white/50">{isRTL ? 'حوّل مبلغ العربون إلى:' : 'Transfer the deposit amount to:'}</p>
+                <p className="text-xl font-black text-white" dir="ltr">
+                  {paymentMethod === 'VODAFONE_CASH'
+                    ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882')
+                    : (paymentSettings['payment.instapay']?.number || '@instapay')}
+                </p>
+                <p className="text-emerald-400 font-bold text-sm">{DEPOSIT_AMOUNT} {isRTL ? 'جنيه فقط' : 'EGP only'}</p>
+              </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-bold text-white/80">{isRTL ? 'رقم الهاتف الذي قمت بالتحويل منه *' : 'Sender Phone Number *'}</label>
-                    <input
-                      type="tel"
-                      dir="ltr"
-                      value={senderPhone}
-                      onChange={e => setSenderPhone(e.target.value)}
-                      placeholder="010XXXXXXXX"
-                      className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2 text-white focus:border-primary transition-colors outline-none text-left"
-                    />
-                  </div>
+              {/* Sender Phone */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-white/80">
+                  {isRTL ? 'رقم الهاتف الذي حولت منه *' : 'Phone number you sent from *'}
+                </label>
+                <input
+                  type="tel"
+                  dir="ltr"
+                  value={senderPhone}
+                  onChange={e => setSenderPhone(e.target.value)}
+                  placeholder="010XXXXXXXX"
+                  className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-2.5 text-white focus:border-primary transition-colors outline-none text-left"
+                />
+              </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-bold text-white/80">{isRTL ? 'صورة إيصال التحويل *' : 'Transfer Receipt Image *'}</label>
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 hover:border-primary/50 bg-black/20 hover:bg-primary/5 rounded-xl cursor-pointer transition-colors relative overflow-hidden">
-                      {proofFile ? (
-                        <>
-                          <img src={URL.createObjectURL(proofFile)} alt="proof" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-                          <CheckCircle className="text-emerald-400 relative z-10" size={32} />
-                          <span className="text-emerald-400 font-bold mt-2 relative z-10 text-sm px-4 text-center truncate w-full">{proofFile.name}</span>
-                        </>
-                      ) : (
-                        <>
-                          <UploadCloud className="text-white/40 mb-2" size={32} />
-                          <span className="text-white/60 text-sm font-medium">{isRTL ? 'اضغط لرفع الصورة' : 'Click to upload image'}</span>
-                        </>
-                      )}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => setProofFile(e.target.files?.[0] || null)} />
-                    </label>
-                  </div>
-                </motion.div>
-              )}
+              {/* Proof Upload */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-white/80">
+                  {isRTL ? '📸 صورة إيصال التحويل (إلزامي) *' : '📸 Transfer Receipt Photo (Required) *'}
+                </label>
+                <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all relative overflow-hidden
+                  border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/60">
+                  {proofFile ? (
+                    <>
+                      <img src={URL.createObjectURL(proofFile)} alt="proof" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                      <CheckCircle className="text-emerald-400 relative z-10" size={36} />
+                      <span className="text-emerald-400 font-bold mt-2 relative z-10 text-sm px-4 text-center truncate w-full">
+                        ✅ {proofFile.name}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="text-primary/70 mb-2" size={36} />
+                      <span className="text-white/70 text-sm font-bold">{isRTL ? 'اضغط لرفع صورة الإيصال' : 'Tap to upload receipt photo'}</span>
+                      <span className="text-white/30 text-xs mt-1">{isRTL ? 'PNG / JPG / WEBP' : 'PNG / JPG / WEBP'}</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => setProofFile(e.target.files?.[0] || null)} />
+                </label>
+                <p className="text-xs text-orange-400/80 font-medium px-1">
+                  ⚠️ {isRTL
+                    ? 'الإيصال مطلوب لتأكيد الحجز — بدونه لن يُعتمد الحجز'
+                    : 'Receipt is required — booking will not be confirmed without it'}
+                </p>
+              </div>
             </div>
           )}
 
@@ -676,9 +708,15 @@ export default function BookingWizard() {
                   <div>
                     <p className="text-xs text-white/50">{isRTL ? 'الدفع' : 'Payment'}</p>
                     <p className="font-bold text-white">
-                      {paymentMethod === 'VODAFONE_CASH' ? 'فودافون كاش' : paymentMethod === 'INSTAPAY' ? 'انستا باي' : (isRTL ? 'نقداً بالعيادة' : 'Cash in Clinic')}
-                      <span className="mx-2 text-primary">({getPrice()} EGP)</span>
+                      {paymentMethod === 'VODAFONE_CASH' ? 'فودافون كاش' : 'انستا باي'}
                     </p>
+                    {type === AppointmentType.IN_CLINIC && (
+                      <p className="text-xs text-white/60 mt-0.5">
+                        <span className="text-emerald-400 font-bold">{DEPOSIT_AMOUNT} {isRTL ? 'ج عربون الآن' : 'EGP deposit now'}</span>
+                        {' + '}
+                        <span>{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج عند الحضور' : 'EGP at clinic'}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

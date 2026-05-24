@@ -98,6 +98,7 @@ model Appointment {
   paymentSenderNum   String?
   paymentStatus      PaymentConfirmStatus @default(NOT_REQUIRED)
   paymentNote        String?
+  depositAmount      Float?               @default(100)
   whatsappReminderSent Boolean              @default(false)
   clinic             Clinic?              @relation(fields: [clinicId], references: [id])
   patient            User?                @relation(fields: [patientId], references: [id])

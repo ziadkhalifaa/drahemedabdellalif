@@ -123,6 +123,19 @@ function AppointmentPaymentCard({ apt, onAction }: { apt: any; onAction: (id: st
             <span className="font-mono text-white/70 ms-1" dir="ltr">{apt.paymentSenderNum}</span>
           )}
         </div>
+        {/* Deposit Breakdown */}
+        {apt.type === 'IN_CLINIC' && apt.depositAmount && (
+          <div className="col-span-2 flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2">
+            <span className="text-emerald-400 font-bold">
+              💰 {isRTL ? 'العربون المدفوع:' : 'Deposit Paid:'}
+            </span>
+            <div className="text-right">
+              <span className="text-emerald-400 font-black">{apt.depositAmount} {isRTL ? 'ج' : 'EGP'}</span>
+              <span className="text-white/40 mx-1">/</span>
+              <span className="text-white/60">{isRTL ? `إجمالي 400 ج` : `Total 400 EGP`}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Actions */}
