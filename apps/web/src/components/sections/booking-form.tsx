@@ -32,7 +32,9 @@ export function BookingForm() {
   const [gender, setGender] = useState('');
   const [clinics, setClinics] = useState<any[]>([]);
   const [paymentSettings, setPaymentSettings] = useState<any>({});
-  const [paymentMethod, setPaymentMethod] = useState<'VODAFONE_CASH' | 'INSTAPAY' | 'CASH'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<'VODAFONE_CASH' | 'INSTAPAY'>('VODAFONE_CASH');
+  const DEPOSIT_AMOUNT = 100;
+  const TOTAL_AMOUNT = 400;
   const [senderPhone, setSenderPhone] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
@@ -133,15 +135,13 @@ export function BookingForm() {
       return;
     }
 
-    if (paymentMethod !== 'CASH') {
-      if (!senderPhone) {
-        toast.error(isAr ? 'الرجاء إدخال رقم المحول منه' : 'Please enter sender phone number');
-        return;
-      }
-      if (!proofFile) {
-        toast.error(isAr ? 'الرجاء رفع صورة الإيصال' : 'Please upload payment receipt');
-        return;
-      }
+    if (!senderPhone) {
+      toast.error(isAr ? 'الرجاء إدخال رقم المحول منه' : 'Please enter sender phone number');
+      return;
+    }
+    if (!proofFile) {
+      toast.error(isAr ? 'الرجاء رفع صورة إيصال العربون (100 جنيه) — هذه خطوة إلزامية' : 'Please upload the deposit receipt (100 EGP) — this is required');
+      return;
     }
 
     setStatus('loading');
@@ -166,7 +166,7 @@ export function BookingForm() {
         paymentSenderNum: senderPhone || undefined,
       });
 
-      if (proofFile && paymentMethod !== 'CASH') {
+      if (proofFile) {
         await appointmentsApi.uploadPaymentProof(apt.id, proofFile, senderPhone);
       }
 
@@ -200,7 +200,7 @@ export function BookingForm() {
         <button
           onClick={() => {
             setStatus('idle');
-            setPaymentMethod('CASH');
+            setPaymentMethod('VODAFONE_CASH');
             setSenderPhone('');
             setProofFile(null);
           }}
@@ -462,90 +462,107 @@ export function BookingForm() {
           )}
         </div>
 
-        {/* Payment Method */}
+        {/* Deposit Payment Section */}
         <div className="space-y-4">
           <label className={cn("block text-sm font-bold text-white mb-2", isAr ? "text-right" : "text-left")}>
-            {isAr ? 'طريقة الدفع' : 'Payment Method'}
+            {isAr ? '💳 دفع عربون الحجز (إلزامي)' : '💳 Booking Deposit (Required)'}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('CASH')}
-              className={cn(
-                'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all text-sm',
-                paymentMethod === 'CASH' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-              )}
-            >
-              {isAr ? 'الدفع بالعيادة' : 'Pay at Clinic'}
-            </button>
+
+          {/* Deposit Breakdown */}
+          <div className="bg-gradient-to-br from-primary/15 to-blue-500/10 border border-primary/30 rounded-2xl p-4 space-y-2">
+            <div className="flex justify-between items-center text-sm text-white/70">
+              <span>{isAr ? 'إجمالي قيمة الكشف:' : 'Total consultation fee:'}</span>
+              <span className="font-bold text-white">{TOTAL_AMOUNT} {isAr ? 'جنيه' : 'EGP'}</span>
+            </div>
+            <div className="border-t border-white/10" />
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-emerald-400 font-black">{isAr ? '✅ المطلوب الآن (عربون):' : '✅ Required Now (Deposit):'}</p>
+                <p className="text-white/50 text-xs">{isAr ? 'يُدفع أونلاين الآن لتأكيد الحجز' : 'Paid online now to confirm booking'}</p>
+              </div>
+              <span className="text-2xl font-black text-emerald-400">{DEPOSIT_AMOUNT} {isAr ? 'ج' : 'EGP'}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs text-white/50">
+              <span>{isAr ? 'المتبقي يُدفع عند الحضور بالعيادة:' : 'Remaining paid at clinic:'}</span>
+              <span className="font-bold">{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isAr ? 'ج' : 'EGP'}</span>
+            </div>
+          </div>
+
+          {/* Method Selection */}
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setPaymentMethod('VODAFONE_CASH')}
               className={cn(
-                'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all text-sm',
-                paymentMethod === 'VODAFONE_CASH' ? 'bg-red-600 border-red-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                'p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 font-bold transition-all text-sm',
+                paymentMethod === 'VODAFONE_CASH' ? 'bg-red-600/20 border-red-500 text-white shadow-lg shadow-red-500/10' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:border-white/20'
               )}
             >
+              <span className="text-xl">📱</span>
               {isAr ? 'فودافون كاش' : 'Vodafone Cash'}
             </button>
             <button
               type="button"
               onClick={() => setPaymentMethod('INSTAPAY')}
               className={cn(
-                'p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition-all text-sm col-span-2 sm:col-span-1',
-                paymentMethod === 'INSTAPAY' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                'p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 font-bold transition-all text-sm',
+                paymentMethod === 'INSTAPAY' ? 'bg-purple-600/20 border-purple-500 text-white shadow-lg shadow-purple-500/10' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:border-white/20'
               )}
             >
+              <span className="text-xl">💜</span>
               {isAr ? 'انستا باي' : 'InstaPay'}
             </button>
           </div>
 
-          {paymentMethod !== 'CASH' && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 pt-4 border-t border-white/10 mt-4">
-              <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-center">
-                <p className="text-sm text-white/70 mb-2">
-                  {isAr ? 'الرجاء تحويل المبلغ إلى الرقم/الحساب التالي:' : 'Please transfer the amount to:'}
-                </p>
-                <p className="text-xl font-bold text-white" dir="ltr">
-                  {paymentMethod === 'VODAFONE_CASH' ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882') : (paymentSettings['payment.instapay']?.number || '+20 10 01516882@instapay')}
-                </p>
-              </div>
+          {/* Transfer Details */}
+          <div className="bg-black/40 border border-white/10 rounded-xl p-3 space-y-0.5 text-center">
+            <p className="text-xs text-white/50">{isAr ? 'حوّل مبلغ العربون إلى:' : 'Transfer the deposit amount to:'}</p>
+            <p className="text-lg font-black text-white" dir="ltr">
+              {paymentMethod === 'VODAFONE_CASH'
+                ? (paymentSettings['payment.vodafone']?.number || '+20 10 01516882')
+                : (paymentSettings['payment.instapay']?.number || '@instapay')}
+            </p>
+            <p className="text-emerald-400 font-bold text-sm">{DEPOSIT_AMOUNT} {isAr ? 'جنيه فقط' : 'EGP only'}</p>
+          </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {renderField(
-                  <Phone size={16} />,
-                  isAr ? 'رقم المحول منه' : 'Sender Phone',
-                  <Input
-                    id="senderPhone"
-                    dir="ltr"
-                    value={senderPhone}
-                    onChange={e => setSenderPhone(e.target.value)}
-                    placeholder="010XXXXXXXX"
-                    required
-                    className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20 h-12 text-left", isAr ? "pr-11" : "pl-11")}
-                  />
-                )}
-
-                <div className="space-y-1">
-                  <label className={cn("block text-sm font-bold text-white mb-2", isAr ? "text-right" : "text-left")}>
-                    {isAr ? 'صورة الإيصال' : 'Receipt Image'}
-                  </label>
-                  <label className="flex flex-col items-center justify-center w-full h-12 border border-white/10 bg-white/5 hover:bg-white/10 rounded-xl cursor-pointer transition-colors relative overflow-hidden">
-                    {proofFile ? (
-                      <span className="text-emerald-400 font-bold text-sm px-4 truncate w-full text-center flex items-center justify-center gap-2">
-                        <CheckCircle2 size={16} /> {proofFile.name}
-                      </span>
-                    ) : (
-                      <span className="text-white/60 text-sm font-medium flex items-center gap-2">
-                        <UploadCloud size={16} /> {isAr ? 'اضغط لرفع الصورة' : 'Upload image'}
-                      </span>
-                    )}
-                    <input type="file" accept="image/*" className="hidden" onChange={e => setProofFile(e.target.files?.[0] || null)} />
-                  </label>
-                </div>
-              </div>
-            </motion.div>
+          {/* Sender Phone */}
+          {renderField(
+            <Phone size={16} />,
+            isAr ? 'رقم الهاتف الذي حولت منه *' : 'Phone number you sent from *',
+            <Input
+              id="senderPhone"
+              dir="ltr"
+              value={senderPhone}
+              onChange={e => setSenderPhone(e.target.value)}
+              placeholder="010XXXXXXXX"
+              required
+              className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors placeholder:text-white/20 h-12 text-left", isAr ? "pr-11" : "pl-11")}
+            />
           )}
+
+          {/* Proof Upload */}
+          <div className="space-y-1">
+            <label className={cn("block text-sm font-bold text-white mb-2", isAr ? "text-right" : "text-left")}>
+              {isAr ? '📸 صورة إيصال العربون (إلزامي) *' : '📸 Deposit Receipt Photo (Required) *'}
+            </label>
+            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer transition-all relative overflow-hidden border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/60">
+              {proofFile ? (
+                <span className="text-emerald-400 font-bold text-sm px-4 truncate w-full text-center flex items-center justify-center gap-2">
+                  <CheckCircle2 size={16} /> {proofFile.name}
+                </span>
+              ) : (
+                <>
+                  <UploadCloud className="text-primary/70 mb-1" size={28} />
+                  <span className="text-white/70 text-sm font-bold">{isAr ? 'اضغط لرفع صورة الإيصال' : 'Tap to upload receipt photo'}</span>
+                  <span className="text-white/30 text-xs mt-0.5">PNG / JPG / WEBP</span>
+                </>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={e => setProofFile(e.target.files?.[0] || null)} />
+            </label>
+            <p className="text-xs text-orange-400/80 font-medium">
+              ⚠️ {isAr ? 'الإيصال مطلوب لتأكيد الحجز — بدونه لن يُعتمد الحجز' : 'Receipt is required — booking will not be confirmed without it'}
+            </p>
+          </div>
         </div>
 
         {/* Notes */}
