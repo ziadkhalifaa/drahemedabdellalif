@@ -299,7 +299,15 @@
     "terms": "شروط الخدمة",
     "contact": "اتصل بنا",
     "quickLinks": "روابط سريعة",
-    "facebook": "تابعنا على فيسبوك"
+    "facebook": "تابعنا على فيسبوك",
+    "newsletterTitle": "النشرة الطبية الأسبوعية",
+    "newsletterSubtitle": "اشترك للحصول على أحدث النصائح الصحية والإرشادات الطبية مباشرة في بريدك الإلكتروني.",
+    "newsletterPlaceholder": "البريد الإلكتروني",
+    "newsletterButton": "اشترك الآن",
+    "newsletterSubscribing": "جاري الاشتراك...",
+    "subscribeSuccess": "تم الاشتراك في النشرة البريدية بنجاح! 🎉",
+    "subscribeError": "حدث خطأ، يرجى المحاولة مرة أخرى.",
+    "subscribeAlready": "هذا البريد الإلكتروني مشترك بالفعل."
   },
   "faqs": {
     "title": "الأسئلة الشائعة",

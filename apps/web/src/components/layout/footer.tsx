@@ -6,6 +6,10 @@ import { MapPin, Phone, Mail, ArrowLeft, ArrowRight, Clock } from 'lucide-react'
 import { Logo } from '@/components/ui/logo';
 import { cn } from '@/lib/utils';
 import { useEditor } from '@/context/editor-context';
+import { useState } from 'react';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
+import { Input, Button } from '@/components/ui';
 
 const FacebookIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -33,6 +37,25 @@ export function Footer() {
   const facebookUrl = social.facebook || "https://www.facebook.com/DrAhmedAbdellatifClinic/";
   const youtubeUrl = social.youtube || "https://www.youtube.com/@DrAhmedAbdellatif";
 
+  const [email, setEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@')) return;
+    setSubscribing(true);
+    try {
+      await api.post('/newsletter/subscribe', { email });
+      toast.success(t('subscribeSuccess'));
+      setEmail('');
+    } catch (err: any) {
+      console.error('Subscription error:', err);
+      toast.error(t('subscribeError'));
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
   const quickLinks = [
     { href: '/', label: tNav('home') },
     { href: '/about', label: tNav('aboutUs') },
@@ -55,6 +78,38 @@ export function Footer() {
     <footer className="bg-[#05111f] text-white/80 border-t border-white/5">
       {/* Main Footer */}
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        
+        {/* Newsletter Section */}
+        <div className="pb-12 mb-12 border-b border-white/5 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className={cn("max-w-md", isAr ? "text-right" : "text-left")}>
+            <h3 className="text-xl sm:text-2xl font-black text-white mb-2">
+              {t('newsletterTitle')}
+            </h3>
+            <p className="text-sm text-white/55 leading-relaxed">
+              {t('newsletterSubtitle')}
+            </p>
+          </div>
+          <form onSubmit={handleSubscribe} className="w-full max-w-md flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Input
+                type="email"
+                placeholder={t('newsletterPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full h-12 bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/30 focus:border-[var(--primary)] focus:ring-[var(--primary)] text-sm"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={subscribing}
+              className="h-12 px-6 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-black rounded-xl transition-all shadow-lg hover:shadow-primary/20 shrink-0"
+            >
+              {subscribing ? t('newsletterSubscribing') : t('newsletterButton')}
+            </Button>
+          </form>
+        </div>
+
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
 
           {/* Brand Column */}

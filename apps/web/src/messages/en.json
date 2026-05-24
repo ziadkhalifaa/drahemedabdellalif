@@ -299,7 +299,15 @@
     "terms": "Terms of Service",
     "contact": "Contact",
     "quickLinks": "Quick Links",
-    "facebook": "Follow us on Facebook"
+    "facebook": "Follow us on Facebook",
+    "newsletterTitle": "Weekly Medical Newsletter",
+    "newsletterSubtitle": "Subscribe to get the latest health tips and medical guidance directly in your inbox.",
+    "newsletterPlaceholder": "Email Address",
+    "newsletterButton": "Subscribe",
+    "newsletterSubscribing": "Subscribing...",
+    "subscribeSuccess": "Subscribed to newsletter successfully! 🎉",
+    "subscribeError": "An error occurred, please try again.",
+    "subscribeAlready": "This email is already subscribed."
   },
   "faqs": {
     "title": "Frequently Asked Questions",
