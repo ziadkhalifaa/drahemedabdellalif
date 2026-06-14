@@ -256,7 +256,7 @@ export default function AdminClinicsPage() {
   });
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-8 text-white relative">
+    <div className="rounded-3xl bg-[#0d1f2d] p-4 sm:p-6 max-w-7xl mx-auto space-y-8 text-white relative">
       {/* Decorative Glows */}
       <div className="absolute top-0 right-1/4 w-80 h-80 bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10" />
       <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none -z-10" />
