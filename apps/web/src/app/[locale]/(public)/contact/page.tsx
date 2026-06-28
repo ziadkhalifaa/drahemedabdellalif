@@ -20,34 +20,27 @@ export default function ContactPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
 
-  const contactCards = [
+  const clinics = [
     { 
-      icon: Phone, 
-      label: t('info.phone'), 
-      value: CLINIC_PHONE, 
-      href: `tel:${CLINIC_PHONE}`,
-      actionText: isAr ? 'اتصل الآن' : 'Call Now'
+      title: isAr ? 'عيادة 6 أكتوبر' : '6th of October Clinic', 
+      address: isAr ? 'أمام حديقة الحصري - مبنى بريما فيستا - أعلى بنك CIB' : 'Opposite Al-Hosary Park - Prima Vista Bldg - Above CIB Bank',
+      hours: isAr ? 'الخميس: من 1 إلى 3 ظهرًا' : 'Thursday: 1:00 PM to 3:00 PM',
+      phones: ['01101211994', '01010415455'],
+      href: 'https://maps.google.com/?q=Prima+Vista+Building,+6th+of+October'
     },
     { 
-      icon: Mail, 
-      label: t('info.email'), 
-      value: CLINIC_EMAIL, 
-      href: `mailto:${CLINIC_EMAIL}`,
-      actionText: isAr ? 'راسلنا بالبريد' : 'Send Email'
+      title: isAr ? 'عيادة بني سويف' : 'Beni Suef Clinic', 
+      address: isAr ? 'برج الندى ش بورسعيد بجوار الثانوية بنات - الدور الثاني' : 'Al Nada Tower, Port Said St, Next to Girls High School - 2nd Floor',
+      hours: isAr ? 'السبت للأربعاء: 4 عصرًا إلى 10 مساءً' : 'Sat-Wed: 4:00 PM to 10:00 PM',
+      phones: ['01024366117', '0822135709'],
+      href: 'https://maps.google.com/?q=Al+Nada+Tower,+Beni+Suef'
     },
     { 
-      icon: MessageCircle, 
-      label: 'WhatsApp', 
-      value: isAr ? 'تواصل عبر واتساب' : 'Chat on WhatsApp', 
-      href: `https://wa.me/${WHATSAPP_NUMBER}`,
-      actionText: isAr ? 'تحدث معنا' : 'Chat Now'
-    },
-    { 
-      icon: MapPin, 
-      label: t('info.beniSuef'), 
-      value: t('info.beniSuefAddress'), 
-      href: 'https://maps.google.com/?q=Al+Nada+Tower,+Beni+Suef',
-      actionText: isAr ? 'عرض موقعنا' : 'View Location'
+      title: isAr ? 'عيادة التجمع الخامس' : '5th Settlement Clinic', 
+      address: isAr ? 'مبنى HCC - خلف المستشفى الجوي التخصصي' : 'HCC Building - Behind Air Force Hospital',
+      hours: isAr ? 'يتم تحديد المواعيد بالحجز المسبق' : 'Appointments by prior reservation',
+      phones: ['01101211994', '01010415455'],
+      href: 'https://maps.google.com/?q=HCC+Building,+5th+Settlement'
     },
   ];
 
@@ -91,13 +84,13 @@ export default function ContactPage() {
 
         {/* Contact Cards */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactCards.map((card, i) => (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {clinics.map((clinic, i) => (
               <motion.a
                 key={i}
-                href={card.href}
-                target={card.href.startsWith('http') ? '_blank' : undefined}
-                rel={card.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                href={clinic.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.5, ease: 'easeOut' }}
@@ -110,23 +103,40 @@ export default function ContactPage() {
                 <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
 
                 {/* Luxury-Grade Icon Badge */}
-                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[var(--primary-dark)] to-[var(--primary)] flex items-center justify-center border border-[var(--accent)]/30 group-hover:border-[var(--accent)] transition-all duration-300 shadow-md shadow-[var(--primary)]/10 relative z-10">
-                  <card.icon size={22} className="text-[var(--accent)] group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[var(--primary-dark)] to-[var(--primary)] flex items-center justify-center border border-[var(--accent)]/30 group-hover:border-[var(--accent)] transition-all duration-300 shadow-md shadow-[var(--primary)]/10 relative z-10 shrink-0">
+                  <MapPin size={22} className="text-[var(--accent)] group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 
-                <div className="flex-1 flex flex-col justify-between items-center relative z-10 w-full">
-                  <div>
-                    <span className="text-[10px] font-black tracking-widest uppercase text-[var(--muted)] group-hover:text-[var(--accent)] transition-colors duration-300 block mb-1">
-                      {card.label}
-                    </span>
-                    <p className="text-base font-black text-[var(--foreground)] tracking-tight leading-snug group-hover:text-[var(--primary)] dark:group-hover:text-white transition-colors duration-300 max-w-[200px] mx-auto break-words">
-                      {card.value}
-                    </p>
+                <div className="flex-1 flex flex-col justify-start items-center relative z-10 w-full">
+                  <span className="text-lg font-black tracking-widest text-[var(--primary)] dark:text-white transition-colors duration-300 block mb-3">
+                    {clinic.title}
+                  </span>
+                  
+                  <p className="text-[13px] font-bold text-[var(--foreground)]/80 leading-relaxed min-h-[40px] mb-4">
+                    {clinic.address}
+                  </p>
+
+                  <div className="w-full h-px bg-[var(--border)] mb-4" />
+
+                  <div className="flex flex-col gap-3 w-full">
+                    <div className="flex items-center justify-center gap-2 text-[var(--muted)] text-sm">
+                      <Clock size={16} className="shrink-0" />
+                      <span className="font-semibold">{clinic.hours}</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center justify-center gap-2 mt-2">
+                      {clinic.phones.map((phone, idx) => (
+                         <div key={idx} className="flex items-center gap-2 text-[var(--accent)] font-black text-sm hover:underline">
+                           <Phone size={14} className="shrink-0" />
+                           <span dir="ltr">{phone}</span>
+                         </div>
+                      ))}
+                    </div>
                   </div>
                   
-                  {/* Call-to-action text indicating direct human interaction */}
-                  <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-black text-[var(--primary)] dark:text-[var(--accent-light)] opacity-70 group-hover:opacity-100 transition-all duration-300">
-                    {card.actionText}
+                  {/* Call-to-action */}
+                  <span className="mt-6 inline-flex items-center gap-1.5 text-xs font-black text-[var(--primary)] dark:text-[var(--accent-light)] opacity-70 group-hover:opacity-100 transition-all duration-300">
+                    {isAr ? 'عرض الموقع على الخريطة' : 'View on Google Maps'}
                     <span className={cn(
                       "transition-transform duration-300",
                       isAr ? "group-hover:-translate-x-1" : "group-hover:translate-x-1"
@@ -247,12 +257,9 @@ export default function ContactPage() {
                   <h4 className="font-black text-[var(--foreground)] text-lg">{t('hours.title')}</h4>
                 </div>
                 <div className="space-y-3">
-                  {[
-                    { location: t('hours.beniSuef'), hours: t('hours.beniSuefHours') },
-                    { location: t('hours.october'), hours: t('hours.octoberHours') },
-                  ].map((row, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-[var(--background)] border border-[var(--border)]">
-                      <span className="text-sm text-[var(--muted)] font-medium">{row.location}</span>
+                  {clinics.map((row, i) => (
+                    <div key={i} className="flex flex-col gap-1 p-4 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+                      <span className="text-sm text-[var(--muted)] font-bold">{row.title}</span>
                       <span className="text-sm text-[var(--accent)] font-black">{row.hours}</span>
                     </div>
                   ))}
