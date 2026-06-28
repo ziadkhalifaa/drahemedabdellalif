@@ -91,6 +91,11 @@ html {
   scroll-behavior: smooth;
 }
 
+body {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+}
+
 
 ::selection {
   background: var(--primary);
