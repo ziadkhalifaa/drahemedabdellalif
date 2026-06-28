@@ -164,8 +164,16 @@ export class AppointmentsService {
       }
     });
 
+    const formatTime24to12 = (time24: string) => {
+      if (!time24 || time24.includes('AM') || time24.includes('PM')) return time24;
+      const [h, m] = time24.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+    };
+
     const bookedSet = new Set(booked.map((b: any) => b.timeSlot));
-    const blockedSet = new Set(blocked.map((b: any) => b.timeSlot).filter(Boolean));
+    const blockedSet = new Set(blocked.map((b: any) => formatTime24to12(b.timeSlot)).filter(Boolean));
     const isFullDayBlocked = blocked.some((b: any) => !b.timeSlot);
 
     if (isFullDayBlocked) return { slots: [], reason: 'Day fully blocked' };
