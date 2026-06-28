@@ -187,46 +187,77 @@ export function Footer() {
             <h4 className="text-white font-black text-sm uppercase tracking-widest mb-6">
               {t('contact')}
             </h4>
-            <ul className="space-y-4">
+            <ul className="space-y-6">
+              {/* 6 October */}
               <li>
-                <a
-                  href={`tel:${tContact('phone')}`}
-                  className="flex items-start gap-3 text-sm text-white/50 hover:text-white transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center text-[var(--accent)] flex-shrink-0 group-hover:bg-[var(--primary)]/30 transition-colors">
-                    <Phone size={14} />
+                <div className="flex flex-col gap-2 text-sm text-white/60">
+                  <span className="font-bold text-white text-base">{isAr ? 'عيادة 6 أكتوبر' : '6th of October Clinic'}</span>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={14} className="text-[var(--accent)] mt-0.5 shrink-0" />
+                    <span className="leading-relaxed">{isAr ? 'أمام حديقة الحصري - مبنى بريما فيستا' : 'Opposite Al-Hosary Park - Prima Vista Bldg'}</span>
                   </div>
-                  <span className="pt-1 leading-relaxed">{tContact('phone')}</span>
-                </a>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-[var(--accent)] shrink-0" />
+                    <span>{isAr ? 'الخميس: 1 - 3 ظهرًا' : 'Thu: 1:00 PM - 3:00 PM'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} className="text-[var(--accent)] shrink-0" />
+                    <span dir="ltr">01101211994 - 01010415455</span>
+                  </div>
+                </div>
               </li>
+
+              {/* Beni Suef */}
+              <li>
+                <div className="flex flex-col gap-2 text-sm text-white/60">
+                  <span className="font-bold text-white text-base">{isAr ? 'عيادة بني سويف' : 'Beni Suef Clinic'}</span>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={14} className="text-[var(--accent)] mt-0.5 shrink-0" />
+                    <span className="leading-relaxed">{isAr ? 'برج الندى ش بورسعيد بجوار الثانوية بنات' : 'Al Nada Tower, Port Said St'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-[var(--accent)] shrink-0" />
+                    <span>{isAr ? 'السبت للأربعاء: 4 - 10 مساءً' : 'Sat-Wed: 4:00 PM - 10:00 PM'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} className="text-[var(--accent)] shrink-0" />
+                    <span dir="ltr">01024366117 - 0822135709</span>
+                  </div>
+                </div>
+              </li>
+
+              {/* 5th Settlement */}
+              <li>
+                <div className="flex flex-col gap-2 text-sm text-white/60">
+                  <span className="font-bold text-white text-base">{isAr ? 'عيادة التجمع الخامس' : '5th Settlement Clinic'}</span>
+                  <div className="flex items-start gap-2">
+                    <MapPin size={14} className="text-[var(--accent)] mt-0.5 shrink-0" />
+                    <span className="leading-relaxed">{isAr ? 'مبنى HCC - خلف المستشفى الجوي' : 'HCC Building - Behind Air Force Hospital'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-[var(--accent)] shrink-0" />
+                    <span>{isAr ? 'يتم تحديد المواعيد بالحجز المسبق' : 'Appointments by prior reservation'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} className="text-[var(--accent)] shrink-0" />
+                    <span dir="ltr">01101211994 - 01010415455</span>
+                  </div>
+                </div>
+              </li>
+
+              <div className="w-full h-px bg-white/10 my-4" />
+
+              {/* Email */}
               <li>
                 <a
                   href={`mailto:${tContact('email')}`}
-                  className="flex items-start gap-3 text-sm text-white/50 hover:text-white transition-colors group"
+                  className="flex items-start gap-3 text-sm text-white/60 hover:text-white transition-colors group"
                 >
                   <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center text-[var(--accent)] flex-shrink-0 group-hover:bg-[var(--primary)]/30 transition-colors">
                     <Mail size={14} />
                   </div>
                   <span className="pt-1 leading-relaxed break-all">{tContact('email')}</span>
                 </a>
-              </li>
-              <li>
-                <div className="flex items-start gap-3 text-sm text-white/50">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center text-[var(--accent)] flex-shrink-0">
-                    <MapPin size={14} />
-                  </div>
-                  <span className="pt-1 leading-relaxed">{tContact('address')}</span>
-                </div>
-              </li>
-              <li>
-                <div className="flex items-start gap-3 text-sm text-white/50">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center text-[var(--accent)] flex-shrink-0">
-                    <Clock size={14} />
-                  </div>
-                  <span className="pt-1 leading-relaxed">
-                    {isAr ? 'السبت - الخميس: ٩ص - ٩م' : 'Sat - Thu: 9AM - 9PM'}
-                  </span>
-                </div>
               </li>
             </ul>
           </div>
