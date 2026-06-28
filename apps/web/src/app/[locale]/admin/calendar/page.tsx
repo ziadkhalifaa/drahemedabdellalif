@@ -152,7 +152,7 @@ export default function AdminCalendarPage() {
   // ── Stats ────────────────────────────────────────────────────────────────────
   const stats = {
     pending: appointments.filter(a => a.status === AppointmentStatus.PENDING).length,
-    approved: appointments.filter(a => a.status === AppointmentStatus.APPROVED).length,
+    approved: appointments.filter(a => a.status === AppointmentStatus.APPROVED || a.status === AppointmentStatus.COMPLETED).length,
     rejected: appointments.filter(a => a.status === AppointmentStatus.REJECTED).length,
     online: appointments.filter(a => a.type === AppointmentType.ONLINE).length,
   };
