@@ -9,7 +9,6 @@ export class WorkingHoursController {
   constructor(private readonly workingHoursService: WorkingHoursService) {}
 
   @Get()
-  @UseInterceptors(SimpleCacheInterceptor)
   async getAll() {
     return this.workingHoursService.getAll();
   }
@@ -29,7 +28,6 @@ export class WorkingHoursController {
   }
 
   @Get('blocked')
-  @UseInterceptors(SimpleCacheInterceptor)
   async getBlocked(@Query('date') date?: string) {
     return this.workingHoursService.getBlockedSlots(date);
   }
