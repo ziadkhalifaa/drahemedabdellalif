@@ -90,8 +90,8 @@ export function Navbar() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
         scrolled 
-          ? "bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-border shadow-sm py-2" 
-          : "bg-white dark:bg-slate-950 border-transparent py-4"
+          ? "bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-border shadow-sm py-1" 
+          : "bg-white dark:bg-slate-950 border-transparent py-2"
       )}
       onMouseLeave={() => setActiveMenu(null)}
     >
@@ -117,7 +117,7 @@ export function Navbar() {
                 <Link
                   href={item.href as any}
                   className={cn(
-                    "flex items-center gap-1.5 py-6 text-sm font-bold uppercase tracking-wider transition-colors outline-none",
+                    "flex items-center gap-1.5 py-3 text-sm font-bold uppercase tracking-wider transition-colors outline-none",
                     isCurrent ? "text-primary dark:text-primary-light" : "text-foreground/80 hover:text-primary dark:hover:text-primary-light"
                   )}
                 >
