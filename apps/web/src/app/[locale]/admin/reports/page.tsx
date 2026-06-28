@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
-import { FileText, Upload, Search, User, FileUp, X } from 'lucide-react';
+import { FileText, Upload, Search, User, FileUp, X, Stethoscope, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 
@@ -29,8 +29,25 @@ export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Upload Modal State
+  // Modals State
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  
+  // Upload Report State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadData, setUploadData] = useState({ title: '', description: '' });
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Prescription State
+  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const [submittingPrescription, setSubmittingPrescription] = useState(false);
+  const [prescriptionData, setPrescriptionData] = useState({
+    diagnosisAr: '',
+    diagnosisEn: '',
+    instructionsAr: '',
+    instructionsEn: '',
+    medications: [{ name: '', dosage: '', duration: '', notes: '' }]
+  });
 
   useEffect(() => {
     if (searchParam) {
@@ -49,10 +66,6 @@ export default function AdminReportsPage() {
       }
     }
   }, [patients, searchParam, openUploadParam]);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [uploadData, setUploadData] = useState({ title: '', description: '' });
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -78,6 +91,18 @@ export default function AdminReportsPage() {
     setIsUploadModalOpen(true);
     setUploadData({ title: '', description: '' });
     setFile(null);
+  };
+
+  const handlePrescriptionClick = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setIsPrescriptionModalOpen(true);
+    setPrescriptionData({
+      diagnosisAr: '',
+      diagnosisEn: '',
+      instructionsAr: '',
+      instructionsEn: '',
+      medications: [{ name: '', dosage: '', duration: '', notes: '' }]
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +145,37 @@ export default function AdminReportsPage() {
       toast.error(err.message || 'An error occurred during upload');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handlePrescriptionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !selectedPatient) return;
+    
+    // Validate medications
+    const validMedications = prescriptionData.medications.filter(m => m.name && m.dosage);
+    if (validMedications.length === 0) {
+      toast.error('Please add at least one medication with name and dosage.');
+      return;
+    }
+
+    setSubmittingPrescription(true);
+    try {
+      await api.post('/prescriptions', {
+        patientId: selectedPatient.id,
+        diagnosisAr: prescriptionData.diagnosisAr || undefined,
+        diagnosisEn: prescriptionData.diagnosisEn || undefined,
+        instructionsAr: prescriptionData.instructionsAr || undefined,
+        instructionsEn: prescriptionData.instructionsEn || undefined,
+        medications: validMedications
+      }, token);
+
+      toast.success('Prescription created successfully!');
+      setIsPrescriptionModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || 'An error occurred while creating the prescription');
+    } finally {
+      setSubmittingPrescription(false);
     }
   };
 
@@ -167,7 +223,7 @@ export default function AdminReportsPage() {
               <tr>
                 <th className="px-6 py-4">{t('patientName')}</th>
                 <th className="px-6 py-4">{t('contactInfo')}</th>
-                <th className="px-6 py-4 text-right">{t('actions')}</th>
+                <th className="px-6 py-4 text-center">{t('actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
@@ -188,14 +244,24 @@ export default function AdminReportsPage() {
                         <span className="text-xs text-[var(--muted)]">{patient.phone || t('noPhone')}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <Button 
-                        onClick={() => handleUploadClick(patient)}
-                        className="rounded-xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] gap-2 shadow-lg shadow-[var(--primary)]/20 px-6 py-5 text-xs h-auto"
-                      >
-                        <FileUp size={16} />
-                        {t('uploadReport')}
-                      </Button>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <Button 
+                          onClick={() => handlePrescriptionClick(patient)}
+                          variant="outline"
+                          className="rounded-xl font-bold gap-2 px-4 py-2 text-xs border-blue-500/30 hover:bg-blue-500 hover:text-white text-blue-500 transition-colors"
+                        >
+                          <Stethoscope size={16} />
+                          عمل روشتة
+                        </Button>
+                        <Button 
+                          onClick={() => handleUploadClick(patient)}
+                          className="rounded-xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] gap-2 shadow-lg shadow-[var(--primary)]/20 px-4 py-2 text-xs h-auto"
+                        >
+                          <FileUp size={16} />
+                          {t('uploadReport')}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -213,7 +279,7 @@ export default function AdminReportsPage() {
 
       {/* Upload Dialog */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full sm:max-w-[500px] bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl">
             <div className="p-8">
               <div className="mb-6">
@@ -297,6 +363,187 @@ export default function AdminReportsPage() {
                   </Button>
                   <Button type="submit" disabled={uploading || !uploadData.title || !file} className="rounded-xl font-bold px-8 h-12 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] shadow-lg shadow-[var(--primary)]/20">
                     {uploading ? tCommon('loading', { fallback: 'Uploading...' }) : t('uploadReport')}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Prescription Dialog */}
+      {isPrescriptionModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full sm:max-w-3xl bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl my-8">
+            <div className="p-8">
+              <div className="mb-8 border-b border-[var(--border)] pb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-black flex items-center gap-3">
+                    <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
+                      <Stethoscope size={24} />
+                    </div>
+                    عمل روشتة طبية (Prescription)
+                  </h2>
+                  <button onClick={() => setIsPrescriptionModalOpen(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]">
+                    <X size={24} />
+                  </button>
+                </div>
+                
+                <div className="p-4 bg-[var(--primary)]/5 border border-[var(--primary)]/10 rounded-2xl flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-full bg-[var(--primary)]/20 text-[var(--primary)] font-black flex items-center justify-center text-sm">
+                    {selectedPatient?.name?.[0]?.toUpperCase() || 'P'}
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-[var(--muted)] uppercase tracking-[0.2em] font-black">{t('patient')}</div>
+                    <div className="font-black text-lg leading-tight">{selectedPatient?.name}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <form onSubmit={handlePrescriptionSubmit} className="space-y-8">
+                {/* Diagnosis Section */}
+                <div className="space-y-4">
+                  <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />
+                    التشخيص (Diagnosis)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--muted)]">التشخيص (عربي)</label>
+                      <Input 
+                        value={prescriptionData.diagnosisAr}
+                        onChange={(e) => setPrescriptionData({ ...prescriptionData, diagnosisAr: e.target.value })}
+                        placeholder="أدخل التشخيص..."
+                        className="py-5 rounded-xl font-medium text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--muted)]">Diagnosis (English)</label>
+                      <Input 
+                        value={prescriptionData.diagnosisEn}
+                        onChange={(e) => setPrescriptionData({ ...prescriptionData, diagnosisEn: e.target.value })}
+                        placeholder="Enter diagnosis..."
+                        className="py-5 rounded-xl font-medium"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medications Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      الأدوية (Medications)
+                    </h3>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setPrescriptionData({
+                        ...prescriptionData, 
+                        medications: [...prescriptionData.medications, { name: '', dosage: '', duration: '', notes: '' }]
+                      })}
+                      className="gap-2 rounded-xl text-xs font-bold"
+                    >
+                      <Plus size={14} /> إضافة دواء
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3 bg-[var(--background)]/50 p-4 rounded-2xl border border-[var(--border)] max-h-[300px] overflow-y-auto">
+                    {prescriptionData.medications.map((med, index) => (
+                      <div key={index} className="flex flex-col md:flex-row gap-3 p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl relative group">
+                        <div className="flex-1 space-y-2">
+                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">اسم الدواء (Medication Name)</label>
+                          <Input 
+                            required
+                            value={med.name}
+                            onChange={(e) => {
+                              const newMeds = [...prescriptionData.medications];
+                              newMeds[index].name = e.target.value;
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            placeholder="e.g. Panadol 500mg"
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                        <div className="w-full md:w-1/4 space-y-2">
+                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">الجرعة (Dosage)</label>
+                          <Input 
+                            required
+                            value={med.dosage}
+                            onChange={(e) => {
+                              const newMeds = [...prescriptionData.medications];
+                              newMeds[index].dosage = e.target.value;
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            placeholder="e.g. 1 pill every 8 hours"
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                        <div className="w-full md:w-1/5 space-y-2">
+                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">المدة (Duration)</label>
+                          <Input 
+                            value={med.duration}
+                            onChange={(e) => {
+                              const newMeds = [...prescriptionData.medications];
+                              newMeds[index].duration = e.target.value;
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            placeholder="e.g. 5 days"
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                        
+                        {prescriptionData.medications.length > 1 && (
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const newMeds = prescriptionData.medications.filter((_, i) => i !== index);
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            className="absolute -top-2 -right-2 md:top-auto md:bottom-2 md:right-4 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Instructions Section */}
+                <div className="space-y-4">
+                  <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    تعليمات إضافية (Instructions)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <textarea 
+                      value={prescriptionData.instructionsAr}
+                      onChange={(e) => setPrescriptionData({ ...prescriptionData, instructionsAr: e.target.value })}
+                      placeholder="تعليمات إضافية للمريض..."
+                      className="w-full min-h-[100px] p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]/50 focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-y text-sm font-medium outline-none text-right"
+                      dir="rtl"
+                    />
+                    <textarea 
+                      value={prescriptionData.instructionsEn}
+                      onChange={(e) => setPrescriptionData({ ...prescriptionData, instructionsEn: e.target.value })}
+                      placeholder="Additional instructions..."
+                      className="w-full min-h-[100px] p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]/50 focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-y text-sm font-medium outline-none"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-8 border-t border-[var(--border)]">
+                  <Button type="button" variant="ghost" onClick={() => setIsPrescriptionModalOpen(false)} className="rounded-xl font-bold h-12 px-8 bg-[var(--background)] border border-[var(--border)]">
+                    إلغاء (Cancel)
+                  </Button>
+                  <Button type="submit" disabled={submittingPrescription} className="rounded-xl font-bold px-10 h-12 bg-gradient-to-r from-blue-600 to-blue-400 shadow-lg shadow-blue-500/30">
+                    {submittingPrescription ? 'جاري الحفظ...' : 'حفظ الروشتة (Save)'}
                   </Button>
                 </div>
               </form>

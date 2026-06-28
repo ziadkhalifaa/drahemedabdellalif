@@ -2,8 +2,8 @@ import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
 export class CreatePrescriptionDto {
   @IsString()
-  @IsNotEmpty()
-  appointmentId!: string;
+  @IsOptional()
+  appointmentId?: string;
 
   @IsString()
   @IsNotEmpty()

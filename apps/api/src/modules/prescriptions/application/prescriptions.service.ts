@@ -6,7 +6,7 @@ export class PrescriptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: { 
-    appointmentId: string; 
+    appointmentId?: string; 
     patientId: string; 
     diagnosisAr?: string; 
     diagnosisEn?: string; 

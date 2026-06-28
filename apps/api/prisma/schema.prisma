@@ -293,7 +293,7 @@ model AuditLog {
 
 model Prescription {
   id             String      @id @default(cuid())
-  appointmentId  String      @unique
+  appointmentId  String?     @unique
   patientId      String
   diagnosisAr    String?
   diagnosisEn    String?
@@ -304,7 +304,7 @@ model Prescription {
   issuedAt       DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @default(now()) @updatedAt
-  appointment    Appointment @relation(fields: [appointmentId], references: [id])
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
   patient        User        @relation(fields: [patientId], references: [id])
 }
 
