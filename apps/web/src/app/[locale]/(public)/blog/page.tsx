@@ -65,10 +65,10 @@ export default function BlogPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-[#050e1a]">
+      <main className="min-h-screen bg-[var(--background)] transition-colors duration-300">
 
         {/* ── Hero Header ─────────────────────────────────── */}
-        <div className="relative pt-32 pb-20 overflow-hidden">
+        <div className="relative pt-32 pb-20 overflow-hidden bg-[#050e1a]">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[var(--primary)]/15 rounded-full blur-[150px]" />
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5" />
@@ -116,9 +116,9 @@ export default function BlogPage() {
               ))}
             </div>
           ) : fetchError ? (
-            <div className="text-center py-24 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-2xl max-w-xl mx-auto p-10">
-              <BookOpen size={64} className="text-white/20 mx-auto mb-6" />
-              <p className="text-white/60 text-lg mb-6">
+            <div className="text-center py-24 bg-[var(--card)] backdrop-blur-md rounded-[2rem] border border-[var(--border)] shadow-2xl max-w-xl mx-auto p-10">
+              <BookOpen size={64} className="text-[var(--muted)] mx-auto mb-6" />
+              <p className="text-[var(--muted)] text-lg mb-6">
                 {isAr ? 'حدث خطأ أثناء تحميل المقالات الطبية.' : 'Failed to load medical blog articles.'}
               </p>
               <button
@@ -130,8 +130,8 @@ export default function BlogPage() {
             </div>
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-24">
-              <BookOpen size={64} className="text-white/10 mx-auto mb-6" />
-              <p className="text-white/40 text-xl font-medium">{t('noPosts')}</p>
+              <BookOpen size={64} className="text-[var(--muted)] mx-auto mb-6 opacity-50" />
+              <p className="text-[var(--muted)] text-xl font-medium">{t('noPosts')}</p>
             </div>
           ) : (
             <>
@@ -143,7 +143,7 @@ export default function BlogPage() {
                   className="mb-10"
                 >
                   <Link href={`/blog/${(isAr ? featuredPost.slugAr : featuredPost.slugEn) || featuredPost.slugEn || featuredPost.slugAr}`}>
-                    <div className="group relative rounded-[2rem] overflow-hidden h-[420px] border border-white/10 hover:border-[var(--primary)]/50 transition-all duration-500 hover:-translate-y-1 shadow-2xl">
+                    <div className="group relative rounded-[2rem] overflow-hidden h-[420px] border border-[var(--border)] hover:border-[var(--primary)]/50 transition-all duration-500 hover:-translate-y-1 shadow-2xl">
                       {featuredPost.featuredImage ? (
                         <img
                           src={getMediaUrl(featuredPost.featuredImage)}
@@ -197,7 +197,7 @@ export default function BlogPage() {
                         transition={{ delay: i * 0.05, duration: 0.5 }}
                       >
                         <Link href={`/blog/${slug}`} className="group block h-full">
-                          <div className="h-full bg-white/5 border border-white/10 rounded-[1.75rem] overflow-hidden hover:border-[var(--primary)]/40 hover:-translate-y-2 transition-all duration-400 hover:shadow-xl hover:shadow-[var(--primary)]/10 flex flex-col">
+                          <div className="h-full bg-[var(--card)] border border-[var(--border)] rounded-[1.75rem] overflow-hidden hover:border-[var(--primary)]/40 hover:-translate-y-2 transition-all duration-400 hover:shadow-xl hover:shadow-[var(--primary)]/10 flex flex-col">
                             {/* Image */}
                             <div className="relative h-52 overflow-hidden flex-shrink-0">
                               {post.featuredImage ? (
@@ -208,7 +208,7 @@ export default function BlogPage() {
                                 />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-[var(--primary)]/10 to-[var(--primary-dark)]/20 flex items-center justify-center">
-                                  <BookOpen size={40} className="text-white/10" />
+                                  <BookOpen size={40} className="text-[var(--primary)]/40" />
                                 </div>
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -223,15 +223,15 @@ export default function BlogPage() {
 
                             {/* Content */}
                             <div className={cn("p-6 flex flex-col flex-grow", isAr ? "text-right" : "text-left")}>
-                              <div className={cn("flex items-center gap-2 text-white/30 text-xs mb-3", isAr ? "flex-row-reverse justify-end" : "")}>
+                              <div className={cn("flex items-center gap-2 text-[var(--muted)] text-xs mb-3", isAr ? "flex-row-reverse justify-end" : "")}>
                                 <Calendar size={12} />
                                 {new Date(post.createdAt).toLocaleDateString(locale)}
                               </div>
-                              <h3 className="text-lg font-black text-white mb-3 line-clamp-2 leading-snug group-hover:text-[var(--accent)] transition-colors duration-200">
+                              <h3 className="text-lg font-black text-[var(--foreground)] mb-3 line-clamp-2 leading-snug group-hover:text-[var(--accent)] transition-colors duration-200">
                                 {title}
                               </h3>
                               {excerpt && (
-                                <p className="text-white/40 text-sm flex-grow line-clamp-3 leading-relaxed mb-5">
+                                <p className="text-[var(--muted)] text-sm flex-grow line-clamp-3 leading-relaxed mb-5">
                                   {excerpt}
                                 </p>
                               )}
@@ -245,7 +245,7 @@ export default function BlogPage() {
                             </div>
 
                             {/* Bottom progress bar */}
-                            <div className="h-0.5 bg-white/5">
+                            <div className="h-0.5 bg-[var(--border)]">
                               <div className="h-full w-0 group-hover:w-full bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] transition-all duration-500" />
                             </div>
                           </div>
