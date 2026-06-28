@@ -3,7 +3,6 @@ import { PrismaService } from '../../../common/prisma.service';
 import { WhatsAppService } from '../../../common/whatsapp.service';
 import { EmailService } from '../../../common/email.service';
 import { StorageService } from '../../media/application/storage.service';
-import { ClinicsService } from '../../clinics/application/clinics.service';
 import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
 
 @Injectable()
@@ -13,7 +12,6 @@ export class AppointmentsService {
     private readonly emailService: EmailService,
     private readonly whatsappService: WhatsAppService,
     private readonly storageService: StorageService,
-    private readonly clinicsService: ClinicsService,
   ) {}
 
   async create(data: {
@@ -25,7 +23,6 @@ export class AppointmentsService {
     date: string;
     timeSlot: string;
     notes?: string;
-    clinicId?: string;
     paymentMethod?: string;
     paymentSenderNum?: string;
     paymentProofUrl?: string;
@@ -33,36 +30,15 @@ export class AppointmentsService {
   }) {
     const appointmentDate = new Date(data.date);
 
-    // التحقق من توفر الوقت في العيادة المختارة
-    if (data.clinicId) {
-      const availableSlots = await this.clinicsService.getAvailableSlots(
-        data.clinicId,
-        data.date,
-      );
-      if (!availableSlots.includes(data.timeSlot)) {
-        throw new ConflictException('هذا الوقت غير متاح في العيادة المختارة');
-      }
-    } else {
-      // فحص global (للأونلاين أو بدون عيادة)
-      const existing = await this.prisma.appointment.findFirst({
-        where: {
-          date: appointmentDate,
-          timeSlot: data.timeSlot,
-          status: { notIn: [AppointmentStatus.REJECTED, AppointmentStatus.CANCELLED] },
-        },
-      });
-      if (existing) throw new ConflictException('This time slot is already booked');
-    }
-
-    // للحجوزات في العيادة: لا يُقبل الدفع نقداً ويجب رفع إيصال الدفع
-    if (data.type === AppointmentType.IN_CLINIC) {
-      if (!data.paymentMethod || data.paymentMethod === 'NONE' || data.paymentMethod === 'CASH') {
-        throw new BadRequestException('يجب اختيار طريقة دفع إلكترونية (فودافون كاش أو انستا باي) لتأكيد جدية الحجز');
-      }
-      if (!data.paymentProofUrl && !data.paymentSenderNum) {
-        throw new BadRequestException('يجب رفع إيصال الدفع وإدخال رقم الهاتف للتحقق');
-      }
-    }
+    // فحص توفر الوقت للاستشارة الأونلاين
+    const existing = await this.prisma.appointment.findFirst({
+      where: {
+        date: appointmentDate,
+        timeSlot: data.timeSlot,
+        status: { notIn: [AppointmentStatus.REJECTED, AppointmentStatus.CANCELLED] },
+      },
+    });
+    if (existing) throw new ConflictException('This time slot is already booked');
 
     // تحديد حالة الدفع
     const paymentStatus = data.paymentMethod && data.paymentMethod !== 'NONE' && data.paymentMethod !== 'CASH'
@@ -122,24 +98,21 @@ export class AppointmentsService {
         notes: data.notes,
         meetingId,
         meetingUrl,
-        clinicId: data.clinicId || null,
         paymentMethod: (data.paymentMethod as any) || 'NONE',
         paymentSenderNum: data.paymentSenderNum,
         paymentProofUrl: data.paymentProofUrl,
         paymentStatus: paymentStatus as any,
-        depositAmount: data.depositAmount ?? (data.type === AppointmentType.IN_CLINIC ? 100 : null),
+        depositAmount: data.depositAmount ?? null,
       },
       include: {
         patient: { select: { id: true, name: true, email: true } },
-        clinic: true,
       },
     });
   }
 
-  async findAll(page = 1, limit = 10, filters?: { clinicId?: string; paymentStatus?: string; status?: string }) {
+  async findAll(page = 1, limit = 10, filters?: { paymentStatus?: string; status?: string }) {
     const skip = (page - 1) * limit;
     const where: any = {};
-    if (filters?.clinicId) where.clinicId = filters.clinicId;
     if (filters?.paymentStatus) where.paymentStatus = filters.paymentStatus;
     if (filters?.status) where.status = filters.status;
 
@@ -149,7 +122,7 @@ export class AppointmentsService {
         take: limit,
         where,
         orderBy: { createdAt: 'desc' },
-        include: { patient: true, clinic: true },
+        include: { patient: true },
       }),
       this.prisma.appointment.count({ where }),
     ]);

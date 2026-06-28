@@ -76,7 +76,7 @@ export default function WorkingHoursPage() {
           </div>
           {t('title', { fallback: 'Working Hours Management' })}
         </h1>
-        <p className="text-[var(--muted)]">{t('subtitle', { fallback: 'Configure clinic working days, times, and consultation durations.' })}</p>
+        <p className="text-[var(--muted)]">{t('subtitle', { fallback: 'Configure online consultation working days, times, and durations.' })}</p>
       </div>
 
       <div className="space-y-4">
@@ -154,7 +154,7 @@ export default function WorkingHoursPage() {
             {!hour.isActive && (
                <div className="mt-4 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 text-sm flex items-center gap-2 font-medium">
                   <AlertCircle size={16} />
-                  {t('closed', { fallback: 'Clinic is closed on this day.' })}
+                  {t('closed', { fallback: 'No online consultations on this day.' })}
                </div>
             )}
           </Card>

@@ -38,7 +38,6 @@ export class AppointmentsController {
     date: string;
     timeSlot: string;
     notes?: string;
-    clinicId?: string;
     paymentMethod?: string;
     paymentSenderNum?: string;
     paymentProofUrl?: string;
@@ -53,11 +52,10 @@ export class AppointmentsController {
   async findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-    @Query('clinicId') clinicId?: string,
     @Query('paymentStatus') paymentStatus?: string,
     @Query('status') status?: string,
   ) {
-    return this.appointmentsService.findAll(+page, +limit, { clinicId, paymentStatus, status });
+    return this.appointmentsService.findAll(+page, +limit, { paymentStatus, status });
   }
 
   @Get('available-slots')

@@ -35,50 +35,11 @@ model User {
   refreshTokens           RefreshToken[]
 }
 
-model Clinic {
-  id           String               @id @default(cuid())
-  nameAr       String
-  nameEn       String
-  addressAr    String
-  addressEn    String
-  phone        String?
-  mapUrl       String?
-  imageUrl     String?
-  isActive     Boolean              @default(true)
-  order        Int                  @default(0)
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @default(now()) @updatedAt
-  workingHours ClinicWorkingHours[]
-  blockedSlots ClinicBlockedSlot[]
-  appointments Appointment[]
-}
 
-model ClinicWorkingHours {
-  id           String  @id @default(cuid())
-  clinicId     String
-  dayOfWeek    Int     // 0=Sunday ... 6=Saturday
-  startTime    String  // "09:00"
-  endTime      String  // "17:00"
-  slotDuration Int     @default(30) // minutes
-  isActive     Boolean @default(true)
-  clinic       Clinic  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-
-  @@unique([clinicId, dayOfWeek])
-}
-
-model ClinicBlockedSlot {
-  id        String   @id @default(cuid())
-  clinicId  String
-  date      DateTime
-  timeSlot  String?  // null = block entire day
-  reason    String?
-  createdAt DateTime @default(now())
-  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-}
 
 model Appointment {
   id                 String               @id @default(cuid())
-  type               AppointmentType      @default(IN_CLINIC)
+  type               AppointmentType      @default(ONLINE)
   patientId          String?
   guestName          String?
   guestPhone         String?
@@ -92,7 +53,6 @@ model Appointment {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @default(now()) @updatedAt
   cancellationReason String?
-  clinicId           String?
   paymentMethod      PaymentMethodType    @default(NONE)
   paymentProofUrl    String?
   paymentSenderNum   String?
@@ -100,7 +60,6 @@ model Appointment {
   paymentNote        String?
   depositAmount      Float?               @default(100)
   whatsappReminderSent Boolean              @default(false)
-  clinic             Clinic?              @relation(fields: [clinicId], references: [id])
   patient            User?                @relation(fields: [patientId], references: [id])
   review             AppointmentReview?
   payments           Payment[]
@@ -282,6 +241,8 @@ model WorkingHours {
   endTime      String
   slotDuration Int     @default(30)
   isActive     Boolean @default(true)
+
+  @@unique([dayOfWeek])
 }
 
 model BlockedSlot {

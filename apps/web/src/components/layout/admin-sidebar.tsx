@@ -20,7 +20,6 @@ const navSections = [
       { href: '/admin', icon: LayoutDashboard, labelKey: 'dashboard' },
       { href: '/admin/appointments', icon: Calendar, labelKey: 'appointments' },
       { href: '/admin/calendar', icon: CalendarDays, labelKey: 'calendar_view' },
-      { href: '/admin/clinics', icon: Building2, labelKey: 'clinics' },
       { href: '/admin/payments', icon: CreditCard, labelKey: 'payments' },
       { href: '/admin/editor', icon: Edit3, labelKey: 'live_editor' },
     ]

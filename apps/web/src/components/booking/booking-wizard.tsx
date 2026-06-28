@@ -16,11 +16,10 @@ import { useAuth } from '@/context/auth-context';
 import { useRouter } from '@/i18n/routing';
 
 const steps = [
-  { id: 1, nameAr: 'نوع الحجز', nameEn: 'Type' },
-  { id: 2, nameAr: 'الموعد', nameEn: 'Date & Time' },
-  { id: 3, nameAr: 'البيانات', nameEn: 'Details' },
-  { id: 4, nameAr: 'الدفع', nameEn: 'Payment' },
-  { id: 5, nameAr: 'تأكيد', nameEn: 'Confirm' },
+  { id: 1, nameAr: 'الموعد', nameEn: 'Date & Time' },
+  { id: 2, nameAr: 'البيانات', nameEn: 'Details' },
+  { id: 3, nameAr: 'الدفع', nameEn: 'Payment' },
+  { id: 4, nameAr: 'تأكيد', nameEn: 'Confirm' },
 ];
 
 export default function BookingWizard() {
@@ -31,13 +30,11 @@ export default function BookingWizard() {
   
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [clinics, setClinics] = useState<any[]>([]);
   const [paymentSettings, setPaymentSettings] = useState<any>({});
   const [maxBookingWeeks, setMaxBookingWeeks] = useState(2);
   
   // Form State
-  const [type, setType] = useState<AppointmentType | null>(null);
-  const [clinicId, setClinicId] = useState<string>('');
+  const [type, setType] = useState<AppointmentType>(AppointmentType.ONLINE);
   const [date, setDate] = useState<string>('');
   const [timeSlot, setTimeSlot] = useState<string>('');
   const [patient, setPatient] = useState({ name: '', phone: '', email: '' });
@@ -56,12 +53,8 @@ export default function BookingWizard() {
   const [slotsError, setSlotsError] = useState(false);
   
   useEffect(() => {
-    // Load clinics and settings
-    Promise.all([
-      clinicsApi.getAll(),
-      siteSettingsApi.getAllPublic()
-    ]).then(([clinicsData, settingsData]) => {
-      setClinics(clinicsData);
+    // Load settings
+    siteSettingsApi.getAllPublic().then((settingsData) => {
       
       const settings = settingsData.reduce((acc: any, curr: any) => {
         acc[curr.key] = curr.value;
@@ -94,12 +87,13 @@ export default function BookingWizard() {
   }, [token, user]);
 
   // Fetch available slots — used both on mount and for polling
-  const fetchSlots = (targetClinicId: string, targetDate: string, showLoading = false) => {
-    if (!targetClinicId || !targetDate) return;
+  const fetchSlots = (targetDate: string, showLoading = false) => {
+    if (!targetDate) return;
     if (showLoading) setSlotsLoading(true);
     setSlotsError(false);
-    clinicsApi.getAvailableSlots(targetClinicId, targetDate)
-      .then(slots => {
+    appointmentsApi.getAvailableSlots(targetDate)
+      .then(res => {
+        const slots = res.slots || [];
         setAvailableSlots(slots);
         // Clear selected time if it was removed (blocked after selection)
         setTimeSlot(prev => slots.includes(prev) ? prev : '');
@@ -112,22 +106,20 @@ export default function BookingWizard() {
   };
 
   useEffect(() => {
-    if (!date || !type) return;
-    const targetClinicId = type === AppointmentType.IN_CLINIC ? clinicId : 'clinic-online';
-    if (type === AppointmentType.IN_CLINIC && !clinicId) return;
+    if (!date) return;
 
     // Initial load with spinner
     setSlotsLoading(true);
-    fetchSlots(targetClinicId, date, true);
+    fetchSlots(date, true);
 
     // Poll every 10 seconds for real-time updates (no spinner for background refresh)
     const interval = setInterval(() => {
-      fetchSlots(targetClinicId, date, false);
+      fetchSlots(date, false);
     }, 10000);
 
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date, clinicId, type]);
+  }, [date]);
 
   // Compute max bookable date from maxBookingWeeks
   const maxDate = (() => {
@@ -138,22 +130,18 @@ export default function BookingWizard() {
 
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!type) return toast.error(isRTL ? 'اختر نوع الحجز أولاً' : 'Select appointment type');
-      if (type === AppointmentType.IN_CLINIC && !clinicId) return toast.error(isRTL ? 'اختر العيادة أولاً' : 'Select clinic');
-    }
-    if (currentStep === 2) {
       if (!date || !timeSlot) return toast.error(isRTL ? 'اختر التاريخ والوقت' : 'Select date and time');
     }
-    if (currentStep === 3) {
+    if (currentStep === 2) {
       if (!patient.name || !patient.phone) return toast.error(isRTL ? 'أدخل الاسم ورقم الهاتف' : 'Enter name and phone');
       if (!gender) return toast.error(isRTL ? 'الرجاء اختيار النوع' : 'Please select gender');
       if (!birthDate) return toast.error(isRTL ? 'الرجاء إدخال تاريخ الميلاد' : 'Please enter date of birth');
     }
-    if (currentStep === 4) {
+    if (currentStep === 3) {
       if (!senderPhone) return toast.error(isRTL ? 'أدخل رقم الهاتف الذي حولت منه' : 'Enter sender phone number');
       if (!proofFile) return toast.error(isRTL ? 'ارفع صورة إيصال التحويل — هذه خطوة إلزامية' : 'Upload payment receipt — this is required');
     }
-    setCurrentStep(p => Math.min(p + 1, 5));
+    setCurrentStep(p => Math.min(p + 1, 4));
   };
   
   const handlePrev = () => setCurrentStep(p => Math.max(p - 1, 1));
@@ -175,7 +163,6 @@ export default function BookingWizard() {
       // 2. Create Appointment
       const apt = await appointmentsApi.create({
         type,
-        clinicId: type === AppointmentType.IN_CLINIC ? clinicId : undefined,
         date,
         timeSlot,
         guestName: patient.name,
@@ -184,7 +171,6 @@ export default function BookingWizard() {
         patientId: user?.id,
         paymentMethod,
         paymentSenderNum: senderPhone || undefined,
-        depositAmount: type === AppointmentType.IN_CLINIC ? 100 : undefined,
       });
       
       // 3. Upload Proof (mandatory for clinic bookings)
@@ -302,80 +288,8 @@ export default function BookingWizard() {
           transition={{ duration: 0.3 }}
           className="min-h-[300px]"
         >
-          {/* STEP 1: TYPE & LOCATION */}
+          {/* STEP 1: DATE & TIME */}
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-black text-white text-center">
-                {isRTL ? 'أين تفضل موعدك؟' : 'Where would you like your appointment?'}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  onClick={() => setType(AppointmentType.IN_CLINIC)}
-                  className={cn(
-                    'p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 text-center',
-                    type === AppointmentType.IN_CLINIC 
-                      ? 'border-primary bg-primary/10 shadow-[0_0_30px_rgba(var(--primary),0.2)]' 
-                      : 'border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
-                  )}
-                >
-                  <Building2 size={48} className={type === AppointmentType.IN_CLINIC ? 'text-primary' : ''} />
-                  <div>
-                    <h3 className="font-bold text-lg">{isRTL ? 'في العيادة' : 'In Clinic'}</h3>
-                    <p className="text-xs opacity-70 mt-1">{isRTL ? 'كشف مباشر في العيادة' : 'Direct consultation in clinic'}</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => { setType(AppointmentType.ONLINE); setClinicId(''); }}
-                  className={cn(
-                    'p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-4 text-center',
-                    type === AppointmentType.ONLINE 
-                      ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_30px_rgba(59,130,246,0.2)]' 
-                      : 'border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white'
-                  )}
-                >
-                  <Video size={48} className={type === AppointmentType.ONLINE ? 'text-blue-500' : ''} />
-                  <div>
-                    <h3 className="font-bold text-lg">{isRTL ? 'استشارة أونلاين' : 'Online Consultation'}</h3>
-                    <p className="text-xs opacity-70 mt-1">{isRTL ? 'مكالمة فيديو لمدة 15 دقيقة' : '15-minute video call'}</p>
-                  </div>
-                </button>
-              </div>
-
-              {type === AppointmentType.IN_CLINIC && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-3 pt-4">
-                  <h3 className="text-white/80 font-bold px-2">{isRTL ? 'اختر العيادة:' : 'Select Clinic:'}</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {clinics.filter(clinic => clinic.id !== 'clinic-online').map(clinic => (
-                      <button
-                        key={clinic.id}
-                        onClick={() => setClinicId(clinic.id)}
-                        className={cn(
-                          'p-4 rounded-xl border flex items-start text-start gap-4 transition-all',
-                          clinicId === clinic.id 
-                            ? 'border-primary bg-primary/10' 
-                            : 'border-white/10 bg-white/5 hover:bg-white/10'
-                        )}
-                      >
-                        <div className={cn('p-2 rounded-lg mt-1', clinicId === clinic.id ? 'bg-primary text-white' : 'bg-white/10 text-white/50')}>
-                          <MapPin size={20} />
-                        </div>
-                        <div>
-                          <h4 className={cn("font-bold text-lg", clinicId === clinic.id ? 'text-white' : 'text-white/80')}>
-                            {isRTL ? clinic.nameAr : clinic.nameEn}
-                          </h4>
-                          <p className="text-sm text-white/50 mt-1">{isRTL ? clinic.addressAr : clinic.addressEn}</p>
-                          <p className="text-xs text-primary mt-2" dir="ltr">{clinic.phone}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 2: DATE & TIME */}
-          {currentStep === 2 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-black text-white text-center">
                 {isRTL ? 'اختر الموعد المناسب' : 'Select a Suitable Time'}
@@ -391,15 +305,6 @@ export default function BookingWizard() {
                     onChange={e => { setDate(e.target.value); setTimeSlot(''); }}
                     className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]"
                   />
-                  {type === AppointmentType.IN_CLINIC && !date && (
-                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mt-4 text-sm text-primary-light">
-                      <p className="flex items-center gap-2 font-bold mb-2"><AlertCircle size={16}/> {isRTL ? 'مواعيد العيادات' : 'Clinic Hours'}</p>
-                      <ul className="space-y-1 list-disc list-inside">
-                        <li><span className="font-bold">أكتوبر:</span> الخميس (1 ظ - 3 ظ)</li>
-                        <li><span className="font-bold">بني سويف:</span> السبت للأربعاء (4 ع - 10 م)</li>
-                      </ul>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="space-y-3">
@@ -441,8 +346,8 @@ export default function BookingWizard() {
             </div>
           )}
 
-          {/* STEP 3: PATIENT DETAILS */}
-          {currentStep === 3 && (
+          {/* STEP 2: PATIENT DETAILS */}
+          {currentStep === 2 && (
             <div className="space-y-6 max-w-md mx-auto">
               <h2 className="text-2xl font-black text-white text-center">
                 {isRTL ? 'بيانات المريض' : 'Patient Details'}
@@ -540,19 +445,15 @@ export default function BookingWizard() {
             </div>
           )}
 
-          {/* STEP 4: PAYMENT — عربون الحجز */}
-          {currentStep === 4 && (
+          {/* STEP 3: PAYMENT — عربون الحجز */}
+          {currentStep === 3 && (
             <div className="space-y-6 max-w-lg mx-auto">
               <div className="text-center space-y-1">
                 <h2 className="text-2xl font-black text-white">
-                  {type === AppointmentType.ONLINE
-                    ? (isRTL ? 'دفع قيمة الاستشارة' : 'Pay Consultation Fee')
-                    : (isRTL ? 'دفع عربون الحجز' : 'Pay Booking Deposit')}
+                  {isRTL ? 'دفع قيمة الاستشارة' : 'Pay Consultation Fee'}
                 </h2>
                 <p className="text-white/50 text-sm">
-                  {type === AppointmentType.ONLINE
-                    ? (isRTL ? 'لتأكيد الحجز يُرجى دفع قيمة الاستشارة' : 'A fee is required to confirm your booking')
-                    : (isRTL ? 'لتأكيد جدية الحجز يُطلب دفع عربون مسبق' : 'A deposit is required to confirm your booking')}
+                  {isRTL ? 'لتأكيد الحجز يُرجى دفع قيمة الاستشارة' : 'A fee is required to confirm your booking'}
                 </p>
               </div>
 
@@ -566,22 +467,14 @@ export default function BookingWizard() {
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-emerald-400 font-black text-lg">
-                      {type === AppointmentType.ONLINE
-                        ? (isRTL ? '✅ المطلوب الآن:' : '✅ Required Now:')
-                        : (isRTL ? '✅ المطلوب الآن (عربون):' : '✅ Required Now (Deposit):')}
+                      {isRTL ? '✅ المطلوب الآن:' : '✅ Required Now:'}
                     </p>
                     <p className="text-white/50 text-xs mt-0.5">{isRTL ? 'يُدفع أونلاين الآن لتأكيد الحجز' : 'Paid online now to confirm booking'}</p>
                   </div>
                   <span className="text-3xl font-black text-emerald-400">
-                    {type === AppointmentType.ONLINE ? TOTAL_AMOUNT : DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}
+                    {TOTAL_AMOUNT} {isRTL ? 'ج' : 'EGP'}
                   </span>
                 </div>
-                {type !== AppointmentType.ONLINE && (
-                  <div className="flex justify-between items-center text-sm text-white/50">
-                    <span>{isRTL ? 'المتبقي يُدفع عند الحضور بالعيادة:' : 'Remaining paid at clinic:'}</span>
-                    <span className="font-bold">{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج' : 'EGP'}</span>
-                  </div>
-                )}
               </div>
 
               {/* Method Selection */}
@@ -635,9 +528,7 @@ export default function BookingWizard() {
               {/* Transfer Details */}
               <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-1 text-center">
                 <p className="text-xs text-white/50">
-                  {type === AppointmentType.ONLINE
-                    ? (isRTL ? 'حوّل قيمة الاستشارة إلى:' : 'Transfer the consultation fee to:')
-                    : (isRTL ? 'حوّل مبلغ العربون إلى:' : 'Transfer the deposit amount to:')}
+                  {isRTL ? 'حوّل قيمة الاستشارة إلى:' : 'Transfer the consultation fee to:'}
                 </p>
                 <p className="text-xl font-black text-white" dir="ltr">
                   {paymentMethod === 'VODAFONE_CASH'
@@ -645,7 +536,7 @@ export default function BookingWizard() {
                     : (paymentSettings['payment.instapay']?.number || '@instapay')}
                 </p>
                 <p className="text-emerald-400 font-bold text-sm">
-                  {type === AppointmentType.ONLINE ? TOTAL_AMOUNT : DEPOSIT_AMOUNT} {isRTL ? (type === AppointmentType.ONLINE ? 'جنيه' : 'جنيه فقط') : 'EGP'}
+                  {TOTAL_AMOUNT} {isRTL ? 'جنيه' : 'EGP'}
                 </p>
               </div>
 
@@ -697,8 +588,8 @@ export default function BookingWizard() {
             </div>
           )}
 
-          {/* STEP 5: REVIEW & CONFIRM */}
-          {currentStep === 5 && (
+          {/* STEP 4: REVIEW & CONFIRM */}
+          {currentStep === 4 && (
             <div className="space-y-6 max-w-md mx-auto">
               <h2 className="text-2xl font-black text-white text-center">
                 {isRTL ? 'مراجعة الحجز' : 'Review Booking'}
@@ -707,11 +598,11 @@ export default function BookingWizard() {
               <div className="bg-black/30 border border-white/10 rounded-2xl p-5 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                    {type === AppointmentType.IN_CLINIC ? <Building2 size={18} className="text-primary"/> : <Video size={18} className="text-blue-500"/>}
+                    <Video size={18} className="text-blue-500"/>
                   </div>
                   <div>
                     <p className="text-xs text-white/50">{isRTL ? 'النوع' : 'Type'}</p>
-                    <p className="font-bold text-white">{type === AppointmentType.IN_CLINIC ? (isRTL ? 'كشف بالعيادة' : 'In Clinic') : (isRTL ? 'استشارة أونلاين' : 'Online Consultation')}</p>
+                    <p className="font-bold text-white">{isRTL ? 'استشارة أونلاين' : 'Online Consultation'}</p>
                   </div>
                 </div>
                 
@@ -745,17 +636,9 @@ export default function BookingWizard() {
                     <p className="font-bold text-white">
                       {paymentMethod === 'VODAFONE_CASH' ? 'فودافون كاش' : 'انستا باي'}
                     </p>
-                    {type === AppointmentType.IN_CLINIC ? (
-                      <p className="text-xs text-white/60 mt-0.5">
-                        <span className="text-emerald-400 font-bold">{DEPOSIT_AMOUNT} {isRTL ? 'ج عربون الآن' : 'EGP deposit now'}</span>
-                        {' + '}
-                        <span>{TOTAL_AMOUNT - DEPOSIT_AMOUNT} {isRTL ? 'ج عند الحضور' : 'EGP at clinic'}</span>
-                      </p>
-                    ) : (
                       <p className="text-xs text-emerald-400 font-bold mt-0.5">
                         {TOTAL_AMOUNT} {isRTL ? 'ج (تم تحويل كامل القيمة)' : 'EGP (Full amount transferred)'}
                       </p>
-                    )}
                   </div>
                 </div>
               </div>
