@@ -242,6 +242,8 @@ export const clinicsApi = {
 };
 
 export const appointmentsApi = {
+  getAvailableSlots: (date: string) =>
+    api.get<{ slots: string[] }>(`/appointments/available-slots?date=${date}&_t=${Date.now()}`),
   getAll: (params: Record<string, any> = {}, token: string) => {
     const query = new URLSearchParams(
       Object.entries(params)
