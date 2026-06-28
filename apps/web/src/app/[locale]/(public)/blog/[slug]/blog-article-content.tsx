@@ -50,7 +50,7 @@ export function BlogArticleContent({ post: initialPost, locale, slug }: Props) {
 
   useEffect(() => {
     if (post && !loading) {
-      const expectedSlug = locale === 'ar' ? post.slugAr : post.slugEn;
+      const expectedSlug = (locale === 'ar' ? post.slugAr : post.slugEn) || post.slugEn || post.slugAr;
       if (slug !== expectedSlug) {
         router.replace(`/blog/${expectedSlug}`);
       }

@@ -142,7 +142,7 @@ export default function BlogPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-10"
                 >
-                  <Link href={`/blog/${isAr ? featuredPost.slugAr : featuredPost.slugEn}`}>
+                  <Link href={`/blog/${(isAr ? featuredPost.slugAr : featuredPost.slugEn) || featuredPost.slugEn || featuredPost.slugAr}`}>
                     <div className="group relative rounded-[2rem] overflow-hidden h-[420px] border border-white/10 hover:border-[var(--primary)]/50 transition-all duration-500 hover:-translate-y-1 shadow-2xl">
                       {featuredPost.featuredImage ? (
                         <img
@@ -187,7 +187,7 @@ export default function BlogPage() {
                   {(search ? filteredPosts : restPosts).map((post, i) => {
                     const title = isAr ? post.titleAr : post.titleEn;
                     const excerpt = isAr ? post.excerptAr : post.excerptEn;
-                    const slug = isAr ? post.slugAr : post.slugEn;
+                    const slug = (isAr ? post.slugAr : post.slugEn) || post.slugEn || post.slugAr;
 
                     return (
                       <motion.div
