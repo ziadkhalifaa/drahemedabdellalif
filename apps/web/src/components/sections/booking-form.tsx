@@ -77,12 +77,20 @@ export function BookingForm() {
   }, [token, user]);
 
   // Fetch available slots — used both on mount and for polling
-  const fetchSlots = (clinicId: string, date: string, showLoading = false) => {
-    if (!clinicId || !date) return;
+  const fetchSlots = (date: string, showLoading = false) => {
+    if (!date) return;
     if (showLoading) setSlotsLoading(true);
     setSlotsError(false);
-    clinicsApi.getAvailableSlots(clinicId, date)
-      .then(slots => {
+    appointmentsApi.getAvailableSlots(date)
+      .then(res => {
+        let slots: string[] = [];
+        if (res.slots && res.slots.length > 0) {
+           if (typeof res.slots[0] === 'string') {
+              slots = res.slots as any;
+           } else {
+              slots = res.slots.filter((s: any) => s.available).map((s: any) => s.time);
+           }
+        }
         setAvailableSlots(slots);
         // Clear selected time if it was removed (blocked after selection)
         setForm(prev => slots.includes(prev.timeSlot) ? prev : { ...prev, timeSlot: '' });
@@ -95,23 +103,23 @@ export function BookingForm() {
   };
 
   useEffect(() => {
-    if (!form.date || !form.clinicId) {
+    if (!form.date) {
       setAvailableSlots([]);
       return;
     }
 
     // Initial load with spinner
     setSlotsLoading(true);
-    fetchSlots(form.clinicId, form.date, true);
+    fetchSlots(form.date, true);
 
     // Poll every 10 seconds for real-time updates (no spinner for background refresh)
     const interval = setInterval(() => {
-      fetchSlots(form.clinicId, form.date, false);
+      fetchSlots(form.date, false);
     }, 10000);
 
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.date, form.clinicId]);
+  }, [form.date]);
 
   // Compute max bookable date from maxBookingWeeks
   const maxDate = (() => {
@@ -140,7 +148,7 @@ export function BookingForm() {
       return;
     }
     if (!proofFile) {
-      toast.error(isAr ? 'الرجاء رفع صورة إيصال العربون (100 جنيه) — هذه خطوة إلزامية' : 'Please upload the deposit receipt (100 EGP) — this is required');
+      toast.error(isAr ? 'الرجاء رفع صورة إيصال الدفع — هذه خطوة إلزامية' : 'Please upload the payment receipt — this is required');
       return;
     }
 
@@ -161,7 +169,7 @@ export function BookingForm() {
         guestPhone: form.patientPhone,
         guestEmail: form.patientEmail,
         patientId: user?.id,
-        type: 'IN_CLINIC',
+        type: 'ONLINE',
         paymentMethod,
         paymentSenderNum: senderPhone || undefined,
       });
@@ -355,26 +363,6 @@ export function BookingForm() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Clinic */}
-          {renderField(
-            <Building2 size={16} />,
-            isAr ? 'العيادة' : 'Clinic',
-            <select
-              value={form.clinicId}
-              onChange={(e) => setForm({ ...form, clinicId: e.target.value })}
-              required
-              className={cn(
-                "w-full h-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-white transition-colors appearance-none",
-                isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"
-              )}
-            >
-              <option value="" className="bg-[#050e1a]">{isAr ? 'اختر العيادة' : 'Select Clinic'}</option>
-              {clinics.filter(c => c.id !== 'clinic-online').map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#050e1a]">{isAr ? c.nameAr : c.nameEn}</option>
-              ))}
-            </select>
-          )}
-
           {/* Gender */}
           {renderField(
             <User size={16} />,
@@ -393,9 +381,7 @@ export function BookingForm() {
               <option value="female" className="bg-[#050e1a]">{isAr ? 'أنثى' : 'Female'}</option>
             </select>
           )}
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Birth Date */}
           {renderField(
             <BabyIcon size={16} />,
@@ -409,9 +395,6 @@ export function BookingForm() {
               className={cn("rounded-xl border-white/10 bg-white/5 text-white focus:border-[var(--primary)] transition-colors [color-scheme:dark] h-12", isAr ? "pr-11" : "pl-11")}
             />
           )}
-          
-          {/* Spacer */}
-          <div className="hidden sm:block"></div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -439,11 +422,11 @@ export function BookingForm() {
               value={form.timeSlot}
               onChange={(e) => setForm({ ...form, timeSlot: e.target.value })}
               required
-              disabled={!form.date || !form.clinicId || slotsLoading}
+              disabled={!form.date || slotsLoading}
               className={cn(
                 "w-full h-12 rounded-xl border border-white/10 bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-white transition-colors appearance-none",
                 isAr ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left",
-                (!form.date || !form.clinicId || slotsLoading) && "opacity-50 cursor-not-allowed"
+                (!form.date || slotsLoading) && "opacity-50 cursor-not-allowed"
               )}
             >
               <option value="" className="bg-[#050e1a]">

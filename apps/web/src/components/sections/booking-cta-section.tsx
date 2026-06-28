@@ -14,19 +14,6 @@ export function BookingCTASection() {
 
   const options = [
     {
-      id: 'clinic' as const,
-      icon: Calendar,
-      titleAr: 'حجز في العيادة',
-      titleEn: 'Clinic Appointment',
-      descAr: 'زيارة شخصية في عيادات 6 أكتوبر، بني سويف، أو التجمع الخامس مع الأستاذ الدكتور أحمد عبد اللطيف.',
-      descEn: 'In-person visit at 6th of October, Beni Suef, or 5th Settlement clinics with Prof. Dr. Ahmed Abdellatif.',
-      color: 'from-[var(--primary)] to-[var(--primary-dark)]',
-      border: 'border-[var(--primary)]',
-      glow: 'shadow-[var(--primary)]/30',
-      href: '/booking',
-      badge: isAr ? 'الأكثر طلباً' : 'Most Popular',
-    },
-    {
       id: 'online' as const,
       icon: Video,
       titleAr: 'استشارة طبية أونلاين',
@@ -36,8 +23,8 @@ export function BookingCTASection() {
       color: 'from-blue-600 to-blue-800',
       border: 'border-blue-500',
       glow: 'shadow-blue-500/30',
-      href: '/booking?type=online',
-      badge: isAr ? 'جديد' : 'New',
+      href: '/booking',
+      badge: isAr ? 'الأكثر طلباً' : 'Most Popular',
     },
   ];
 
@@ -64,17 +51,17 @@ export function BookingCTASection() {
           </div>
 
           <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-tight">
-            {isAr ? 'كيف تريد التواصل معنا؟' : 'How Would You Like to Connect?'}
+            {isAr ? 'احجز استشارتك الأونلاين' : 'Book Your Online Consultation'}
           </h2>
           <p className="text-white/60 text-lg max-w-2xl mx-auto mb-14 leading-relaxed">
             {isAr
-              ? 'اختر الطريقة التي تناسبك — زيارة شخصية أو استشارة أونلاين من راحة منزلك'
-              : 'Choose what works best for you — an in-person visit or an online consultation from home'}
+              ? 'تواصل مع الطبيب بكل خصوصية وسهولة من أي مكان.'
+              : 'Connect with the doctor privately and easily from anywhere.'}
           </p>
         </motion.div>
 
         {/* Choice Cards */}
-        <div className="grid sm:grid-cols-2 gap-6 mb-14">
+        <div className="max-w-xl mx-auto mb-14">
           {options.map((opt, i) => (
             <motion.button
               key={opt.id}
