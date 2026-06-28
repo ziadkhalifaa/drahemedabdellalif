@@ -5,10 +5,8 @@ import { AppointmentReminderService } from './application/appointment-reminder.s
 import { EmailService } from '../../common/email.service';
 import { WhatsAppService } from '../../common/whatsapp.service';
 import { StorageService } from '../media/application/storage.service';
-import { ClinicsModule } from '../clinics/clinics.module';
-
 @Module({
-  imports: [ClinicsModule],
+  imports: [],
   controllers: [AppointmentsController],
   providers: [
     AppointmentsService,

@@ -207,14 +207,13 @@ export class AppointmentsService {
     return this.prisma.appointment.findMany({
       where: { patientId },
       orderBy: { date: 'asc' },
-      include: { clinic: true },
     });
   }
 
   async findOne(id: string) {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },
-      include: { patient: true, clinic: true },
+      include: { patient: true },
     });
     if (!appointment) throw new NotFoundException('Appointment not found');
     return appointment;
@@ -236,7 +235,7 @@ export class AppointmentsService {
         paymentSenderNum: senderPhone,
         paymentStatus: 'PENDING_REVIEW' as any,
       },
-      include: { clinic: true, patient: true },
+      include: { patient: true },
     });
   }
 
@@ -257,13 +256,13 @@ export class AppointmentsService {
         status: appointmentStatus,
         paymentNote: adminNote,
       },
-      include: { clinic: true, patient: true },
+      include: { patient: true },
     });
 
     // إرسال إشعار للمريض
     const phone = appointment.guestPhone || (appointment as any).patient?.phone;
     const name = appointment.guestName || (appointment as any).patient?.name || 'مريضنا العزيز';
-    const clinicName = (appointment as any).clinic?.nameAr || '';
+    const clinicName = '';
 
     if (phone && action === 'confirm') {
       const formattedDate = new Date(appointment.date).toLocaleDateString('ar-EG', {
@@ -284,7 +283,7 @@ export class AppointmentsService {
     return this.prisma.appointment.findMany({
       where: { paymentStatus: 'PENDING_REVIEW' as any },
       orderBy: { createdAt: 'asc' },
-      include: { patient: true, clinic: true },
+      include: { patient: true },
     });
   }
 
