@@ -32,6 +32,7 @@ model User {
   medicalReports          MedicalReport[]
   payments                Payment[]
   prescriptions           Prescription[]
+  patientNotes            PatientNote[]
   refreshTokens           RefreshToken[]
 }
 
@@ -375,4 +376,13 @@ enum PaymentConfirmStatus {
   PENDING_REVIEW
   CONFIRMED
   REJECTED
+}
+
+model PatientNote {
+  id        String   @id @default(cuid())
+  patientId String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  patient   User     @relation(fields: [patientId], references: [id])
 }

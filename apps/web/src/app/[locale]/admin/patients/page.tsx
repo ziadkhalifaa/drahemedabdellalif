@@ -187,10 +187,10 @@ export default function PatientsManagementPage() {
                         size="sm"
                         className="text-[var(--primary)] hover:bg-[var(--primary)]/5 rounded-lg h-8 px-3 text-xs font-bold gap-1"
                         onClick={() => {
-                          router.push(`/admin/reports?search=${encodeURIComponent(patient.name)}&openUpload=true`);
+                          router.push(`/admin/patients/${patient.id}`);
                         }}
                       >
-                        <FileText size={14} /> Reports
+                        <FileText size={14} /> الملف الطبي
                       </Button>
                       {appointmentIdParam && (
                         <Button

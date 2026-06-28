@@ -307,6 +307,32 @@ export class AuthService {
     return users;
   }
 
+  async getUserFullProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        appointments: { orderBy: { createdAt: 'desc' } },
+        prescriptions: { orderBy: { createdAt: 'desc' } },
+        medicalReports: { orderBy: { createdAt: 'desc' } },
+        patientNotes: { orderBy: { createdAt: 'desc' } },
+      }
+    });
+    if (!user) throw new UnauthorizedException('User not found');
+    return user;
+  }
+
+  async addPatientNote(patientId: string, content: string) {
+    return this.prisma.patientNote.create({
+      data: { patientId, content }
+    });
+  }
+
+  async deletePatientNote(noteId: string) {
+    return this.prisma.patientNote.delete({
+      where: { id: noteId }
+    });
+  }
+
   async deleteUser(userId: string) {
     await this.prisma.$transaction(async (tx) => {
       // 1. Delete prescriptions
@@ -335,8 +361,11 @@ export class AuthService {
 
       // 7. Delete refresh tokens
       await tx.refreshToken.deleteMany({ where: { userId } });
+      
+      // 8. Delete patient notes
+      await tx.patientNote.deleteMany({ where: { patientId: userId } });
 
-      // 8. Finally delete the user
+      // 9. Finally delete the user
       await tx.user.delete({ where: { id: userId } });
     });
 

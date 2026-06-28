@@ -99,6 +99,30 @@ export class AuthController {
 
   @SkipThrottle()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'doctor')
+  @Get('users/:id/profile')
+  async getUserFullProfile(@Param('id') id: string) {
+    return this.authService.getUserFullProfile(id);
+  }
+
+  @SkipThrottle()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'doctor')
+  @Post('users/:id/notes')
+  async addPatientNote(@Param('id') id: string, @Body() body: { content: string }) {
+    return this.authService.addPatientNote(id, body.content);
+  }
+
+  @SkipThrottle()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'doctor')
+  @Delete('users/notes/:noteId')
+  async deletePatientNote(@Param('noteId') noteId: string) {
+    return this.authService.deletePatientNote(noteId);
+  }
+
+  @SkipThrottle()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Delete('users/:id')
   async deleteUser(@Param('id') id: string) {

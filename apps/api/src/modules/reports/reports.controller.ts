@@ -31,11 +31,11 @@ export class ReportsController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor')
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
     @Body() body: { title: string; patientId: string; description?: string },
+    @Req() req: any,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -46,7 +46,14 @@ export class ReportsController {
       }),
     ) file: Express.Multer.File,
   ) {
-    return this.reportsService.create(body, file);
+    const userRole = req.user.role;
+    const patientId = userRole === 'patient' ? req.user.id : body.patientId;
+    
+    if (!patientId) {
+      throw new Error('Patient ID is required');
+    }
+
+    return this.reportsService.create({ ...body, patientId }, file);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
