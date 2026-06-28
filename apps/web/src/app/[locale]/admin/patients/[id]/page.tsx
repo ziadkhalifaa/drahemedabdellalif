@@ -5,7 +5,9 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Card, Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
-import { User, Calendar, FileText, Pill, Stethoscope, ArrowRight, Download, Plus, Trash2, Clock } from 'lucide-react';
+import { 
+  User, Calendar, FileText, Pill, Stethoscope, ArrowRight, Download, Plus, Trash2, Clock, Upload, FileUp, X
+} from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -14,6 +16,7 @@ export default function PatientProfilePage() {
   const router = useRouter();
   const { token } = useAuth();
   const tCommon = useTranslations('common');
+  const tAdmin = useTranslations('admin.reports'); // Fallbacks used inline if missing
   
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +25,23 @@ export default function PatientProfilePage() {
   // Note State
   const [newNote, setNewNote] = useState('');
   const [submittingNote, setSubmittingNote] = useState(false);
+
+  // Upload Report State
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadData, setUploadData] = useState({ title: '', description: '' });
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Prescription State
+  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const [submittingPrescription, setSubmittingPrescription] = useState(false);
+  const [prescriptionData, setPrescriptionData] = useState({
+    diagnosisAr: '',
+    diagnosisEn: '',
+    instructionsAr: '',
+    instructionsEn: '',
+    medications: [{ name: '', dosage: '', duration: '', notes: '' }]
+  });
 
   useEffect(() => {
     if (!token || !id) return;
@@ -69,6 +89,85 @@ export default function PatientProfilePage() {
     }
   };
 
+  // Upload Handlers
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selected = e.target.files[0];
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(selected.type)) {
+        toast.error('Invalid file type. Please select a PDF or an image.');
+        e.target.value = '';
+        return;
+      }
+      if (selected.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB.');
+        e.target.value = '';
+        return;
+      }
+      setFile(selected);
+    }
+  };
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !profile || !file || !uploadData.title) return;
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', uploadData.title);
+      if (uploadData.description) formData.append('description', uploadData.description);
+      formData.append('patientId', profile.id);
+      formData.append('file', file);
+
+      await api.postFormData('/reports', formData, token);
+
+      toast.success('Medical report uploaded successfully!');
+      setIsUploadModalOpen(false);
+      setFile(null);
+      setUploadData({ title: '', description: '' });
+      fetchProfile(); // Refresh profile to see the new report
+    } catch (err: any) {
+      toast.error(err.message || 'An error occurred during upload');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Prescription Handlers
+  const handlePrescriptionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !profile) return;
+    
+    // Validate medications
+    const validMedications = prescriptionData.medications.filter(m => m.name && m.dosage);
+    if (validMedications.length === 0) {
+      toast.error('Please add at least one medication with name and dosage.');
+      return;
+    }
+
+    setSubmittingPrescription(true);
+    try {
+      await api.post('/prescriptions', {
+        patientId: profile.id,
+        diagnosisAr: prescriptionData.diagnosisAr || undefined,
+        diagnosisEn: prescriptionData.diagnosisEn || undefined,
+        instructionsAr: prescriptionData.instructionsAr || undefined,
+        instructionsEn: prescriptionData.instructionsEn || undefined,
+        medications: validMedications
+      }, token);
+
+      toast.success('Prescription created successfully!');
+      setIsPrescriptionModalOpen(false);
+      fetchProfile(); // Refresh profile to see the new prescription
+    } catch (err: any) {
+      toast.error(err.message || 'An error occurred while creating the prescription');
+    } finally {
+      setSubmittingPrescription(false);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto">
@@ -83,7 +182,7 @@ export default function PatientProfilePage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-4 md:p-8">
       {/* Header / Patient Info */}
-      <Card className="p-8 rounded-3xl border border-[var(--border)] bg-gradient-to-br from-[var(--background)] to-[var(--primary)]/5 shadow-lg relative overflow-hidden">
+      <Card className="p-8 rounded-3xl border border-[var(--border)] bg-[var(--background)] shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between relative z-10">
           <div className="flex items-center gap-6">
             <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-[var(--primary)] to-[var(--primary-light)] text-white font-black flex items-center justify-center text-4xl shadow-xl shadow-[var(--primary)]/30">
@@ -98,9 +197,37 @@ export default function PatientProfilePage() {
               </div>
             </div>
           </div>
-          <Button variant="outline" onClick={() => router.back()} className="rounded-xl h-10 px-4 font-bold border-[var(--border)]">
-            <ArrowRight size={16} className="ml-2" /> العودة للقائمة
-          </Button>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <Button 
+              onClick={() => {
+                setIsPrescriptionModalOpen(true);
+                setPrescriptionData({
+                  diagnosisAr: '', diagnosisEn: '', instructionsAr: '', instructionsEn: '',
+                  medications: [{ name: '', dosage: '', duration: '', notes: '' }]
+                });
+              }}
+              variant="outline"
+              className="rounded-xl font-bold gap-2 px-4 border-blue-500/30 text-blue-500 hover:bg-blue-50 hover:border-blue-500"
+            >
+              <Stethoscope size={16} /> عمل روشتة
+            </Button>
+            
+            <Button 
+              onClick={() => {
+                setIsUploadModalOpen(true);
+                setUploadData({ title: '', description: '' });
+                setFile(null);
+              }}
+              className="rounded-xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] gap-2 shadow-lg shadow-[var(--primary)]/20 px-4"
+            >
+              <FileUp size={16} /> رفع تقرير
+            </Button>
+
+            <Button variant="ghost" onClick={() => router.back()} className="rounded-xl font-bold">
+              <ArrowRight size={16} className="ml-2" /> رجوع
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -277,6 +404,237 @@ export default function PatientProfilePage() {
         )}
 
       </Card>
+
+      {/* Upload Dialog */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full sm:max-w-[500px] bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl">
+            <div className="p-8">
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-black flex items-center gap-2">
+                    <FileUp className="text-[var(--primary)]" />
+                    {tAdmin('uploadMedicalReport', { fallback: 'Upload Report' })}
+                  </h2>
+                  <button onClick={() => setIsUploadModalOpen(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]">
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+              
+              <form onSubmit={handleUploadSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Report Title</label>
+                  <Input 
+                    required
+                    value={uploadData.title}
+                    onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
+                    placeholder="e.g. Blood Test Results"
+                    className="py-6 rounded-xl font-medium"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Description (Optional)</label>
+                  <textarea 
+                    value={uploadData.description}
+                    onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
+                    placeholder="Add any notes..."
+                    className="w-full min-h-[100px] p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]/50 focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-y text-sm font-medium outline-none"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] ml-1">Select File</label>
+                  
+                  <div className="relative border-2 border-dashed border-[var(--border)] hover:border-[var(--primary)]/50 rounded-2xl p-8 text-center transition-all bg-[var(--background)]/30 group">
+                    <input 
+                      type="file" 
+                      onChange={handleFileChange}
+                      accept=".pdf,image/jpeg,image/png,image/webp"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      required
+                    />
+                    {file ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="p-3 bg-green-500/10 text-green-500 rounded-full">
+                          <FileText size={24} />
+                        </div>
+                        <div className="font-bold text-sm truncate max-w-[200px]">{file.name}</div>
+                        <div className="text-xs text-[var(--muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="p-4 bg-[var(--primary)]/5 text-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
+                          <Upload size={24} />
+                        </div>
+                        <div className="font-bold text-sm">Click to upload or drag and drop</div>
+                        <div className="text-xs text-[var(--muted)]">PDF, PNG, JPG (max. 10MB)</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-6 border-t border-[var(--border)]">
+                  <Button type="button" variant="ghost" onClick={() => setIsUploadModalOpen(false)} className="rounded-xl font-bold h-12 px-6">
+                    {tCommon('cancel', { fallback: 'Cancel' })}
+                  </Button>
+                  <Button type="submit" disabled={uploading || !uploadData.title || !file} className="rounded-xl font-bold px-8 h-12 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] shadow-lg shadow-[var(--primary)]/20">
+                    {uploading ? tCommon('loading', { fallback: 'Uploading...' }) : 'Upload Report'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Prescription Dialog */}
+      {isPrescriptionModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full sm:max-w-3xl bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl my-8">
+            <div className="p-8">
+              <div className="mb-8 border-b border-[var(--border)] pb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-black flex items-center gap-3">
+                    <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
+                      <Stethoscope size={24} />
+                    </div>
+                    عمل روشتة طبية (Prescription)
+                  </h2>
+                  <button onClick={() => setIsPrescriptionModalOpen(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]">
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+              
+              <form onSubmit={handlePrescriptionSubmit} className="space-y-8">
+                {/* Diagnosis Section */}
+                <div className="space-y-4">
+                  <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />
+                    التشخيص (Diagnosis)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--muted)]">التشخيص (عربي)</label>
+                      <Input 
+                        value={prescriptionData.diagnosisAr}
+                        onChange={(e) => setPrescriptionData({ ...prescriptionData, diagnosisAr: e.target.value })}
+                        placeholder="أدخل التشخيص..."
+                        className="py-5 rounded-xl font-medium text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--muted)]">Diagnosis (English)</label>
+                      <Input 
+                        value={prescriptionData.diagnosisEn}
+                        onChange={(e) => setPrescriptionData({ ...prescriptionData, diagnosisEn: e.target.value })}
+                        placeholder="Enter diagnosis..."
+                        className="py-5 rounded-xl font-medium"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medications Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      الأدوية (Medications)
+                    </h3>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setPrescriptionData({
+                        ...prescriptionData, 
+                        medications: [...prescriptionData.medications, { name: '', dosage: '', duration: '', notes: '' }]
+                      })}
+                      className="gap-2 rounded-xl text-xs font-bold"
+                    >
+                      <Plus size={14} /> إضافة دواء
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3 bg-[var(--background)]/50 p-4 rounded-2xl border border-[var(--border)] max-h-[300px] overflow-y-auto">
+                    {prescriptionData.medications.map((med, index) => (
+                      <div key={index} className="flex flex-col md:flex-row gap-3 p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl relative group">
+                        <div className="flex-1 space-y-2">
+                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">اسم الدواء (Medication Name)</label>
+                          <Input 
+                            required
+                            value={med.name}
+                            onChange={(e) => {
+                              const newMeds = [...prescriptionData.medications];
+                              newMeds[index].name = e.target.value;
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            placeholder="e.g. Panadol 500mg"
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                        <div className="w-full md:w-1/4 space-y-2">
+                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">الجرعة (Dosage)</label>
+                          <Input 
+                            required
+                            value={med.dosage}
+                            onChange={(e) => {
+                              const newMeds = [...prescriptionData.medications];
+                              newMeds[index].dosage = e.target.value;
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            placeholder="e.g. 1 pill every 8 hours"
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                        <div className="w-full md:w-1/5 space-y-2">
+                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">المدة (Duration)</label>
+                          <Input 
+                            value={med.duration}
+                            onChange={(e) => {
+                              const newMeds = [...prescriptionData.medications];
+                              newMeds[index].duration = e.target.value;
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            placeholder="e.g. 5 days"
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                        
+                        {prescriptionData.medications.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newMeds = prescriptionData.medications.filter((_, i) => i !== index);
+                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                            }}
+                            className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-6 border-t border-[var(--border)]">
+                  <Button type="button" variant="ghost" onClick={() => setIsPrescriptionModalOpen(false)} className="rounded-xl font-bold h-12 px-6">
+                    {tCommon('cancel', { fallback: 'Cancel' })}
+                  </Button>
+                  <Button type="submit" disabled={submittingPrescription} className="rounded-xl font-bold px-8 h-12 bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+                    {submittingPrescription ? tCommon('loading', { fallback: 'Saving...' }) : 'حفظ الروشتة'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
