@@ -93,7 +93,15 @@ export default function BookingWizard() {
     setSlotsError(false);
     appointmentsApi.getAvailableSlots(targetDate)
       .then(res => {
-        const slots = res.slots || [];
+        // The backend returns { slots: [{ time: '10:00', available: true }, ...] }
+        let slots: string[] = [];
+        if (res.slots && res.slots.length > 0) {
+           if (typeof res.slots[0] === 'string') {
+              slots = res.slots as any;
+           } else {
+              slots = res.slots.filter((s: any) => s.available).map((s: any) => s.time);
+           }
+        }
         setAvailableSlots(slots);
         // Clear selected time if it was removed (blocked after selection)
         setTimeSlot(prev => slots.includes(prev) ? prev : '');
