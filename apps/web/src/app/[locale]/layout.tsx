@@ -88,8 +88,8 @@ export async function generateMetadata({
       images: [`${baseUrl}/images/doctor.png`],
     },
     icons: {
-      icon: '/images/logo.png',
-      apple: '/images/logo.png',
+      icon: '/images/logo-favicon.png',
+      apple: '/images/logo-favicon.png',
     },
   };
 }
