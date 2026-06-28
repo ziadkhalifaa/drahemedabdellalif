@@ -114,7 +114,7 @@ export function Footer() {
 
           {/* Brand Column */}
           <div className={cn("col-span-2 lg:col-span-1", isAr ? "text-right" : "text-left")}>
-            <Logo className="mb-6 brightness-0 invert opacity-90" />
+            <Logo className="mb-6 opacity-90" />
             <p className="text-sm text-white/50 leading-relaxed max-w-xs mb-8">
               {tHero('subtitle')}
             </p>

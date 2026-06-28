@@ -10,8 +10,8 @@ export function Logo({ className, iconOnly = false }: { className?: string, icon
         <Image
           src="/images/logo.png"
           alt="LRO CLINIC - Dr. Ahmed Abd El Latif"
-          width={iconOnly ? 60 : 180}
-          height={iconOnly ? 60 : 180}
+          width={iconOnly ? 40 : 72}
+          height={iconOnly ? 40 : 72}
           className="object-contain"
           priority
         />
