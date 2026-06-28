@@ -15,18 +15,30 @@ export default function WorkingHoursPage() {
   const { token } = useAuth();
   const [hours, setHours] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<number | null>(null);
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const defaultHours = [
+    { dayOfWeek: 0, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+    { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+    { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+    { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+    { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+    { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+    { dayOfWeek: 6, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
+  ];
 
   useEffect(() => {
     if (!token) return;
     
     api.get<any[]>('/working-hours', token)
       .then(res => {
-        // Sort by dayOfWeek (0 = Sunday, 6 = Saturday)
-        const sorted = [...res].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
-        setHours(sorted);
+        // Merge the API response with default hours to ensure all 7 days always exist in the UI
+        const merged = defaultHours.map(def => {
+          const existing = res.find(h => h.dayOfWeek === def.dayOfWeek);
+          return existing ? existing : def;
+        });
+        setHours(merged);
       })
       .catch(err => {
         toast.error('Failed to load working hours');
@@ -35,13 +47,14 @@ export default function WorkingHoursPage() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const handleUpdate = async (id: string, updates: any) => {
+  const handleUpdate = async (dayOfWeek: number, updates: any) => {
     if (!token) return;
-    setSavingId(id);
+    setSavingId(dayOfWeek);
     
     try {
-      const res = await api.patch(`/working-hours/${id}`, updates, token);
-      setHours(prev => prev.map(h => h.id === id ? { ...h, ...res } : h));
+      // The backend @Put endpoint does an upsert based on dayOfWeek
+      const res = await api.put(`/working-hours`, { dayOfWeek, ...updates }, token);
+      setHours(prev => prev.map(h => h.dayOfWeek === dayOfWeek ? { ...h, ...res } : h));
       toast.success(tCommon('success') || 'Updated successfully');
     } catch (err: any) {
       toast.error(err.message || tCommon('error'));
@@ -50,8 +63,13 @@ export default function WorkingHoursPage() {
     }
   };
 
-  const handleToggle = (id: string, isActive: boolean) => {
-    handleUpdate(id, { isActive });
+  const handleToggle = (dayOfWeek: number, currentHour: any, isActive: boolean) => {
+    handleUpdate(dayOfWeek, { 
+      startTime: currentHour.startTime, 
+      endTime: currentHour.endTime, 
+      slotDuration: currentHour.slotDuration, 
+      isActive 
+    });
   };
 
   if (loading) {
@@ -81,7 +99,7 @@ export default function WorkingHoursPage() {
 
       <div className="space-y-4">
         {hours.map((hour) => (
-          <Card key={hour.id} className={cn("p-6 border-[var(--border)] transition-all", !hour.isActive && "opacity-70 grayscale-[0.5]")}>
+          <Card key={hour.dayOfWeek} className={cn("p-6 border-[var(--border)] transition-all", !hour.isActive && "opacity-70 grayscale-[0.5]")}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               
               {/* Left side: Day and Toggle */}
@@ -92,8 +110,8 @@ export default function WorkingHoursPage() {
                       type="checkbox" 
                       className="sr-only peer" 
                       checked={hour.isActive}
-                      onChange={(e) => handleToggle(hour.id, e.target.checked)}
-                      disabled={savingId === hour.id}
+                      onChange={(e) => handleToggle(hour.dayOfWeek, hour, e.target.checked)}
+                      disabled={savingId === hour.dayOfWeek}
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[var(--primary)]"></div>
                   </label>
@@ -108,7 +126,7 @@ export default function WorkingHoursPage() {
                   <Input 
                     type="time" 
                     value={hour.startTime} 
-                    onChange={(e) => setHours(prev => prev.map(h => h.id === hour.id ? { ...h, startTime: e.target.value } : h))}
+                    onChange={(e) => setHours(prev => prev.map(h => h.dayOfWeek === hour.dayOfWeek ? { ...h, startTime: e.target.value } : h))}
                     className="font-bold text-base h-12 bg-[var(--background)] border-[var(--border)] rounded-xl"
                   />
                 </div>
@@ -117,7 +135,7 @@ export default function WorkingHoursPage() {
                   <Input 
                     type="time" 
                     value={hour.endTime} 
-                    onChange={(e) => setHours(prev => prev.map(h => h.id === hour.id ? { ...h, endTime: e.target.value } : h))}
+                    onChange={(e) => setHours(prev => prev.map(h => h.dayOfWeek === hour.dayOfWeek ? { ...h, endTime: e.target.value } : h))}
                     className="font-bold text-base h-12 bg-[var(--background)] border-[var(--border)] rounded-xl"
                   />
                 </div>
@@ -129,7 +147,7 @@ export default function WorkingHoursPage() {
                       min="10"
                       step="5"
                       value={hour.slotDuration} 
-                      onChange={(e) => setHours(prev => prev.map(h => h.id === hour.id ? { ...h, slotDuration: parseInt(e.target.value) } : h))}
+                      onChange={(e) => setHours(prev => prev.map(h => h.dayOfWeek === hour.dayOfWeek ? { ...h, slotDuration: parseInt(e.target.value) } : h))}
                       className="font-bold text-base h-12 bg-[var(--background)] border-[var(--border)] rounded-xl pl-4 pr-10"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--muted)] pointer-events-none">min</span>
@@ -138,13 +156,13 @@ export default function WorkingHoursPage() {
                 
                 <div className="col-span-2 md:col-span-1">
                   <Button 
-                    onClick={() => handleUpdate(hour.id, { startTime: hour.startTime, endTime: hour.endTime, slotDuration: hour.slotDuration })}
-                    disabled={savingId === hour.id || !hour.isActive}
+                    onClick={() => handleUpdate(hour.dayOfWeek, { startTime: hour.startTime, endTime: hour.endTime, slotDuration: hour.slotDuration, isActive: hour.isActive })}
+                    disabled={savingId === hour.dayOfWeek || !hour.isActive}
                     variant="outline"
                     className="w-full border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white h-12 px-6 rounded-xl font-bold"
                   >
                     <Save size={18} className="mr-2" />
-                    {savingId === hour.id ? tCommon('loading', { fallback: 'Saving...' }) : tCommon('save', { fallback: 'Save' })}
+                    {savingId === hour.dayOfWeek ? tCommon('loading', { fallback: 'Saving...' }) : tCommon('save', { fallback: 'Save' })}
                   </Button>
                 </div>
               </div>

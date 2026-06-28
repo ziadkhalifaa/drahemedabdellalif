@@ -18,11 +18,21 @@ export class WorkingHoursService {
     slotDuration: number;
     isActive: boolean;
   }) {
-    const existing = await this.prisma.workingHours.findFirst({ where: { dayOfWeek: data.dayOfWeek } });
     return this.prisma.workingHours.upsert({
-      where: { id: existing?.id || 'new' },
-      update: data,
-      create: data,
+      where: { dayOfWeek: data.dayOfWeek },
+      update: {
+        startTime: data.startTime,
+        endTime: data.endTime,
+        slotDuration: data.slotDuration,
+        isActive: data.isActive,
+      },
+      create: {
+        dayOfWeek: data.dayOfWeek,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        slotDuration: data.slotDuration,
+        isActive: data.isActive,
+      },
     });
   }
 
