@@ -46,15 +46,24 @@ export class WorkingHoursService {
     });
   }
 
-  async getBlockedSlots(date: string) {
-    return this.prisma.blockedSlot.findMany({
-      where: {
-        date: {
-          gte: new Date(date + 'T00:00:00'),
-          lt: new Date(date + 'T23:59:59'),
+  async getBlockedSlots(date?: string) {
+    if (date) {
+      return this.prisma.blockedSlot.findMany({
+        where: {
+          date: {
+            gte: new Date(date + 'T00:00:00'),
+            lt: new Date(date + 'T23:59:59'),
+          },
         },
-      },
-    });
+      });
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return this.prisma.blockedSlot.findMany({
+        where: { date: { gte: today } },
+        orderBy: { date: 'asc' },
+      });
+    }
   }
 
   async unblockSlot(id: string) {

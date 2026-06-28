@@ -30,7 +30,7 @@ export class WorkingHoursController {
 
   @Get('blocked')
   @UseInterceptors(SimpleCacheInterceptor)
-  async getBlocked(@Query('date') date: string) {
+  async getBlocked(@Query('date') date?: string) {
     return this.workingHoursService.getBlockedSlots(date);
   }
 
