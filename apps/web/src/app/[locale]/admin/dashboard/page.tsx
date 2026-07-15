@@ -19,7 +19,6 @@ import {
 import { exportToExcel } from '@/lib/export-utils';
 import { cn, formatTime12Hour } from '@/lib/utils';
 import { Link } from '@/i18n/routing';
-import { motion as m } from 'framer-motion';
 
 interface DashboardStats {
   overview: {
@@ -122,8 +121,8 @@ export default function AdminDashboardPage() {
     },
     {
       icon: Users, label: isRTL ? 'المرضى' : 'Patients',
-      value: stats?.overview?.appointments?.total ?? 0,
-      sub: isRTL ? 'إجمالي الحجوزات' : 'total bookings',
+      value: stats?.overview?.testimonials?.total ?? 0,
+      sub: isRTL ? 'إجمالي التقييمات' : 'total testimonials',
       color: 'text-amber-600 dark:text-amber-400', light: 'bg-amber-50 dark:bg-amber-500/10',
       trend: '', trendUp: false, href: '/admin/patients'
     },
@@ -200,7 +199,7 @@ export default function AdminDashboardPage() {
                 <card.icon size={20} className={card.color} />
               </div>
               <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <ArrowUpRight size={14} className="text-slate-400" />
+                <ArrowUpRight size={14} className={cn("text-slate-400", isRTL && "scale-x-[-1]")} />
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{card.value}</p>
@@ -223,7 +222,7 @@ export default function AdminDashboardPage() {
           { icon: CalendarDays, label: isRTL ? 'مواعيد اليوم' : 'Today\'s Appointments', count: stats?.overview?.appointments?.pending ?? 0, color: 'blue', href: '/admin/appointments' },
           { icon: CreditCard, label: isRTL ? 'مدفوعات معلقة' : 'Pending Payments', count: pendingPayments, color: 'amber', href: '/admin/payments' },
           { icon: MessageSquare, label: isRTL ? 'رسائل جديدة' : 'New Messages', count: stats?.overview?.messages?.unread ?? 0, color: 'violet', href: '/admin/messages' },
-          { icon: Star, label: isRTL ? 'تقييمات معلقة' : 'Pending Reviews', count: stats?.overview?.testimonials?.approved ?? 0, color: 'emerald', href: '/admin/testimonials' },
+          { icon: Star, label: isRTL ? 'تقييمات معلقة' : 'Pending Reviews', count: (stats?.overview?.testimonials?.total ?? 0) - (stats?.overview?.testimonials?.approved ?? 0), color: 'emerald', href: '/admin/testimonials' },
         ].map((action, idx) => (
           <Link key={idx} href={action.href as any}
             className={cn(
@@ -277,7 +276,7 @@ export default function AdminDashboardPage() {
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 {chartTab === 'bookings' ? (
-                  <BarChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <BarChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: isRTL ? -20 : 0, left: isRTL ? 0 : -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
                     <XAxis dataKey="month" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
                     <YAxis fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
@@ -286,7 +285,7 @@ export default function AdminDashboardPage() {
                     <Bar dataKey="onlineBookings" name={isRTL ? "أونلاين" : "Online"} fill="#06b6d4" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 ) : (
-                  <AreaChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <AreaChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: isRTL ? -20 : 0, left: isRTL ? 0 : -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.15}/><stop offset="95%" stopColor="#6366f1" stopOpacity={0}/></linearGradient>
                       <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#06b6d4" stopOpacity={0.15}/><stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/></linearGradient>
@@ -386,7 +385,7 @@ export default function AdminDashboardPage() {
                     <Zap size={13} className="text-slate-400 dark:text-white/25 group-hover:text-indigo-500 transition-colors" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-medium text-slate-700 dark:text-white/60 truncate capitalize">{event.type.replace(/_/g, ' ')}</p>
+                    <p className="text-[11px] font-medium text-slate-700 dark:text-white/60 truncate">{event.type.replace(/_/g, ' ')}</p>
                     <p className="text-[10px] text-slate-400 dark:text-white/20 mt-0.5">{new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
@@ -408,18 +407,18 @@ export default function AdminDashboardPage() {
               <p className="text-[12px] text-slate-400 dark:text-white/30 mt-0.5">{isRTL ? 'أحدث المواعيد المسجلة' : 'Latest appointment requests'}</p>
             </div>
             <Link href="/admin/appointments" className="text-[11px] font-semibold text-indigo-500 hover:text-indigo-600 transition-colors flex items-center gap-1">
-              {isRTL ? 'عرض الكل' : 'View All'} <ArrowUpRight size={12} />
+              {isRTL ? 'عرض الكل' : 'View All'} <ArrowUpRight size={12} className={cn(isRTL && "scale-x-[-1]")} />
             </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25 bg-slate-50 dark:bg-white/[0.02]">
-                  <th className="px-6 py-3 text-left">{isRTL ? 'المريض' : 'Patient'}</th>
-                  <th className="px-6 py-3 text-left">{isRTL ? 'التاريخ والوقت' : 'Schedule'}</th>
-                  <th className="px-6 py-3 text-left">{isRTL ? 'النوع' : 'Type'}</th>
-                  <th className="px-6 py-3 text-left">{isRTL ? 'العيادة' : 'Clinic'}</th>
-                  <th className="px-6 py-3 text-right">{isRTL ? 'الحالة' : 'Status'}</th>
+                  <th className={cn("px-6 py-3", isRTL ? "text-right" : "text-left")}>{isRTL ? 'المريض' : 'Patient'}</th>
+                  <th className={cn("px-6 py-3", isRTL ? "text-right" : "text-left")}>{isRTL ? 'التاريخ والوقت' : 'Schedule'}</th>
+                  <th className={cn("px-6 py-3", isRTL ? "text-right" : "text-left")}>{isRTL ? 'النوع' : 'Type'}</th>
+                  <th className={cn("px-6 py-3", isRTL ? "text-right" : "text-left")}>{isRTL ? 'العيادة' : 'Clinic'}</th>
+                  <th className={cn("px-6 py-3", isRTL ? "text-left" : "text-right")}>{isRTL ? 'الحالة' : 'Status'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -451,7 +450,7 @@ export default function AdminDashboardPage() {
                           {apt.clinic ? (isRTL ? apt.clinic.nameAr : apt.clinic.nameEn) : '—'}
                         </span>
                       </td>
-                      <td className="px-6 py-3.5 text-right">
+                      <td className={cn("px-6 py-3.5", isRTL ? "text-left" : "text-right")}>
                         <span className={cn(
                           "inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider",
                           apt.status === 'approved' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
