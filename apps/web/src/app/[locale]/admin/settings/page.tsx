@@ -12,32 +12,32 @@ export default function AdminSettingsPage() {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [settings, setSettings] = useState<any>({
     hero: {
-      titleAr: 'جراحة الكلى والمسالك البولية والذكورة',
-      titleEn: 'Urology and Andrology Surgery',
-      subtitleAr: 'نقدم أحدث الحلول الطبية وجراحات المناظير والليزر بأعلى المعايير العالمية',
-      subtitleEn: 'Providing the latest medical solutions and endoscopic laser surgeries with the highest global standards',
+      titleAr: '',
+      titleEn: '',
+      subtitleAr: '',
+      subtitleEn: '',
     },
     about: {
-      textAr: 'الأستاذ الدكتور أحمد عبد اللطيف، استشاري جراحة المسالك البولية...',
-      textEn: 'Prof. Dr. Ahmed Abdellatif, Consultant Urologist...',
+      textAr: '',
+      textEn: '',
     },
     contact: {
-      phone: '+20 123 456 7890',
-      email: 'info@drahmedabdellatif.com',
-      addressBeniSuef: 'بني سويف، مصر',
-      addressOctober: 'الحي المتميز، 6 أكتوبر',
+      phone: '',
+      email: '',
+      addressBeniSuef: '',
+      addressOctober: '',
     },
     social: {
-      facebook: 'https://www.facebook.com/DrAhmedAbdellatifClinic/',
-      youtube: 'https://www.youtube.com/@DrAhmedAbdellatif',
+      facebook: '',
+      youtube: '',
       instagram: '',
       whatsapp: ''
     },
     seo: {
-      metaTitleAr: 'د. أحمد عبد اللطيف - استشاري جراحة المسالك البولية',
-      metaTitleEn: 'Dr. Ahmed Abdellatif - Urology & Andrology Consultant',
-      metaDescriptionAr: 'استشاري جراحة المسالك البولية والكلى والمناظير والذكورة في مصر',
-      metaDescriptionEn: 'Consultant Urologist specializing in endoscopic and laser surgeries',
+      metaTitleAr: '',
+      metaTitleEn: '',
+      metaDescriptionAr: '',
+      metaDescriptionEn: '',
       ogImage: '',
     }
   });

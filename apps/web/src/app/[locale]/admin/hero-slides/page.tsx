@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api, getMediaUrl } from '@/lib/api';
+import { toast } from 'sonner';
 
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -65,15 +66,18 @@ export default function AdminHeroSlidesPage() {
 
   const handleSave = async () => {
     if (!token) return;
-    if (editing) {
-      await api.patch(`/hero-slides/${editing.id}`, form, token);
-    } else {
-      await api.post('/hero-slides', form, token);
-    }
-    setShowForm(false);
-    setEditing(null);
-    resetForm();
-    fetchSlides();
+    try {
+      if (editing) {
+        await api.patch(`/hero-slides/${editing.id}`, form, token);
+      } else {
+        await api.post('/hero-slides', form, token);
+      }
+      toast.success(editing ? 'Slide updated' : 'Slide created');
+      setShowForm(false);
+      setEditing(null);
+      resetForm();
+      fetchSlides();
+    } catch { toast.error('Failed to save slide'); }
   };
 
   const resetForm = () => {
@@ -87,8 +91,11 @@ export default function AdminHeroSlidesPage() {
   const handleDelete = async (id: string) => {
     if (!token) return;
     if (confirm('Delete this slide?')) {
-      await api.delete(`/hero-slides/${id}`, token);
-      fetchSlides();
+      try {
+        await api.delete(`/hero-slides/${id}`, token);
+        toast.success('Slide deleted');
+        fetchSlides();
+      } catch { toast.error('Failed to delete slide'); }
     }
   };
 

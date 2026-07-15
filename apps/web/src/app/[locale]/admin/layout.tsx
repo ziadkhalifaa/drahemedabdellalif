@@ -53,12 +53,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!token) return;
-    api.get<{ total: number; pendingAppointments: number; unreadMessages: number; pendingTestimonials: number }>('/analytics/notifications', token)
-      .then(data => {
-        setNotifCount(data.total);
-        setNotifData({ pendingAppointments: data.pendingAppointments, unreadMessages: data.unreadMessages, pendingTestimonials: data.pendingTestimonials });
-      })
-      .catch(() => {});
+    const fetchNotifs = () => {
+      api.get<{ total: number; pendingAppointments: number; unreadMessages: number; pendingTestimonials: number }>('/analytics/notifications', token)
+        .then(data => {
+          setNotifCount(data.total);
+          setNotifData({ pendingAppointments: data.pendingAppointments, unreadMessages: data.unreadMessages, pendingTestimonials: data.pendingTestimonials });
+        })
+        .catch(() => {});
+    };
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 60000);
+    return () => clearInterval(interval);
   }, [token]);
 
   useEffect(() => {

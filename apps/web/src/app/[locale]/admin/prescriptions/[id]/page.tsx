@@ -185,7 +185,12 @@ export default function PrescriptionDetailPage() {
 
           <div className="text-center">
             <div className="w-20 h-20 bg-white border border-slate-200/60 p-1.5 rounded-xl mb-1.5 mx-auto">
-              <div className="w-full h-full bg-[url('https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=prescription-verified')] bg-cover opacity-25" />
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=prescription:${prescription?.id || id}`}
+                alt="QR Code"
+                className="w-full h-full"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
             </div>
             <p className="text-[9px] font-semibold text-indigo-500 uppercase tracking-widest">Verified Digital Prescription</p>
           </div>

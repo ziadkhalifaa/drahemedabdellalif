@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 import { Check, X, Trash2, Star, Trophy, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,27 +40,37 @@ export default function AdminTestimonialsPage() {
 
   const approve = async (id: string) => {
     if (!token) return;
-    await api.patch(`/testimonials/${id}/approve`, {}, token);
-    fetchTestimonials();
+    try {
+      await api.patch(`/testimonials/${id}/approve`, {}, token);
+      toast.success('Approved');
+      fetchTestimonials();
+    } catch { toast.error('Failed to approve'); }
   };
 
   const toggleVisibility = async (item: any) => {
     if (!token) return;
-    await api.patch(`/testimonials/${item.id}`, { isVisible: !item.isVisible }, token);
-    fetchTestimonials();
+    try {
+      await api.patch(`/testimonials/${item.id}`, { isVisible: !item.isVisible }, token);
+      fetchTestimonials();
+    } catch { toast.error('Failed to update visibility'); }
   };
 
   const toggleSuccessStory = async (item: any) => {
     if (!token) return;
-    await api.patch(`/testimonials/${item.id}/toggle-success-story`, { isSuccessStory: !item.isSuccessStory }, token);
-    fetchTestimonials();
+    try {
+      await api.patch(`/testimonials/${item.id}/toggle-success-story`, { isSuccessStory: !item.isSuccessStory }, token);
+      fetchTestimonials();
+    } catch { toast.error('Failed to update'); }
   };
 
   const handleDelete = async (id: string) => {
     if (!token) return;
     if (confirm('Delete this testimonial permanently?')) {
-      await api.delete(`/testimonials/${id}`, token);
-      fetchTestimonials();
+      try {
+        await api.delete(`/testimonials/${id}`, token);
+        toast.success('Deleted');
+        fetchTestimonials();
+      } catch { toast.error('Failed to delete'); }
     }
   };
 

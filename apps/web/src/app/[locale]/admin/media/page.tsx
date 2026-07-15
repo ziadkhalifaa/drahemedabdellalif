@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Input } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api, getMediaUrl } from '@/lib/api';
+import { toast } from 'sonner';
 import {
   Plus, Edit2, Trash2, Image as ImageIcon,
   Play, UploadCloud, Globe, Film
@@ -83,7 +84,7 @@ export default function AdminMediaPage() {
       const formData = new FormData();
       formData.append('file', uploadFile, file.name.split('.')[0] + '.webp');
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/media/upload`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/media/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -96,7 +97,7 @@ export default function AdminMediaPage() {
       const data = await res.json();
       setForm({ ...form, url: data.url });
     } catch (error) {
-      alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setUploading(false);
     }
@@ -104,15 +105,18 @@ export default function AdminMediaPage() {
 
   const handleSave = async () => {
     if (!token) return;
-    if (editing) {
-      await api.patch(`/media/${editing.id}`, form, token);
-    } else {
-      await api.post('/media', form, token);
-    }
-    setShowForm(false);
-    setEditing(null);
-    resetForm();
-    fetchItems();
+    try {
+      if (editing) {
+        await api.patch(`/media/${editing.id}`, form, token);
+      } else {
+        await api.post('/media', form, token);
+      }
+      toast.success(editing ? 'Media updated' : 'Media created');
+      setShowForm(false);
+      setEditing(null);
+      resetForm();
+      fetchItems();
+    } catch { toast.error('Failed to save media'); }
   };
 
   const resetForm = () => {
@@ -128,8 +132,11 @@ export default function AdminMediaPage() {
   const handleDelete = async (id: string) => {
     if (!token) return;
     if (confirm('Delete this media item?')) {
-      await api.delete(`/media/${id}`, token);
-      fetchItems();
+      try {
+        await api.delete(`/media/${id}`, token);
+        toast.success('Media deleted');
+        fetchItems();
+      } catch { toast.error('Failed to delete media'); }
     }
   };
 

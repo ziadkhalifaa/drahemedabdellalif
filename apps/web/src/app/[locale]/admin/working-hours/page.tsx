@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { toast } from 'sonner';
@@ -42,7 +42,7 @@ export default function WorkingHoursPage() {
     { dayOfWeek: 6, startTime: '09:00', endTime: '17:00', slotDuration: 30, isActive: false },
   ];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
@@ -63,11 +63,11 @@ export default function WorkingHoursPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchData();
-  }, [token]);
+  }, [fetchData]);
 
   const handleUpdate = async (dayOfWeek: number, updates: any) => {
     if (!token) return;

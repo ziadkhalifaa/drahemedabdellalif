@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { toast } from 'sonner';
@@ -25,6 +26,8 @@ interface Patient {
 }
 
 export default function PatientsManagementPage() {
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const { token } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,7 +45,9 @@ export default function PatientsManagementPage() {
   }, [searchParam]);
 
   const handleDeleteClick = async (patientId: string, patientName: string) => {
-    const msg = `Are you absolutely sure you want to delete patient "${patientName}"? This will permanently delete ALL of their appointments, prescriptions, medical reports, payments, and account data. This action is irreversible!`;
+    const msg = isRTL
+      ? `هل أنت متأكد من حذف المريض "${patientName}"؟ سيتم حذف جميع مواعيده وروشتاته وتقاريره وحسابه نهائياً. هذا الإجراء لا يمكن التراجع عنه!`
+      : `Are you absolutely sure you want to delete patient "${patientName}"? This will permanently delete ALL of their appointments, prescriptions, medical reports, payments, and account data. This action is irreversible!`;
     if (!window.confirm(msg)) return;
     setDeletingId(patientId);
     try {
@@ -128,10 +133,10 @@ export default function PatientsManagementPage() {
       {/* Search + Sort */}
       <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+          <Search size={15} className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} />
           <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
             placeholder={isRTL ? 'بحث بالاسم، الإيميل، أو الهاتف...' : 'Search by name, email, or phone...'}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all" />
+            className={cn("w-full py-2 rounded-xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all", isRTL ? "pl-4 pr-9" : "pl-9 pr-4")} />
         </div>
         <div className="flex items-center gap-1 bg-white dark:bg-[#111827] rounded-xl border border-slate-200/60 dark:border-white/5 p-1">
           {([['date', isRTL ? 'الأحدث' : 'Newest'], ['name', isRTL ? 'الاسم' : 'Name'], ['email', isRTL ? 'البريد' : 'Email']] as const).map(([key, label]) => (
@@ -169,7 +174,7 @@ export default function PatientsManagementPage() {
                 </div>
                 <button onClick={() => router.push(`/admin/patients/${patient.id}`)}
                   className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
-                  <ArrowUpRight size={14} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                  <ArrowUpRight size={14} className={cn("text-slate-400 group-hover:text-indigo-500 transition-colors", isRTL && "scale-x-[-1]")} />
                 </button>
               </div>
 
