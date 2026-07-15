@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Card, Button } from '@/components/ui';
 import { Navbar } from '@/components/layout/navbar';
@@ -14,7 +14,7 @@ import {
   Upload, Pill, HeartPulse, FileBarChart, Download, X,
   ChevronRight, ChevronLeft, Activity, AlertCircle, CheckCircle2,
   Plus, Trash2, Stethoscope, Loader2, Paperclip, MessageSquare,
-  RefreshCw, ExternalLink, FileImage, File, Eye
+  RefreshCw, ExternalLink, FileImage, File, Eye, LogIn
 } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 
@@ -29,6 +29,7 @@ interface Medication {
 
 export default function VideoRoomPage() {
   const { meetingId } = useParams();
+  const searchParams = useSearchParams();
   const t = useTranslations('dashboard.video');
   const locale = useLocale();
   const isRTL = locale === 'ar';
@@ -36,6 +37,7 @@ export default function VideoRoomPage() {
   const [mounted, setMounted] = useState(false);
   const { user, token, isLoading } = useAuth();
   const isDoctor = user?.role === 'admin' || user?.role === 'editor';
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const [meetingUrl, setMeetingUrl] = useState<string>(`https://meet.jit.si/${meetingId}`);
   const [appointment, setAppointment] = useState<any>(null);
@@ -47,26 +49,44 @@ export default function VideoRoomPage() {
   const [showSidebar, setShowSidebar] = useState(true);
   const authToken = token ?? undefined;
 
-  // Fetch appointment data
+  // Redirect to login if not authenticated
   useEffect(() => {
     setMounted(true);
-    if (token) {
-      api.get<any>(`/appointments/by-meeting/${meetingId}`, authToken)
-        .then(appt => {
-          setAppointment(appt);
-          if (appt.meetingUrl) setMeetingUrl(appt.meetingUrl);
-          setAppointmentLoading(false);
-          // Load existing prescription if any
-          loadPrescription(appt.id);
-          // Load session reports
-          loadSessionReports(appt.id);
-        })
-        .catch(err => {
-          console.error(err);
-          setAppointmentLoading(false);
-        });
+    if (!isLoading && !token) {
+      const loginUrl = `/auth/login?redirect=${encodeURIComponent(`/dashboard/video/${meetingId}`)}`;
+      router.push(loginUrl);
     }
-  }, [meetingId, token]);
+  }, [isLoading, token, meetingId, router]);
+
+  // Fetch appointment data and verify ownership
+  useEffect(() => {
+    if (!token) return;
+    api.get<any>(`/appointments/by-meeting/${meetingId}`, authToken)
+      .then(appt => {
+        if (!appt) {
+          setAuthError(isRTL ? 'لم يتم العثور على الجلسة' : 'Session not found');
+          setAppointmentLoading(false);
+          return;
+        }
+        // Verify ownership: patient must own this appointment, doctors can access any
+        const isOwner = appt.patientId === user?.id || appt.guestEmail === user?.email;
+        if (!isDoctor && !isOwner) {
+          setAuthError(isRTL ? 'هذه الجلسة غير مخصصة لك' : 'This session does not belong to you');
+          setAppointmentLoading(false);
+          return;
+        }
+        setAppointment(appt);
+        if (appt.meetingUrl) setMeetingUrl(appt.meetingUrl);
+        setAppointmentLoading(false);
+        loadPrescription(appt.id);
+        loadSessionReports(appt.id);
+      })
+      .catch(err => {
+        console.error(err);
+        setAppointmentLoading(false);
+        setAuthError(isRTL ? 'فشل في تحميل بيانات الجلسة' : 'Failed to load session');
+      });
+  }, [meetingId, token, user?.id, user?.email, isDoctor]);
 
   const loadPrescription = async (apptId: string) => {
     try {
@@ -210,6 +230,33 @@ export default function VideoRoomPage() {
           <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
+    );
+  }
+
+  if (authError) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen pt-32 flex items-center justify-center bg-[#0a0a0f] overflow-hidden relative">
+          <div className="absolute inset-0 pointer-events-none opacity-20">
+            <div className="absolute top-1/4 left-1/4 w-[50vw] h-[50vw] bg-red-500/10 rounded-full blur-[120px]" />
+          </div>
+          <Card className="max-w-md w-full p-10 bg-zinc-900/60 backdrop-blur-2xl border-white/[0.06] rounded-[2.5rem] text-center relative z-10 shadow-2xl">
+            <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <AlertCircle size={40} />
+            </div>
+            <h2 className="text-2xl font-black text-white mb-3">
+              {isRTL ? 'غير مصرح بالدخول' : 'Access Denied'}
+            </h2>
+            <p className="text-zinc-400 text-sm mb-8 leading-relaxed font-medium">{authError}</p>
+            <Link href={isDoctor ? '/admin' : '/dashboard'} className="block w-full">
+              <Button className="w-full h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:-translate-y-0.5 transition-transform text-white">
+                {isRTL ? 'العودة للرئيسية' : 'Back to Home'}
+              </Button>
+            </Link>
+          </Card>
+        </main>
+      </>
     );
   }
 

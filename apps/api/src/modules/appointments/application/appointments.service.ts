@@ -285,11 +285,13 @@ export class AppointmentsService {
       const formattedDate = new Date(appointment.date).toLocaleDateString('ar-EG', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
       });
+      const frontendUrl = process.env.FRONTEND_URL || 'https://drahmedabdellatif.com';
+      const videoUrl = appointment.meetingId ? `${frontendUrl}/dashboard/video/${appointment.meetingId}` : undefined;
       await this.whatsappService.sendAppointmentConfirmation(phone, {
         date: formattedDate,
         time: appointment.timeSlot,
         type: appointment.type,
-        url: appointment.meetingUrl || undefined,
+        url: videoUrl,
       }).catch(console.error);
     }
 
@@ -328,6 +330,9 @@ export class AppointmentsService {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
       });
 
+      const frontendUrl = process.env.FRONTEND_URL || 'https://drahmedabdellatif.com';
+      const videoUrl = appointment.meetingId ? `${frontendUrl}/dashboard/video/${appointment.meetingId}` : undefined;
+
       if (email) {
         await this.emailService.sendAppointmentStatus(
           email,
@@ -335,7 +340,7 @@ export class AppointmentsService {
           formattedDate,
           appointment.timeSlot,
           status.toLowerCase() as 'approved' | 'rejected',
-          appointment.meetingUrl || undefined
+          videoUrl
         );
       }
 
@@ -344,7 +349,7 @@ export class AppointmentsService {
           date: formattedDate,
           time: appointment.timeSlot,
           type: appointment.type,
-          url: appointment.meetingUrl || undefined
+          url: videoUrl
         });
       }
     }
