@@ -13,7 +13,8 @@ import {
   Newspaper, Eye, Zap, Server, Shield, DollarSign,
   Percent, BarChart3, PieChart, Bell, RefreshCw,
   UserPlus, Phone, Mail, MapPin, ArrowRight, ArrowLeft,
-  Sparkles, Target, Award, ChevronRight, Video, Building2
+  Sparkles, Target, Award, ChevronRight, Video, Building2,
+  UserCheck, Edit, Trash2, MessageCircle
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -36,6 +37,7 @@ interface DashboardStats {
   recentEvents: any[];
   charts: {
     appointments: any[];
+    appointmentsWeekly: any[];
     visitors: any[];
   };
 }
@@ -78,6 +80,32 @@ function formatUptime(seconds: number): string {
   return `${m}m`;
 }
 
+function formatRelativeTime(ms: number, isRTL: boolean): string {
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return isRTL ? 'الآن' : 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return isRTL ? `منذ ${minutes} د` : `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return isRTL ? `منذ ${hours} س` : `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return isRTL ? `منذ ${days} ي` : `${days}d ago`;
+  return isRTL ? 'منذ فترة' : 'long ago';
+}
+
+const EVENT_ICONS: Record<string, { icon: any; color: string; bg: string; dot: string }> = {
+  page_view: { icon: Eye, color: 'bg-slate-400', bg: 'bg-slate-500', dot: 'bg-slate-400' },
+  appointment_created: { icon: CalendarDays, color: 'bg-indigo-500', bg: 'bg-indigo-500', dot: 'bg-indigo-400' },
+  appointment_approved: { icon: UserCheck, color: 'bg-emerald-500', bg: 'bg-emerald-500', dot: 'bg-emerald-400' },
+  appointment_cancelled: { icon: Trash2, color: 'bg-red-500', bg: 'bg-red-500', dot: 'bg-red-400' },
+  appointment_completed: { icon: CheckCircle, color: 'bg-blue-500', bg: 'bg-blue-500', dot: 'bg-blue-400' },
+  payment_received: { icon: CreditCard, color: 'bg-cyan-500', bg: 'bg-cyan-500', dot: 'bg-cyan-400' },
+  testimonial_created: { icon: MessageCircle, color: 'bg-amber-500', bg: 'bg-amber-500', dot: 'bg-amber-400' },
+  testimonial_approved: { icon: Star, color: 'bg-amber-500', bg: 'bg-amber-500', dot: 'bg-amber-400' },
+  message_received: { icon: MessageSquare, color: 'bg-violet-500', bg: 'bg-violet-500', dot: 'bg-violet-400' },
+  blog_published: { icon: Newspaper, color: 'bg-emerald-500', bg: 'bg-emerald-500', dot: 'bg-emerald-400' },
+  default: { icon: Activity, color: 'bg-slate-400', bg: 'bg-slate-500', dot: 'bg-slate-400' },
+};
+
 export default function AdminDashboardPage() {
   const locale = useLocale();
   const isRTL = locale === 'ar';
@@ -88,6 +116,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [chartTab, setChartTab] = useState<'bookings' | 'revenue'>('bookings');
+  const [chartPeriod, setChartPeriod] = useState<'monthly' | 'weekly'>('monthly');
   const [visitorPeriod, setVisitorPeriod] = useState<'7d' | '30d'>('30d');
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -134,7 +163,9 @@ export default function AdminDashboardPage() {
   const approvalRate = totalTestimonials > 0 ? Math.round((approvedTestimonials / totalTestimonials) * 100) : 0;
   const messageReadRate = totalMessages > 0 ? Math.round(((totalMessages - unreadCount) / totalMessages) * 100) : 0;
 
-  const appointmentData = stats?.charts?.appointments || [];
+  const appointmentData = chartPeriod === 'weekly'
+    ? (stats?.charts?.appointmentsWeekly || [])
+    : (stats?.charts?.appointments || []);
 
   const pieData = [
     { name: isRTL ? 'مكتمل' : 'Completed', value: completedCount, color: PIE_COLORS[0] },
@@ -380,25 +411,37 @@ export default function AdminDashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">{isRTL ? 'تحليلات الأداء' : 'Performance Analytics'}</h3>
-                  <p className="text-[11px] text-slate-400 dark:text-white/30 mt-0.5">{isRTL ? 'حجوزات العيادة مقابل الاستشارات أونلاين' : 'Clinic vs online appointments over time'}</p>
+                  <p className="text-[11px] text-slate-400 dark:text-white/30 mt-0.5">{isRTL ? 'حجوزات الحضوري مقابل الأونلاين عبر الفترة' : 'In-person vs online appointments over time'}</p>
                 </div>
               </div>
-              <div className="flex gap-1 bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl">
-                {(['bookings', 'revenue'] as const).map(tab => (
-                  <button key={tab} onClick={() => setChartTab(tab)} className={cn(
-                    "px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200",
-                    chartTab === tab ? "bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white" : "text-slate-400 dark:text-white/30 hover:text-slate-600"
-                  )}>
-                    {tab === 'bookings' ? (isRTL ? 'الحجوزات' : 'Bookings') : (isRTL ? 'الإيرادات' : 'Revenue')}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1.5">
+                <div className="flex gap-0.5 bg-slate-100 dark:bg-white/5 p-0.5 rounded-lg">
+                  {(['monthly', 'weekly'] as const).map(p => (
+                    <button key={p} onClick={() => setChartPeriod(p)} className={cn(
+                      "px-2 py-1 rounded-md text-[9px] font-bold transition-all",
+                      chartPeriod === p ? "bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white" : "text-slate-400 dark:text-white/30"
+                    )}>
+                      {p === 'monthly' ? (isRTL ? 'شهري' : 'Month') : (isRTL ? 'أسبوعي' : 'Week')}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-1 bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl">
+                  {(['bookings', 'revenue'] as const).map(tab => (
+                    <button key={tab} onClick={() => setChartTab(tab)} className={cn(
+                      "px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all duration-200",
+                      chartTab === tab ? "bg-white dark:bg-white/10 shadow-sm text-slate-900 dark:text-white" : "text-slate-400 dark:text-white/30 hover:text-slate-600"
+                    )}>
+                      {tab === 'bookings' ? (isRTL ? 'الحجوزات' : 'Bookings') : (isRTL ? 'الإيرادات' : 'Revenue')}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="p-6">
               <div className="flex items-center gap-6 mb-4 pb-3 border-b border-slate-50 dark:border-white/5">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-                  <span className="text-[11px] font-medium text-slate-500 dark:text-white/40">{isRTL ? 'عيادة' : 'Clinic'}</span>
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-white/40">{isRTL ? 'حضوري' : 'In-person'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
@@ -406,7 +449,9 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="flex-1" />
                 <span className="text-[10px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">
-                  {isRTL ? 'آخر 12 شهراً' : 'Last 12 months'}
+                  {chartPeriod === 'weekly'
+                    ? (isRTL ? 'آخر 6 أسابيع' : 'Last 6 weeks')
+                    : (isRTL ? 'آخر 6 أشهر' : 'Last 6 months')}
                 </span>
               </div>
               <div className="h-[260px] w-full">
@@ -414,13 +459,13 @@ export default function AdminDashboardPage() {
                   {chartTab === 'bookings' ? (
                     <BarChart data={appointmentData} margin={{ top: 0, right: isRTL ? -20 : 0, left: isRTL ? 0 : -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
-                      <XAxis dataKey="month" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
+                      <XAxis dataKey={chartPeriod === 'weekly' ? 'week' : 'month'} fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
                       <YAxis fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
                       <Tooltip
                         cursor={{ fill: 'rgba(99,102,241,0.04)' }}
                         contentStyle={{ borderRadius: 14, border: '1px solid rgba(0,0,0,0.06)', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: '10px 16px', fontSize: 12 }}
                       />
-                      <Bar dataKey="clinicsBookings" name={isRTL ? "عيادة" : "Clinic"} fill="#6366f1" radius={[6, 6, 0, 0]} maxBarSize={32} />
+                      <Bar dataKey="inPersonBookings" name={isRTL ? "حضوري" : "In-person"} fill="#6366f1" radius={[6, 6, 0, 0]} maxBarSize={32} />
                       <Bar dataKey="onlineBookings" name={isRTL ? "أونلاين" : "Online"} fill="#06b6d4" radius={[6, 6, 0, 0]} maxBarSize={32} />
                     </BarChart>
                   ) : (
@@ -430,13 +475,13 @@ export default function AdminDashboardPage() {
                         <linearGradient id="revGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#06b6d4" stopOpacity={0.2}/><stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/></linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
-                      <XAxis dataKey="month" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
+                      <XAxis dataKey={chartPeriod === 'weekly' ? 'week' : 'month'} fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
                       <YAxis fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
                       <Tooltip
                         cursor={{ fill: 'rgba(99,102,241,0.04)' }}
                         contentStyle={{ borderRadius: 14, border: '1px solid rgba(0,0,0,0.06)', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: '10px 16px', fontSize: 12 }}
                       />
-                      <Area type="monotone" dataKey="clinicsPayments" name={isRTL ? "إيرادات العيادات" : "Clinic Revenue"} stroke="#6366f1" fillOpacity={1} fill="url(#revGrad1)" strokeWidth={2.5} />
+                      <Area type="monotone" dataKey="inPersonPayments" name={isRTL ? "إيرادات الحضوري" : "In-person Revenue"} stroke="#6366f1" fillOpacity={1} fill="url(#revGrad1)" strokeWidth={2.5} />
                       <Area type="monotone" dataKey="onlinePayments" name={isRTL ? "إيرادات الأونلاين" : "Online Revenue"} stroke="#06b6d4" fillOpacity={1} fill="url(#revGrad2)" strokeWidth={2.5} />
                     </AreaChart>
                   )}
@@ -652,11 +697,11 @@ export default function AdminDashboardPage() {
                           <p className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{formatTime12Hour(apt.timeSlot, isRTL)}</p>
                         </td>
                         <td className="px-6 py-3.5">
-                          <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold", apt.type === 'ONLINE' ? "text-cyan-600 dark:text-cyan-400" : "text-slate-500 dark:text-white/40")}>
+                          <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold", apt.type === 'ONLINE' ? "text-cyan-600 dark:text-cyan-400" : "text-indigo-600 dark:text-indigo-400")}>
                             {apt.type === 'ONLINE' ? (
                               <><Video size={11} /> {isRTL ? 'أونلاين' : 'Online'}</>
                             ) : (
-                              <><Building2 size={11} /> {isRTL ? 'عيادة' : 'Clinic'}</>
+                              <><Building2 size={11} /> {isRTL ? 'حضوري' : 'In-person'}</>
                             )}
                           </span>
                         </td>
@@ -699,38 +744,63 @@ export default function AdminDashboardPage() {
                 </div>
                 <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">{isRTL ? 'النشاطات الأخيرة' : 'Recent Activity'}</h3>
               </div>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">{isRTL ? 'مباشر' : 'LIVE'}</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-500 dark:text-rose-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                {isRTL ? 'مباشر' : 'LIVE'}
+              </span>
             </div>
-            <div className="space-y-0 relative">
-              <div className="absolute left-3.5 top-2 bottom-2 w-px bg-gradient-to-b from-indigo-500/30 via-cyan-500/20 to-transparent" />
-              {stats?.recentEvents?.slice(0, 6).map((event, idx) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.06 }}
-                  className="relative flex items-start gap-4 pb-4 last:pb-0"
-                >
-                  <div className="relative z-10 mt-0.5">
+            <div className="space-y-1 relative">
+              <div className="absolute left-[17px] top-3 bottom-3 w-px bg-gradient-to-b from-indigo-500/30 via-cyan-500/20 to-transparent" />
+              {stats?.recentEvents?.slice(0, 7).map((event, idx) => {
+                const eventConfig = EVENT_ICONS[event.type] || EVENT_ICONS['default'];
+                const timeDiff = Date.now() - new Date(event.createdAt).getTime();
+                const relativeTime = formatRelativeTime(timeDiff, isRTL);
+                const detailText = event.payload?.patientName
+                  ? event.payload.patientName
+                  : event.payload?.page
+                    ? (event.payload.page as string).replace(/^\//, '').replace(/-/g, ' ')
+                    : null;
+                return (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="group relative flex items-start gap-3.5 py-2.5 px-3 -mx-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.03] transition-all duration-200 cursor-default"
+                  >
+                    <div className="relative z-10 mt-0.5">
+                      <div className={cn(
+                        "w-[9px] h-[9px] rounded-full ring-[3px] ring-white dark:ring-[#111827] flex items-center justify-center transition-transform duration-300 group-hover:scale-125",
+                        eventConfig.color
+                      )}>
+                        <div className={cn("w-1 h-1 rounded-full bg-white", idx === 0 && "animate-ping absolute")} />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", eventConfig.bg)}>
+                          <eventConfig.icon size={10} className="text-white" />
+                        </span>
+                        <p className="text-[12px] font-semibold text-slate-700 dark:text-white/70 truncate capitalize">
+                          {event.type?.replace(/_/g, ' ') || (isRTL ? 'حدث' : 'Event')}
+                        </p>
+                      </div>
+                      {detailText && (
+                        <p className="text-[10px] text-slate-400 dark:text-white/30 mt-0.5 truncate pl-7">
+                          {detailText}
+                        </p>
+                      )}
+                      <p className="text-[9px] text-slate-400/60 dark:text-white/20 mt-0.5 pl-7 font-medium">
+                        {relativeTime}
+                      </p>
+                    </div>
                     <div className={cn(
-                      "w-[7px] h-[7px] rounded-full ring-2 ring-white dark:ring-[#111827]",
-                      idx === 0 ? "bg-indigo-500 animate-pulse" :
-                      idx === 1 ? "bg-cyan-500" :
-                      idx === 2 ? "bg-emerald-500" :
-                      idx === 3 ? "bg-amber-500" :
-                      "bg-slate-300 dark:bg-slate-600"
+                      "shrink-0 w-1.5 h-1.5 rounded-full mt-2 opacity-0 group-hover:opacity-100 transition-opacity",
+                      eventConfig.dot
                     )} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold text-slate-700 dark:text-white/70 truncate capitalize">
-                      {event.type?.replace(/_/g, ' ') || (isRTL ? 'حدث' : 'Event')}
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">
-                      {new Date(event.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
               {(!stats?.recentEvents || stats.recentEvents.length === 0) && (
                 <div className="py-8 text-center">
                   <Activity size={20} className="mx-auto mb-2 text-slate-300 dark:text-white/15" />

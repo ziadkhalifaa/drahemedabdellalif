@@ -417,7 +417,7 @@ function DashboardContent() {
                                   </span>
                                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 dark:text-white/50">
                                     {upcomingApt.type === 'ONLINE' ? <Video size={13} className="text-cyan-500" /> : <MapPin size={13} className="text-emerald-500" />}
-                                    {upcomingApt.type === 'ONLINE' ? (isRTL ? 'استشارة أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}
+                                    {upcomingApt.type === 'ONLINE' ? (isRTL ? 'استشارة أونلاين' : 'Online') : (isRTL ? 'زيارة حضورية' : 'In-person')}
                                   </span>
                                   {getStatusBadge(upcomingApt.status)}
                                 </div>
@@ -482,7 +482,7 @@ function DashboardContent() {
                                   contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.06)', background: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: '8px 14px', fontSize: 11 }}
                                 />
                                 <Bar dataKey="online" name={isRTL ? 'أونلاين' : 'Online'} fill="#06b6d4" radius={[4, 4, 0, 0]} maxBarSize={24} stackId="a" />
-                                <Bar dataKey="clinic" name={isRTL ? 'عيادة' : 'Clinic'} fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={24} stackId="a" />
+                                <Bar dataKey="clinic" name={isRTL ? 'حضوري' : 'In-person'} fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={24} stackId="a" />
                               </BarChart>
                             </ResponsiveContainer>
                           </div>
@@ -494,7 +494,7 @@ function DashboardContent() {
                         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center gap-4">
                           <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                            <span className="text-[10px] font-semibold text-slate-500 dark:text-white/40">{isRTL ? 'عيادة' : 'Clinic'}</span>
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-white/40">{isRTL ? 'حضوري' : 'In-person'}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-cyan-500" />

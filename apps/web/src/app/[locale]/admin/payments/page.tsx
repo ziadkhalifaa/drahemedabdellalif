@@ -81,7 +81,7 @@ function AppointmentPaymentCard({ apt, onAction }: { apt: any; onAction: (id: st
       <div className="grid grid-cols-2 gap-3 text-[11px] text-slate-500 dark:text-white/40">
         <div className="flex items-center gap-2"><Calendar size={12} className="text-indigo-500" />{new Date(apt.date).toLocaleDateString(isRTL ? 'ar-EG' : 'en-GB')}</div>
         <div className="flex items-center gap-2"><Clock size={12} className="text-indigo-500" />{formatTime12Hour(apt.timeSlot, isRTL)}</div>
-        <div className="flex items-center gap-2 col-span-2"><Building2 size={12} className="text-indigo-500" />{apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}</div>
+        <div className="flex items-center gap-2 col-span-2"><Building2 size={12} className="text-indigo-500" />{apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'حضوري' : 'In-person')}</div>
         <div className="flex items-center gap-2 col-span-2"><CreditCard size={12} className="text-indigo-500" />{isRTL ? method.ar : method.en}{apt.paymentSenderNum && <span className="font-mono text-slate-700 dark:text-white/70 ms-1" dir="ltr">{apt.paymentSenderNum}</span>}</div>
         {apt.type === 'IN_CLINIC' && apt.depositAmount && (
           <div className="col-span-2 flex items-center justify-between bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl px-3 py-2">

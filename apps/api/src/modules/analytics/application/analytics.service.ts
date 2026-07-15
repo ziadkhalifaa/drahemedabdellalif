@@ -26,9 +26,9 @@ export class AnalyticsService {
       recentEvents,
       visitorStats,
       appointmentsForCharts,
+      weeklyAppointments,
       paymobSum,
       manualOnlineCount,
-      manualClinicCount,
     ] = await Promise.all([
       this.prisma.appointment.count(),
       this.prisma.appointment.count({ where: { status: 'pending' } }),
@@ -64,6 +64,14 @@ export class AnalyticsService {
         },
         include: { payments: true }
       }),
+      this.prisma.appointment.findMany({
+        where: {
+          createdAt: {
+            gte: new Date(today.getTime() - 42 * 24 * 60 * 60 * 1000)
+          }
+        },
+        include: { payments: true }
+      }),
       this.prisma.payment.aggregate({
         _sum: { amount: true },
         where: { status: 'SUCCESS' }
@@ -75,16 +83,6 @@ export class AnalyticsService {
           NOT: { payments: { some: { status: 'SUCCESS' } } }
         }
       }),
-      this.prisma.appointment.count({
-        where: {
-          type: 'IN_CLINIC',
-          OR: [
-            { paymentStatus: 'CONFIRMED' },
-            { status: 'completed' }
-          ],
-          NOT: { payments: { some: { status: 'SUCCESS' } } }
-        }
-      })
     ]);
 
     // Grouping last 6 months of data
@@ -99,9 +97,9 @@ export class AnalyticsService {
         month: mName,
         year,
         count: 0,
-        clinicsBookings: 0,
+        inPersonBookings: 0,
         onlineBookings: 0,
-        clinicsPayments: 0,
+        inPersonPayments: 0,
         onlinePayments: 0
       });
     }
@@ -120,7 +118,7 @@ export class AnalyticsService {
       if (isOnline) {
         monthData.onlineBookings += 1;
       } else {
-        monthData.clinicsBookings += 1;
+        monthData.inPersonBookings += 1;
       }
 
       let revenue = 0;
@@ -136,11 +134,66 @@ export class AnalyticsService {
       if (isOnline) {
         monthData.onlinePayments += revenue;
       } else {
-        monthData.clinicsPayments += revenue;
+        monthData.inPersonPayments += revenue;
       }
     }
 
-    const totalRevenue = (paymobSum._sum.amount || 0) + (manualOnlineCount * 300) + (manualClinicCount * 500);
+    // Weekly chart data (last 6 weeks)
+    const weeksData = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - (d.getDay() + 7 * i));
+      const weekStart = new Date(d);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekLabel = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      weeksData.push({
+        week: weekLabel,
+        count: 0,
+        inPersonBookings: 0,
+        onlineBookings: 0,
+        inPersonPayments: 0,
+        onlinePayments: 0
+      });
+    }
+
+    for (const apt of weeklyAppointments) {
+      const aptDate = new Date(apt.createdAt);
+      const aptDay = aptDate.getDay();
+      const weekStart = new Date(aptDate);
+      weekStart.setDate(weekStart.getDate() - aptDay);
+      const weekLabel = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      const weekData = weeksData.find(w => w.week === weekLabel);
+      if (!weekData) continue;
+
+      weekData.count += 1;
+      const isOnline = apt.type === 'ONLINE';
+
+      if (isOnline) {
+        weekData.onlineBookings += 1;
+      } else {
+        weekData.inPersonBookings += 1;
+      }
+
+      let revenue = 0;
+      const successfulPayment = apt.payments.find(p => p.status === 'SUCCESS');
+      if (successfulPayment) {
+        revenue = successfulPayment.amount;
+      } else if (apt.paymentStatus === 'CONFIRMED') {
+        revenue = isOnline ? 300 : 500;
+      } else if (!isOnline && apt.status === 'completed') {
+        revenue = 500;
+      }
+
+      if (isOnline) {
+        weekData.onlinePayments += revenue;
+      } else {
+        weekData.inPersonPayments += revenue;
+      }
+    }
+
+    const totalRevenue = (paymobSum._sum.amount || 0) + (manualOnlineCount * 300);
 
     return {
       overview: {
@@ -154,6 +207,7 @@ export class AnalyticsService {
       recentEvents,
       charts: {
         appointments: chartsData,
+        appointmentsWeekly: weeksData,
         visitors: visitorStats,
       }
     };

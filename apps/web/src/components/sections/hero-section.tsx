@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui';
 import { Link } from '@/i18n/routing';
 import { Calendar, ChevronRight, ChevronLeft, Edit, Star, Award, Stethoscope, Users } from 'lucide-react';
@@ -10,6 +10,7 @@ import { useEditor } from '@/context/editor-context';
 import useSWR from 'swr';
 import { api, getMediaUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { FloatingOrbs, TextReveal, MagneticButton } from '@/components/motion/motion-utils';
 
 interface Slide {
   id: string;
@@ -21,68 +22,129 @@ interface Slide {
   isPortrait: boolean;
 }
 
-// ── Fallback static hero when DB has no slides ─────────────────────────────
+function HeroTilt({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0.5);
+  const y = useMotionValue(0.5);
+  const rotateX = useSpring(useTransform(y, [0, 1], [4, -4]), { damping: 30, stiffness: 200 });
+  const rotateY = useSpring(useTransform(x, [0, 1], [-4, 4]), { damping: 30, stiffness: 200 });
+
+  const handleMouse = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    x.set((e.clientX - rect.left) / rect.width);
+    y.set((e.clientY - rect.top) / rect.height);
+  };
+  const handleLeave = () => { x.set(0.5); y.set(0.5); };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleLeave}
+      style={{ rotateX, rotateY, perspective: 1200, transformStyle: 'preserve-3d' }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 function StaticHero({ t, locale }: { t: any; locale: string }) {
+  const isAr = locale === 'ar';
   const stats = [
-    { icon: Stethoscope, value: '5000+', label: locale === 'ar' ? 'عملية ناجحة' : 'Surgeries' },
-    { icon: Users, value: '15+', label: locale === 'ar' ? 'سنة خبرة' : 'Years Exp.' },
-    { icon: Award, value: '40+', label: locale === 'ar' ? 'بحث علمي' : 'Publications' },
+    { icon: Stethoscope, value: '5000+', label: isAr ? 'عملية ناجحة' : 'Surgeries' },
+    { icon: Users, value: '15+', label: isAr ? 'سنة خبرة' : 'Years Exp.' },
+    { icon: Award, value: '40+', label: isAr ? 'بحث علمي' : 'Publications' },
   ];
 
   return (
     <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-[#0a192f] flex items-center">
-      {/* Background Orbs */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-[var(--primary)]/15 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
+      <FloatingOrbs count={6} />
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={cn("max-w-4xl", locale === 'ar' ? "text-right" : "text-left")}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
-            <Star size={14} className="fill-[var(--accent)]" />
-            {locale === 'ar' ? 'رعاية طبية عالمية' : 'World Class Care'}
-          </div>
-          <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl mb-8">
-            {locale === 'ar' ? 'أ.د. أحمد عبد اللطيف' : 'Prof. Dr. Ahmed Abdellatif'}
-          </h1>
-          <p className={cn(
-            "text-xl sm:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg mb-10",
-            locale === 'ar' ? "border-r-4 pr-6 border-[var(--accent)]" : "border-l-4 pl-6 border-[var(--accent)]"
-          )}>
-            {locale === 'ar'
+        <HeroTilt className={cn("max-w-4xl", isAr ? "text-right" : "text-left")}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ transformStyle: 'preserve-3d', transform: 'translateZ(30px)' }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
+              <Star size={14} className="fill-[var(--accent)]" />
+              {isAr ? 'رعاية طبية عالمية' : 'World Class Care'}
+            </div>
+          </motion.div>
+
+          <motion.div style={{ transformStyle: 'preserve-3d', transform: 'translateZ(50px)' }}>
+            <TextReveal
+              text={isAr ? 'أ.د. أحمد عبد اللطيف' : 'Prof. Dr. Ahmed Abdellatif'}
+              className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl mb-8"
+            />
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, x: isAr ? 20 : -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+            style={{ transformStyle: 'preserve-3d', transform: 'translateZ(20px)' }}
+            className={cn(
+              "text-xl sm:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg mb-10",
+              isAr ? "border-r-4 pr-6 border-[var(--accent)]" : "border-l-4 pl-6 border-[var(--accent)]"
+            )}
+          >
+            {isAr
               ? 'أستاذ واستشاري جراحة المسالك البولية والكلى والمناظير والذكورة'
               : 'Professor & Consultant of Urology, Kidney Surgery, Endoscopy, and Andrology'}
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-16">
-            <Link href="/booking">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
+            className="flex flex-col sm:flex-row gap-4 mb-16"
+            style={{ transformStyle: 'preserve-3d', transform: 'translateZ(40px)' }}
+          >
+            <MagneticButton as="a" href="/booking">
               <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
                 <Calendar size={20} />
                 {t('cta')}
               </Button>
-            </Link>
+            </MagneticButton>
             <Link href="/services">
               <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
                 {t('learnMore')}
               </Button>
             </Link>
-          </div>
+          </motion.div>
 
-          {/* Mini Stats */}
-          <div className="flex flex-wrap gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1.2 }}
+            className="flex flex-wrap gap-6"
+          >
             {stats.map((stat, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-md px-5 py-3 rounded-2xl">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.3 + i * 0.15 }}
+                whileHover={{ scale: 1.05, y: -4 }}
+                className="flex items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-md px-5 py-3 rounded-2xl"
+              >
                 <stat.icon size={20} className="text-[var(--accent)]" />
                 <div>
                   <div className="text-xl font-black text-white">{stat.value}</div>
                   <div className="text-xs text-white/60 font-medium">{stat.label}</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </HeroTilt>
       </div>
     </section>
   );
@@ -91,6 +153,7 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
 export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
   const t = useTranslations('hero');
   const locale = useLocale();
+  const isAr = locale === 'ar';
   const { isEditing } = useEditor();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -113,29 +176,38 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
     return <section className="h-[90vh] min-h-[600px] w-full bg-[#0a192f] animate-pulse" />;
   }
 
-  // ── Fallback when no slides in DB ────────────────────────────────────────
   if (slides.length === 0) {
     return <StaticHero t={t} locale={locale} />;
   }
 
+  const slideVariants = {
+    enter: (dir: number) => ({ opacity: 0, scale: 1.08, x: dir > 0 ? (isAr ? -100 : 100) : (isAr ? 100 : -100), filter: 'blur(6px)' }),
+    center: { opacity: 1, scale: 1, x: 0, filter: 'blur(0px)' },
+    exit: (dir: number) => ({ opacity: 0, scale: 0.95, x: dir > 0 ? (isAr ? 100 : -100) : (isAr ? -100 : 100), filter: 'blur(4px)' }),
+  };
+
   return (
-    <section 
+    <section
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-black flex items-center"
     >
-      <AnimatePresence mode="wait">
+      <FloatingOrbs count={4} />
+
+      <AnimatePresence mode="wait" custom={1}>
         <motion.div
           key={currentSlide}
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: "easeInOut" }}
+          custom={1}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
           className="absolute inset-0 z-0"
         >
           <div className={cn(
             "absolute inset-0 z-10",
-            locale === 'ar'
+            isAr
               ? "bg-gradient-to-r from-black/85 via-black/50 to-transparent"
               : "bg-gradient-to-l from-black/85 via-black/50 to-transparent"
           )} />
@@ -146,34 +218,37 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
               <div
                 className={cn(
                   "absolute inset-y-0 w-full lg:w-[60%] z-0",
-                  locale === 'ar' ? "right-0" : "left-0"
+                  isAr ? "right-0" : "left-0"
                 )}
                 style={{
-                  maskImage: `linear-gradient(to ${locale === 'ar' ? 'right' : 'left'}, transparent 0%, black 35%, black 100%)`,
-                  WebkitMaskImage: `linear-gradient(to ${locale === 'ar' ? 'right' : 'left'}, transparent 0%, black 35%, black 100%)`
+                  maskImage: `linear-gradient(to ${isAr ? 'right' : 'left'}, transparent 0%, black 35%, black 100%)`,
+                  WebkitMaskImage: `linear-gradient(to ${isAr ? 'right' : 'left'}, transparent 0%, black 35%, black 100%)`
                 }}
               >
                 <motion.img
-                  initial={{ opacity: 0, scale: 1.1 }}
+                  initial={{ opacity: 0, scale: 1.15 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   src={getMediaUrl(slides[currentSlide].image)}
-                  alt={locale === 'ar' ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
+                  alt={isAr ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
                   className={cn(
                     "w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
-                    locale === 'ar' ? "object-right lg:object-right-bottom" : "object-left lg:object-left-bottom"
+                    isAr ? "object-right lg:object-right-bottom" : "object-left lg:object-left-bottom"
                   )}
                 />
               </div>
               <div className={cn(
                 "absolute inset-0 z-10",
-                locale === 'ar'
+                isAr
                   ? "bg-gradient-to-r from-black/90 via-black/40 to-transparent"
                   : "bg-gradient-to-l from-black/90 via-black/40 to-transparent"
               )} />
             </div>
           ) : (
-            <img
+            <motion.img
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 8, ease: 'easeOut' }}
               src={getMediaUrl(slides[currentSlide].image)}
               alt="Hero Background"
               className="w-full h-full object-cover"
@@ -183,96 +258,133 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
       </AnimatePresence>
 
       {isEditing && (
-        <div className={cn("absolute top-24 z-50", locale === 'ar' ? "right-8" : "left-8")}>
+        <div className={cn("absolute top-24 z-50", isAr ? "right-8" : "left-8")}>
           <Link href="/admin/hero-slides">
             <Button className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 gap-2">
               <Edit size={16} />
-              {locale === 'ar' ? 'تعديل السلايدر' : 'Edit Slides'}
+              {isAr ? 'تعديل السلايدر' : 'Edit Slides'}
             </Button>
           </Link>
         </div>
       )}
 
       <div className="relative z-20 w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className={cn("max-w-4xl", locale === 'ar' ? "text-right" : "text-left")}>
+        <HeroTilt className={cn("max-w-4xl", isAr ? "text-right" : "text-left")}>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
+              initial={{ opacity: 0, y: 40, rotateX: -10 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              exit={{ opacity: 0, y: -20, rotateX: 10 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
-                <Star size={14} className="fill-[var(--accent)]" />
-                {locale === 'ar' ? 'رعاية طبية عالمية' : 'World Class Care'}
-              </div>
-              <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl mb-8">
-                {locale === 'ar' ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
-              </h1>
-              <p className={cn(
-                "text-xl sm:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg",
-                locale === 'ar' ? "border-r-4 pr-6 border-[var(--accent)]" : "border-l-4 pl-6 border-[var(--accent)]"
-              )}>
-                {locale === 'ar' ? slides[currentSlide].subtitleAr : slides[currentSlide].subtitleEn}
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                style={{ transformStyle: 'preserve-3d', transform: 'translateZ(30px)' }}
+              >
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
+                  <Star size={14} className="fill-[var(--accent)]" />
+                  {isAr ? 'رعاية طبية عالمية' : 'World Class Care'}
+                </div>
+              </motion.div>
 
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.4 }}
+                style={{ transformStyle: 'preserve-3d', transform: 'translateZ(50px)' }}
+                className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl mb-8"
+              >
+                {isAr ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, x: isAr ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, delay: 0.6 }}
+                style={{ transformStyle: 'preserve-3d', transform: 'translateZ(20px)' }}
+                className={cn(
+                  "text-xl sm:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg",
+                  isAr ? "border-r-4 pr-6 border-[var(--accent)]" : "border-l-4 pl-6 border-[var(--accent)]"
+                )}
+              >
+                {isAr ? slides[currentSlide].subtitleAr : slides[currentSlide].subtitleEn}
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="mt-10 flex flex-col sm:flex-row gap-4"
+                style={{ transformStyle: 'preserve-3d', transform: 'translateZ(40px)' }}
+              >
                 {currentSlide === 0 ? (
                   <>
-                    <Link href="/booking">
+                    <MagneticButton as="a" href="/booking">
                       <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
                         <Calendar size={20} />
-                        {locale === 'ar' ? 'احجز موعدك الآن' : 'Book Appointment'}
+                        {isAr ? 'احجز موعدك الآن' : 'Book Appointment'}
                       </Button>
-                    </Link>
+                    </MagneticButton>
                     <Link href="/about">
                       <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
-                        {locale === 'ar' ? 'تعرف علينا' : 'About Us'}
+                        {isAr ? 'تعرف علينا' : 'About Us'}
                       </Button>
                     </Link>
                   </>
                 ) : currentSlide === 1 ? (
                   <>
-                    <Link href="/services">
+                    <MagneticButton as="a" href="/services">
                       <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
                         <Calendar size={20} />
-                        {locale === 'ar' ? 'خدماتنا العلاجية' : 'Our Services'}
+                        {isAr ? 'خدماتنا العلاجية' : 'Our Services'}
                       </Button>
-                    </Link>
+                    </MagneticButton>
                     <Link href="/techniques">
                       <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
-                        {locale === 'ar' ? 'التقنيات العلاجية' : 'Treatment Techniques'}
+                        {isAr ? 'التقنيات العلاجية' : 'Treatment Techniques'}
                       </Button>
                     </Link>
                   </>
                 ) : (
                   <>
-                    <Link href="/testimonials">
+                    <MagneticButton as="a" href="/testimonials">
                       <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-[var(--accent)] hover:bg-[#eab531]/90 text-black font-bold gap-2 rounded-xl shadow-lg transition-all hover:-translate-y-1">
                         <Calendar size={20} />
-                        {locale === 'ar' ? 'آراء المرضى' : 'Patient Reviews'}
+                        {isAr ? 'آراء المرضى' : 'Patient Reviews'}
                       </Button>
-                    </Link>
+                    </MagneticButton>
                     <Link href="/booking">
                       <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 rounded-xl transition-all backdrop-blur-sm">
-                        {locale === 'ar' ? 'اتصل بنا' : 'Contact Us'}
+                        {isAr ? 'اتصل بنا' : 'Contact Us'}
                       </Button>
                     </Link>
                   </>
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </AnimatePresence>
-        </div>
+        </HeroTilt>
       </div>
 
       {/* Carousel Controls */}
       {slides.length > 1 && (
-        <div className="absolute bottom-10 left-0 right-0 z-30 flex justify-center items-center gap-4">
-          <button onClick={prevSlide} className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-sm transition-all">
-            {locale === 'ar' ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-          </button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+          className="absolute bottom-10 left-0 right-0 z-30 flex justify-center items-center gap-4"
+        >
+          <motion.button
+            onClick={prevSlide}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-sm transition-all"
+          >
+            {isAr ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+          </motion.button>
           <div className="flex gap-2">
             {slides.map((_, index) => (
               <button
@@ -284,10 +396,15 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
               />
             ))}
           </div>
-          <button onClick={nextSlide} className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-sm transition-all">
-            {locale === 'ar' ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
-          </button>
-        </div>
+          <motion.button
+            onClick={nextSlide}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white/20 backdrop-blur-sm transition-all"
+          >
+            {isAr ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+          </motion.button>
+        </motion.div>
       )}
     </section>
   );

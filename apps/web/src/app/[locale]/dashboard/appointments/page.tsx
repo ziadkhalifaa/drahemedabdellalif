@@ -286,7 +286,7 @@ export default function PatientAppointmentsPage() {
                                       {isOnline ? <Video size={14} className="text-cyan-400" /> : <MapPin size={14} className="text-emerald-400" />}
                                       {isOnline
                                         ? (isRTL ? 'استشارة أونلاين' : 'Online Video')
-                                        : (isRTL ? 'عيادة' : 'Clinic')}
+                                        : (isRTL ? 'حضوري' : 'In-person')}
                                     </span>
                                   </div>
                                 </div>

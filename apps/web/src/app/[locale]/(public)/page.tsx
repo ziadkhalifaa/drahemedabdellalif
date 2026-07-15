@@ -16,6 +16,7 @@ import { BookingForm } from '@/components/sections/booking-form';
 import { api } from '@/lib/api';
 
 import { Stethoscope, Zap, ShieldCheck, Headphones } from 'lucide-react';
+import { FadeIn, StaggerContainer, StaggerItem, FloatingOrbs } from '@/components/motion/motion-utils';
 
 export async function generateMetadata({
   params,
@@ -111,10 +112,8 @@ export default async function HomePage() {
         <SurgicalTipsSection />
         {/* 10 - Booking Form */}
         <section id="booking-section" className="relative py-28 overflow-hidden bg-[#050e1a]">
-          {/* Background */}
+          <FloatingOrbs count={4} />
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[var(--primary)]/10 rounded-full blur-[150px]" />
-            <div className="absolute bottom-0 right-0 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-[100px]" />
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5" />
           </div>
 
@@ -122,7 +121,7 @@ export default async function HomePage() {
             <div className="grid lg:grid-cols-2 gap-16 items-start">
 
               {/* Left: Info Column */}
-              <div className="text-white">
+              <FadeIn direction={isAr ? 'right' : 'left'} className="text-white">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
                   {isAr ? 'احجز الآن' : 'Book Now'}
                 </div>
@@ -133,35 +132,43 @@ export default async function HomePage() {
                   {isAr ? 'فريقنا الطبي المتخصص جاهز للإجابة على استفساراتك وحجز موعدك في أقرب وقت ممكن.' : 'Our specialized medical team is ready to answer your inquiries and schedule your appointment as soon as possible.'}
                 </p>
 
-                <div className="space-y-12">
+                <StaggerContainer className="space-y-12">
                   {bookingFeatures.map((item, i) => (
-                    <div 
-                      key={i} 
-                      className="group relative flex items-start gap-6 transition-all duration-500"
-                    >
-                      {/* Artistic Indicator */}
-                      <div className="relative flex-shrink-0 mt-1">
-                        <div className="w-[2px] h-full absolute left-1/2 -translate-x-1/2 bg-white/5 group-hover:bg-[var(--primary)]/20 transition-colors duration-500" />
-                        <div className="w-10 h-10 rounded-full bg-[#0a192f] border border-white/10 flex items-center justify-center relative z-10 group-hover:border-[var(--primary)]/50 group-hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] transition-all duration-500">
-                          <item.icon size={18} className="text-white/40 group-hover:text-[var(--primary)] transition-colors duration-500" />
+                    <StaggerItem key={i} direction="up" distance={20}>
+                      <div className="group relative flex items-start gap-6 transition-all duration-500">
+                        <div className="relative flex-shrink-0 mt-1">
+                          <div className="w-[2px] h-full absolute left-1/2 -translate-x-1/2 bg-white/5 group-hover:bg-[var(--primary)]/20 transition-colors duration-500" />
+                          <motion.div
+                            animate={{ scale: [1, 1.15, 1] }}
+                            transition={{ duration: 2 + i * 0.3, repeat: Infinity, ease: 'easeInOut' }}
+                            className="w-10 h-10 rounded-full bg-[#0a192f] border border-white/10 flex items-center justify-center relative z-10 group-hover:border-[var(--primary)]/50 group-hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] transition-all duration-500"
+                          >
+                            <item.icon size={18} className="text-white/40 group-hover:text-[var(--primary)] transition-colors duration-500" />
+                          </motion.div>
+                        </div>
+
+                        <div className="flex-1">
+                          <h4 className="text-xl font-black text-white/90 group-hover:text-white transition-colors duration-300 mb-2">
+                            {item.text}
+                          </h4>
+                          <div className="w-0 group-hover:w-12 h-[2px] bg-[var(--primary)] transition-all duration-500 rounded-full" />
                         </div>
                       </div>
-
-                      <div className="flex-1">
-                        <h4 className="text-xl font-black text-white/90 group-hover:text-white transition-colors duration-300 mb-2">
-                          {item.text}
-                        </h4>
-                        <div className="w-0 group-hover:w-12 h-[2px] bg-[var(--primary)] transition-all duration-500 rounded-full" />
-                      </div>
-                    </div>
+                    </StaggerItem>
                   ))}
-                </div>
-              </div>
+                </StaggerContainer>
+              </FadeIn>
 
               {/* Right: Form */}
-              <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-[2rem] p-8">
-                <BookingForm />
-              </div>
+              <FadeIn direction={isAr ? 'left' : 'right'} delay={0.2}>
+                <motion.div
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white/5 border border-white/10 backdrop-blur-md rounded-[2rem] p-8"
+                >
+                  <BookingForm />
+                </motion.div>
+              </FadeIn>
             </div>
           </div>
         </section>

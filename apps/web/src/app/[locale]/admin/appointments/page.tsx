@@ -97,7 +97,7 @@ export default function AdminAppointmentsPage() {
       Time: formatTime12Hour(a.timeSlot, false),
       Type: a.type,
       Status: a.status,
-      Clinic: a.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic'),
+      Clinic: a.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'حضوري' : 'In-person'),
     })), 'Appointments_Report');
     toast.success(isRTL ? 'تم التصدير' : 'Exported');
   };
@@ -277,7 +277,7 @@ export default function AdminAppointmentsPage() {
                   </th>
                   <th className="px-4 py-3 text-left">{isRTL ? 'المريض' : 'Patient'}</th>
                   <th className="px-4 py-3 text-left">{isRTL ? 'التاريخ والوقت' : 'Date & Time'}</th>
-                  <th className="px-4 py-3 text-left">{isRTL ? 'النوع والعيادة' : 'Type & Clinic'}</th>
+                  <th className="px-4 py-3 text-left">{isRTL ? 'النوع' : 'Type'}</th>
                   <th className="px-4 py-3 text-left">{isRTL ? 'الحالة' : 'Status'}</th>
                   <th className="px-4 py-3 text-right">{isRTL ? 'إجراءات' : 'Actions'}</th>
                 </tr>
@@ -314,8 +314,8 @@ export default function AdminAppointmentsPage() {
                         </p>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={cn("inline-flex text-[11px] font-bold px-2 py-0.5 rounded-md", apt.type === 'ONLINE' ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40")}>
-                          {apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}
+                        <span className={cn("inline-flex text-[11px] font-bold px-2 py-0.5 rounded-md", apt.type === 'ONLINE' ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" : "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400")}>
+                          {apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'حضوري' : 'In-person')}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
