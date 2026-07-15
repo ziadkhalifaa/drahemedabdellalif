@@ -8,6 +8,7 @@ import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
 import { Check, X, Download, Pill, Video, Calendar, Search, Filter, Clock, ChevronDown, CheckCheck, Ban, User } from 'lucide-react';
 import { exportToExcel } from '@/lib/export-utils';
 import { formatTime12Hour, cn } from '@/lib/utils';
+import { Link } from '@/i18n/routing';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -342,10 +343,10 @@ export default function AdminAppointmentsPage() {
                             </>
                           )}
                           {apt.status === AppointmentStatus.APPROVED && apt.type === AppointmentType.ONLINE && (
-                            <a href={`/dashboard/video/${apt.meetingId || apt.id}`} target="_blank" className="p-1.5 rounded-lg text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors" title={isRTL ? 'دخول الفيديو' : 'Join Video'}><Video size={15} /></a>
+                            <Link href={`/dashboard/video/${apt.meetingId || apt.id}`} className="p-1.5 rounded-lg text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors" title={isRTL ? 'دخول الفيديو' : 'Join Video'}><Video size={15} /></Link>
                           )}
                           {apt.status === AppointmentStatus.APPROVED && (
-                            <a href={`/admin/prescriptions/new/${apt.id}`} className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors" title={isRTL ? 'وصفة جديدة' : 'Prescription'}><Pill size={15} /></a>
+                            <Link href={`/admin/prescriptions/new/${apt.id}`} className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors" title={isRTL ? 'وصفة جديدة' : 'Prescription'}><Pill size={15} /></Link>
                           )}
                         </div>
                       </td>

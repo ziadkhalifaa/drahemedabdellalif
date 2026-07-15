@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { cn, formatTime12Hour } from '@/lib/utils';
 import { useLocale } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { api } from '@/lib/api';
 import { useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 import { MedicalTimeline } from '@/components/dashboard/medical-timeline';
 import { useAuth } from '@/context/auth-context';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const t = useTranslations('dashboard');
   const locale = useLocale();
   const isRTL = locale === 'ar';
@@ -435,10 +435,10 @@ export default function DashboardPage() {
               </div>
               
               <h3 className="text-2xl font-black text-[var(--foreground)] mb-2">
-                كيف كانت استشارتك الطبية؟
+                {t('review.title')}
               </h3>
               <p className="text-[var(--muted)] text-sm mb-6 leading-relaxed">
-                يسعدنا سماع رأيك وتقييمك لمساعدتنا في تقديم أفضل رعاية طبية مستمرة.
+                {t('review.subtitle')}
               </p>
               
               {/* Stars Selection */}
@@ -464,13 +464,13 @@ export default function DashboardPage() {
               {/* Feedback Input */}
               <div className="space-y-2 text-right mb-8">
                 <label className="text-xs font-black uppercase tracking-widest text-[var(--muted)] ml-1 block text-right">
-                  اكتب تعليقك (اختياري)
+                  {t('review.commentLabel')}
                 </label>
                 <textarea
                   rows={4}
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="اكتب تجربتك مع الدكتور أحمد..."
+                  placeholder={t('review.commentPlaceholder')}
                   className="w-full p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] outline-none transition-all resize-none text-sm font-bold text-[var(--foreground)]"
                 />
               </div>
@@ -485,14 +485,14 @@ export default function DashboardPage() {
                         rating: reviewRating,
                         comment: reviewComment || undefined
                       }, token);
-                      toast.success('شكراً لتقييمك! تم إرسال رأيك بنجاح وبانتظار موافقة الإدارة للنشر.');
+                      toast.success(t('review.submitSuccess'));
                       setShowReviewModal(false);
                       // Clear search query param cleanly
                       const url = new URL(window.location.href);
                       url.searchParams.delete('rateAppointmentId');
                       window.history.replaceState({}, '', url.pathname + url.search);
                     } catch (e: any) {
-                      toast.error(e.message || 'فشل إرسال التقييم');
+                      toast.error(e.message || t('review.submitFailed'));
                     } finally {
                       setSubmittingReview(false);
                     }
@@ -500,7 +500,7 @@ export default function DashboardPage() {
                   disabled={submittingReview}
                   className="flex-1 py-6 text-sm font-black rounded-2xl bg-gradient-to-r from-[var(--primary)] to-blue-600 shadow-lg shadow-[var(--primary)]/25 text-white"
                 >
-                  {submittingReview ? 'جاري الإرسال...' : 'إرسال التقييم'}
+                  {submittingReview ? t('review.submitting') : t('review.submit')}
                 </Button>
                 
                 <Button 
@@ -514,7 +514,7 @@ export default function DashboardPage() {
                   disabled={submittingReview}
                   className="py-6 text-sm font-black rounded-2xl border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-[var(--foreground)] bg-transparent"
                 >
-                  تخطي
+                  {t('review.skip')}
                 </Button>
               </div>
             </motion.div>
@@ -524,6 +524,21 @@ export default function DashboardPage() {
 
       <Footer />
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+        <div className="relative w-20 h-20">
+          <div className="absolute inset-0 border-4 border-[var(--primary)]/20 rounded-full" />
+          <div className="absolute inset-0 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
 

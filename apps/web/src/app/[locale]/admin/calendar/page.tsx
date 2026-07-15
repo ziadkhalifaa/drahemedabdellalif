@@ -313,11 +313,11 @@ export default function AdminCalendarPage() {
 
       <div className="flex-1 rounded-2xl border border-slate-200/60 dark:border-white/5 bg-white dark:bg-[#111827] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/5">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all"><ChevronLeft size={18} /></button>
+          <button onClick={() => navigate(isRTL ? 1 : -1)} className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all">{isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button>
           <h2 className="text-slate-900 dark:text-white font-bold text-base sm:text-lg">{getTitle()}</h2>
           <div className="flex items-center gap-2">
             <button onClick={() => setCurrentDate(new Date())} className="hidden sm:block px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all">Today</button>
-            <button onClick={() => navigate(1)} className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all"><ChevronRight size={18} /></button>
+            <button onClick={() => navigate(isRTL ? -1 : 1)} className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-all">{isRTL ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}</button>
           </div>
         </div>
         {loading ? (

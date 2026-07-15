@@ -344,8 +344,8 @@ export default function AuditLogsPage() {
                       {/* Expand */}
                       <div className="flex items-center justify-end gap-2">
                         {log.ip && (
-                          <span className="text-[11px] text-slate-400 dark:text-white/25 font-mono">
-                            {log.ip}
+                          <span className="text-[11px] text-slate-400 dark:text-white/25 font-mono" title={log.ip}>
+                            {log.ip.split('.').slice(0, 2).join('.')}.***.***
                           </span>
                         )}
                         {isExpanded ? (
@@ -366,7 +366,7 @@ export default function AuditLogsPage() {
                           </div>
                           <div>
                             <span className="font-bold text-slate-500 dark:text-white/35">IP: </span>
-                            <span className="text-slate-700 dark:text-white/50 font-mono">{log.ip || '—'}</span>
+                            <span className="text-slate-700 dark:text-white/50 font-mono">{log.ip ? log.ip.split('.').slice(0, 2).join('.') + '.***.***' : '—'}</span>
                           </div>
                           <div>
                             <span className="font-bold text-slate-500 dark:text-white/35">Date: </span>

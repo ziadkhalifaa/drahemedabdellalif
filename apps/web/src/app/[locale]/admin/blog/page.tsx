@@ -210,7 +210,7 @@ export default function AdminBlogPage() {
           {/* Main Content Area */}
           <main className={cn(
             "flex-1 overflow-y-auto transition-all duration-300",
-            showSEO ? "mr-[420px]" : "mr-0"
+            showSEO ? (isRTL ? "ml-[420px]" : "mr-[420px]") : (isRTL ? "ml-0" : "mr-0")
           )}>
             <div className="max-w-4xl mx-auto px-12 py-16 space-y-14 pb-24">
               {/* Title Input */}

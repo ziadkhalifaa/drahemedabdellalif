@@ -513,6 +513,17 @@
       "noReports": "No medical reports available yet.",
       "download": "Download Report"
     },
+    "review": {
+      "title": "How was your medical consultation?",
+      "subtitle": "We value your feedback to help us provide the best continuous medical care.",
+      "commentLabel": "Write your review (optional)",
+      "commentPlaceholder": "Share your experience with Dr. Ahmed...",
+      "submitSuccess": "Thank you! Your review has been submitted and is pending approval.",
+      "submitFailed": "Failed to submit review",
+      "submitting": "Submitting...",
+      "submit": "Submit Review",
+      "skip": "Skip"
+    },
     "video": {
       "title": "Online Consultation",
       "encrypted": "End-to-end Encrypted",

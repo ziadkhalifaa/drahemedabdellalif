@@ -295,7 +295,7 @@ export default function AdminMessagesPage() {
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-[11px] text-slate-400 dark:text-white/25">
-                    {new Date(msg.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.createdAt).toLocaleString(isRTL ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </span>
                   {msg.isRead && (
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300 dark:text-white/15">Read</span>

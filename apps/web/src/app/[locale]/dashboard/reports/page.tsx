@@ -93,7 +93,6 @@ export default function ReportsPage() {
       const formData = new FormData();
       formData.append('title', uploadData.title);
       if (uploadData.description) formData.append('description', uploadData.description);
-      formData.append('patientId', user.id); // For patients, backend will override it anyway, but we send it to pass validation
       formData.append('file', file);
 
       await api.postFormData('/reports', formData, token);

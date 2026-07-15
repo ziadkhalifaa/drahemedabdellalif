@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import {
   User, Calendar, FileText, Pill, Stethoscope, ArrowRight, Download, Plus, Trash2, Clock, Upload, FileUp, X
 } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 

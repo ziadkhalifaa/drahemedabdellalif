@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import { FileText, Plus, Search, Eye, Calendar, User as UserIcon, Activity, Pill, Printer } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
