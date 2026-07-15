@@ -87,12 +87,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('user', JSON.stringify(newUser));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout', {});
+    } catch {
+      // Proceed with local cleanup even if server request fails
+    }
     setToken(null);
     setUser(null);
     localStorage.removeItem('user');
-    // Call server to clear cookie (optional but good practice)
-    // api.post('/auth/logout', {})
     router.push('/');
   };
 

@@ -30,12 +30,12 @@ export function Providers({
       }}>
         <CustomThemeProvider>
         <NextIntlClientProvider messages={messages} locale={locale} timeZone="Africa/Cairo">
-          <EditorProvider initialSettings={initialSettings}>
-            <AuthProvider>
+          <AuthProvider>
+            <EditorProvider initialSettings={initialSettings}>
               {children}
               <Toaster position="top-center" richColors />
-            </AuthProvider>
-          </EditorProvider>
+            </EditorProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </CustomThemeProvider>
       </SWRConfig>

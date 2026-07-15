@@ -1,9 +1,11 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { randomInt, randomBytes } from 'crypto';
 import { PrismaService } from '../../../common/prisma.service';
 import { WhatsAppService } from '../../../common/whatsapp.service';
 import { EmailService } from '../../../common/email.service';
+import { UserRole } from '@dr-ahmed/shared';
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 30;
 const PASSWORD_MIN_LENGTH = 8;
@@ -33,7 +35,8 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isValid = await bcrypt.compare(password, user.password);
@@ -53,7 +56,8 @@ export class AuthService {
   async register(data: { email: string; password: string; name: string; phone?: string; method?: 'email' | 'whatsapp' }) {
     validatePasswordStrength(data.password);
 
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
+    const normalizedEmail = data.email.toLowerCase().trim();
+    const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     const method = data.method || 'email';
     
     if (existing) {
@@ -62,7 +66,7 @@ export class AuthService {
       }
       
       const hashedPassword = await bcrypt.hash(data.password, 10);
-      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const verificationCode = randomInt(100000, 999999).toString();
       const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
       const { method: _, ...updateData } = data;
@@ -70,6 +74,7 @@ export class AuthService {
         where: { id: existing.id },
         data: {
           ...updateData,
+          email: normalizedEmail,
           password: hashedPassword,
           emailVerificationCode: verificationCode,
           emailVerificationExpiry,
@@ -80,29 +85,29 @@ export class AuthService {
         if (method === 'whatsapp' && data.phone) {
           await this.whatsappService.sendOTP(data.phone, verificationCode);
         } else {
-          await this.emailService.sendOTP(data.email, verificationCode);
+          await this.emailService.sendOTP(normalizedEmail, verificationCode);
         }
       } catch (notifyErr) {
         // Notification failed but user record is updated — they can request resend
       }
 
       return {
-        user: { id: existing.id, email: existing.email, name: data.name, role: existing.role, isEmailVerified: false },
+        user: { id: existing.id, email: normalizedEmail, name: data.name, role: existing.role, isEmailVerified: false },
         message: 'Verification code resent'
       };
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCode = randomInt(100000, 999999).toString();
     const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     const user = await this.prisma.user.create({
       data: {
-        email: data.email,
+        email: normalizedEmail,
         password: hashedPassword,
         name: data.name,
         phone: data.phone,
-        role: 'patient',
+        role: UserRole.PATIENT,
         isEmailVerified: false,
         emailVerificationCode: verificationCode,
         emailVerificationExpiry,
@@ -113,7 +118,7 @@ export class AuthService {
       if (method === 'whatsapp' && data.phone) {
         await this.whatsappService.sendOTP(data.phone, verificationCode);
       } else {
-        await this.emailService.sendOTP(data.email, verificationCode);
+        await this.emailService.sendOTP(normalizedEmail, verificationCode);
       }
     } catch (notifyErr) {
       // Notification failed but user is created — they can request resend from verify screen
@@ -125,7 +130,8 @@ export class AuthService {
   }
 
   async verifyEmail(email: string, code: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) throw new UnauthorizedException('User not found');
 
     if (user.emailVerificationCode !== code) {
@@ -153,10 +159,11 @@ export class AuthService {
   }
 
   async resendCode(email: string, method: 'email' | 'whatsapp' = 'email') {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) throw new UnauthorizedException('User not found');
 
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const newCode = randomInt(100000, 999999).toString();
     const emailVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     await this.prisma.user.update({
@@ -224,10 +231,11 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) throw new UnauthorizedException('User not found');
 
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetCode = randomInt(100000, 999999).toString();
     const passwordResetExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     await this.prisma.user.update({
@@ -245,7 +253,8 @@ export class AuthService {
   async resetPassword(email: string, code: string, newPassword: string) {
     validatePasswordStrength(newPassword);
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) throw new UnauthorizedException('User not found');
 
     if (user.passwordResetCode !== code) {
@@ -273,7 +282,7 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     
-    const refreshToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const refreshToken = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
     await this.prisma.refreshToken.create({
       data: {
@@ -284,6 +293,10 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken, refreshTokenExpiry: expiresAt.toISOString() };
+  }
+
+  async invalidateRefreshToken(refreshToken: string) {
+    await this.prisma.refreshToken.deleteMany({ where: { token: refreshToken } }).catch(() => {});
   }
 
   async refreshAccessToken(refreshToken: string) {

@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma.service';
 import { PaymobService } from '../../../common/paymob.service';
+import { PaymentStatus } from '@dr-ahmed/shared';
 
 @Injectable()
 export class PaymentsService {
@@ -34,7 +35,7 @@ export class PaymentsService {
         appointmentId,
         amount: amountEGP,
         paymobOrderId: String(orderId),
-        status: 'PENDING',
+        status: PaymentStatus.PENDING,
       },
     });
 
@@ -60,7 +61,7 @@ export class PaymentsService {
         await this.prisma.payment.update({
           where: { id: payment.id },
           data: {
-            status: success ? 'SUCCESS' : 'FAILED',
+            status: success ? PaymentStatus.SUCCESS : PaymentStatus.FAILED,
             transactionId: String(payload.id),
             paymentMethod: payload.source_data?.sub_type || 'unknown',
             metadata: payload,

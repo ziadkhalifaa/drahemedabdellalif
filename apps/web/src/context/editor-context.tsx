@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/components/layout/admin-layout';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/auth-context';
+import { useSearchParams } from 'next/navigation';
 
 interface EditorContextType {
   isEditing: boolean;
@@ -81,7 +81,6 @@ export function EditorProvider({
   };
 
   const saveChanges = async () => {
-    const token = localStorage.getItem('admin_token');
     if (!token || Object.keys(pendingChanges).length === 0) {
       if (!token) alert('You must be logged in as admin to save changes.');
       return;

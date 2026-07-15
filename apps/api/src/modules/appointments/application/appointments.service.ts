@@ -3,7 +3,7 @@ import { PrismaService } from '../../../common/prisma.service';
 import { WhatsAppService } from '../../../common/whatsapp.service';
 import { EmailService } from '../../../common/email.service';
 import { StorageService } from '../../media/application/storage.service';
-import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
+import { AppointmentStatus, AppointmentType, PaymentMethodType, PaymentConfirmStatus } from '@dr-ahmed/shared';
 
 @Injectable()
 export class AppointmentsService {
@@ -30,6 +30,10 @@ export class AppointmentsService {
   }) {
     const appointmentDate = new Date(data.date);
 
+    if (appointmentDate < new Date(new Date().toDateString())) {
+      throw new BadRequestException('Appointment date must be in the future');
+    }
+
     // فحص توفر الوقت للاستشارة الأونلاين
     const existing = await this.prisma.appointment.findFirst({
       where: {
@@ -41,9 +45,9 @@ export class AppointmentsService {
     if (existing) throw new ConflictException('This time slot is already booked');
 
     // تحديد حالة الدفع
-    const paymentStatus = data.paymentMethod && data.paymentMethod !== 'NONE' && data.paymentMethod !== 'CASH'
-      ? 'PENDING_REVIEW'
-      : 'NOT_REQUIRED';
+    const paymentStatus = data.paymentMethod && data.paymentMethod !== PaymentMethodType.NONE && data.paymentMethod !== PaymentMethodType.CASH
+      ? PaymentConfirmStatus.PENDING_REVIEW
+      : PaymentConfirmStatus.NOT_REQUIRED;
 
     // If ONLINE, generate a professional Daily.co meeting link
     let meetingId = null;
@@ -98,7 +102,7 @@ export class AppointmentsService {
         notes: data.notes,
         meetingId,
         meetingUrl,
-        paymentMethod: (data.paymentMethod as any) || 'NONE',
+        paymentMethod: (data.paymentMethod as any) || PaymentMethodType.NONE,
         paymentSenderNum: data.paymentSenderNum,
         paymentProofUrl: data.paymentProofUrl,
         paymentStatus: paymentStatus as any,
@@ -191,10 +195,15 @@ export class AppointmentsService {
     const [startH, startM] = startTime.split(':').map(Number);
     const [endH, endM] = endTime.split(':').map(Number);
     
-    let current = new Date();
+    const now = new Date();
+    const cairoOffset = 2 * 60; // Egypt is UTC+2
+    const localOffset = now.getTimezoneOffset();
+    const totalOffset = cairoOffset + localOffset;
+    
+    let current = new Date(now.getTime() + totalOffset * 60000);
     current.setHours(startH, startM, 0, 0);
     
-    const end = new Date();
+    const end = new Date(current);
     end.setHours(endH, endM, 0, 0);
 
     while (current < end) {
@@ -241,7 +250,7 @@ export class AppointmentsService {
       data: {
         paymentProofUrl: proofUrl,
         paymentSenderNum: senderPhone,
-        paymentStatus: 'PENDING_REVIEW' as any,
+        paymentStatus: PaymentConfirmStatus.PENDING_REVIEW,
       },
       include: { patient: true },
     });
@@ -253,14 +262,14 @@ export class AppointmentsService {
     adminNote?: string,
   ) {
     const appointment = await this.findOne(appointmentId);
-    const paymentStatus = action === 'confirm' ? 'CONFIRMED' : 'REJECTED';
+    const paymentStatus = action === 'confirm' ? PaymentConfirmStatus.CONFIRMED : PaymentConfirmStatus.REJECTED;
     const appointmentStatus =
       action === 'confirm' ? AppointmentStatus.APPROVED : appointment.status;
 
     const updated = await this.prisma.appointment.update({
       where: { id: appointmentId },
       data: {
-        paymentStatus: paymentStatus as any,
+        paymentStatus,
         status: appointmentStatus,
         paymentNote: adminNote,
       },
@@ -289,7 +298,7 @@ export class AppointmentsService {
 
   async getPendingPayments() {
     return this.prisma.appointment.findMany({
-      where: { paymentStatus: 'PENDING_REVIEW' as any },
+      where: { paymentStatus: PaymentConfirmStatus.PENDING_REVIEW },
       orderBy: { createdAt: 'asc' },
       include: { patient: true },
     });

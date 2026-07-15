@@ -15,7 +15,7 @@ export class AuthController {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'strict',
       maxAge: REFRESH_COOKIE_MAX_AGE,
       path: '/',
     });
@@ -92,6 +92,22 @@ export class AuthController {
     const data = await this.authService.refreshAccessToken(refreshToken);
     this.setRefreshCookie(res, data.refreshToken);
     return { accessToken: data.accessToken };
+  }
+
+  @SkipThrottle()
+  @Post('logout')
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies?.refreshToken;
+    if (refreshToken) {
+      await this.authService.invalidateRefreshToken(refreshToken);
+    }
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+    });
+    return { message: 'Logged out successfully' };
   }
 
   @SkipThrottle()

@@ -32,8 +32,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
-      message: typeof message === 'object' ? (message as any).message : message,
-      error: typeof message === 'object' ? (message as any).error : null,
+      message: typeof message === 'object' ? (message as any).message : (status >= 500 ? 'Internal server error' : message),
+      error: typeof message === 'object' ? (message as any).error : (status >= 500 ? null : undefined),
     };
 
     if (status >= 500) {

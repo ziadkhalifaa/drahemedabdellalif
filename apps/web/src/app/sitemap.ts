@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let blogPosts: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch(`${API_BASE}/blog/published`, { cache: 'no-store' });
+    const res = await fetch(`${API_BASE}/blog/published`, { next: { revalidate: 3600 } });
     if (res.ok) {
       const posts = await res.json();
       blogPosts = posts.flatMap((post: any) => 
@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamic: Services
   let servicePages: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch(`${API_BASE}/services`, { cache: 'no-store' });
+    const res = await fetch(`${API_BASE}/services`, { next: { revalidate: 3600 } });
     if (res.ok) {
       const services = await res.json();
       servicePages = services.flatMap((svc: any) =>

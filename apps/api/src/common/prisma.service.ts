@@ -9,10 +9,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   constructor() {
     // Use pg driver adapter (pure Node.js) to avoid Rust/Tokio thread spawning
     // required on Hostinger shared hosting which blocks os thread creation (EAGAIN)
+    const isServerless = !!process.env.VERCEL;
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      max: 15,           // Increased pool size for handling concurrent connections on Supabase pgbouncer
-      idleTimeoutMillis: 15000,
+      max: isServerless ? 3 : 10,
+      idleTimeoutMillis: isServerless ? 5000 : 15000,
       connectionTimeoutMillis: 15000,
     });
 

@@ -55,7 +55,7 @@ async function bootstrap() {
             try {
               const allowedHost = new URL(o).hostname;
               const originHost = new URL(origin).hostname;
-              return originHost === allowedHost || originHost.endsWith(`.${allowedHost}`);
+              return originHost === allowedHost;
             } catch {
               return false;
             }

@@ -61,7 +61,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setUser(res.user);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout', {});
+    } catch {
+      // Proceed with local cleanup
+    }
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     setToken(null);

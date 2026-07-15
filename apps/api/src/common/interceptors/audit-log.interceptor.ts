@@ -23,6 +23,14 @@ export class AuditLogInterceptor implements NestInterceptor {
     const { method, url, body, ip } = request;
     const userId = user.sub || user.id;
 
+    const safeDetails = body && typeof body === 'object'
+      ? Object.fromEntries(
+          Object.entries(body).filter(([key]) =>
+            !['password', 'token', 'secret', 'authorization', 'code'].includes(key.toLowerCase())
+          )
+        )
+      : body;
+
     return (next.handle() as any).pipe(
       tap(() => {
         this.prisma.auditLog.create({
@@ -30,7 +38,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             userId,
             action: `${method} ${url}`,
             resource: url.split('/')[2] || 'unknown',
-            details: body,
+            details: method === 'POST' || method === 'PATCH' || method === 'PUT' ? safeDetails : null,
             ip: ip || request.headers['x-forwarded-for'] || (request as any).connection?.remoteAddress,
           },
         }).catch((err: any) => console.error('Failed to save audit log:', err));
