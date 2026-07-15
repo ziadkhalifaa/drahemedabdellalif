@@ -34,7 +34,7 @@ export function Navbar() {
   const { data: servicesData } = useSWR<Service[]>('/services', api.get);
   const services = servicesData?.slice(0, 6) || [];
   const [mounted, setMounted] = useState(false);
-  const { token, isLoading: isAuthLoading } = useAuth();
+  const { user, token, isLoading: isAuthLoading } = useAuth();
   const isLoggedIn = !!token;
 
   const [langOpen, setLangOpen] = useState(false);
@@ -235,7 +235,7 @@ export function Navbar() {
 
           {!isAuthLoading && (
             isLoggedIn ? (
-              <Link href="/dashboard">
+              <Link href={user?.role === 'admin' ? '/admin' : '/dashboard'}>
                 <Button variant="outline" size="sm" className="rounded-full font-bold gap-2">
                   <User size={14} />
                   {isRTL ? 'ملفي' : 'Account'}
@@ -297,7 +297,7 @@ export function Navbar() {
 
               {!isAuthLoading && (
                 isLoggedIn ? (
-                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Link href={user?.role === 'admin' ? '/admin' : '/dashboard'} onClick={() => setMobileOpen(false)}>
                     <Button className="w-full rounded-xl py-6 font-black gap-2 text-lg">
                       <User size={20} />
                       {isRTL ? 'ملفي الشخصي' : 'My Account'}
