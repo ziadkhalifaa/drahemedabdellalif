@@ -1,9 +1,27 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../../common/prisma.service';
 import { WhatsAppService } from '../../../common/whatsapp.service';
 import { EmailService } from '../../../common/email.service';
+
+const REFRESH_TOKEN_EXPIRY_DAYS = 30;
+const PASSWORD_MIN_LENGTH = 8;
+
+function validatePasswordStrength(password: string): void {
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    throw new BadRequestException(`Password must be at least ${PASSWORD_MIN_LENGTH} characters long`);
+  }
+  if (!/[A-Z]/.test(password)) {
+    throw new BadRequestException('Password must contain at least one uppercase letter');
+  }
+  if (!/[a-z]/.test(password)) {
+    throw new BadRequestException('Password must contain at least one lowercase letter');
+  }
+  if (!/[0-9]/.test(password)) {
+    throw new BadRequestException('Password must contain at least one number');
+  }
+}
 
 @Injectable()
 export class AuthService {
@@ -33,6 +51,8 @@ export class AuthService {
   }
 
   async register(data: { email: string; password: string; name: string; phone?: string; method?: 'email' | 'whatsapp' }) {
+    validatePasswordStrength(data.password);
+
     const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
     const method = data.method || 'email';
     
@@ -182,6 +202,7 @@ export class AuthService {
     if (data.currentPassword && data.newPassword) {
       const isPasswordValid = await bcrypt.compare(data.currentPassword, user.password);
       if (!isPasswordValid) throw new UnauthorizedException('Invalid current password');
+      validatePasswordStrength(data.newPassword);
       updateData.password = await bcrypt.hash(data.newPassword, 10);
     }
 
@@ -222,6 +243,8 @@ export class AuthService {
   }
 
   async resetPassword(email: string, code: string, newPassword: string) {
+    validatePasswordStrength(newPassword);
+
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('User not found');
 
@@ -251,15 +274,16 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
     
     const refreshToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
         token: refreshToken,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        expiresAt,
       },
     });
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, refreshTokenExpiry: expiresAt.toISOString() };
   }
 
   async refreshAccessToken(refreshToken: string) {

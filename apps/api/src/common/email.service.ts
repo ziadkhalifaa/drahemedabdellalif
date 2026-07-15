@@ -7,7 +7,7 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    console.log(`[EmailService-DEBUG] SMTP init: Host=${process.env.SMTP_HOST}, Port=${process.env.SMTP_PORT}, User=${process.env.SMTP_USER}, PassLength=${process.env.SMTP_PASS ? process.env.SMTP_PASS.length : 0}`);
+    console.log(`[EmailService-DEBUG] SMTP init: Host=${process.env.SMTP_HOST}, Port=${process.env.SMTP_PORT}, User=${process.env.SMTP_USER}`);
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 465,
@@ -144,7 +144,50 @@ export class EmailService {
   }
 
   async sendAppointmentConfirmation(email: string, details: { date: string; time: string; type: string; url?: string }) {
-    // Implementation for appointment confirmation emails...
+    const typeText = details.type === 'ONLINE' ? 'استشارة أونلاين' : 'موعد في العيادة';
+    const html = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 40px 0;">
+        <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);">
+          <div style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 40px 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 800;">تأكيد الموعد الطبي</h1>
+          </div>
+          <div style="padding: 40px 30px; text-align: center;">
+            <h2 style="color: #0f172a; font-size: 20px; margin-top: 0; margin-bottom: 16px;">تم تأكيد موعدك بنجاح</h2>
+            <div style="background: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 32px; text-align: right; border: 1px solid #e2e8f0;">
+              <div style="margin-bottom: 12px;"><strong>التاريخ:</strong> <span style="color: #475569;">${details.date}</span></div>
+              <div style="margin-bottom: 12px;"><strong>الوقت:</strong> <span style="color: #475569;">${details.time}</span></div>
+              <div style="margin-bottom: ${details.url ? '12px' : '0'};"><strong>النوع:</strong> <span style="color: #475569;">${typeText}</span></div>
+              ${details.url ? `<div><strong>رابط الاستشارة:</strong> <a href="${details.url}" style="color: #3b82f6; text-decoration: none;">انقر هنا للإنضمام</a></div>` : ''}
+            </div>
+            <p style="color: #64748b; font-size: 14px;">يرجى التواجد قبل الموعد بـ 15 دقيقة.</p>
+          </div>
+          <div style="background: #f8fafc; padding: 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} عيادات أ.د. أحمد عبد اللطيف. جميع الحقوق محفوظة.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      const from = process.env.SMTP_USER || 'noreply@drahmedabdellatif.com';
+      await this.transporter.sendMail({
+        from: `"أ.د. أحمد عبد اللطيف" <${from}>`,
+        to: email,
+        subject: `تأكيد موعدك الطبي - ${typeText}`,
+        html,
+      });
+      return { success: true };
+    } catch (error) {
+      this.logger.error(`[Appointment Confirmation Email] Failed to send to ${email}`, error);
+      return { success: false };
+    }
   }
 
   async sendNewsletter(email: string, subject: string, content: string) {

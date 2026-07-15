@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Header } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Header, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SkipThrottle } from '@nestjs/throttler';
 import { SettingsService } from '../application/settings.service';
 import { RolesGuard, Roles } from '../../../common/decorators';
 import { UserRole } from '@dr-ahmed/shared';
+import { SimpleCacheInterceptor } from '../../../common/interceptors/cache.interceptor';
 
 
 
@@ -13,7 +14,8 @@ export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get('public')
-  @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
+  @UseInterceptors(SimpleCacheInterceptor)
+  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   async getPublic() {
     return this.settingsService.getAll();
   }

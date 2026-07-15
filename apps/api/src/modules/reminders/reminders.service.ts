@@ -12,6 +12,23 @@ export class RemindersService {
     private readonly whatsappService: WhatsAppService,
   ) {}
 
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async handleCleanupExpiredTokens() {
+    this.logger.log('Running cleanup job for expired tokens and old analytics...');
+    
+    const deletedTokens = await this.prisma.refreshToken.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    });
+    this.logger.log(`Deleted ${deletedTokens.count} expired refresh tokens`);
+
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const deletedAnalytics = await this.prisma.analyticsEvent.deleteMany({
+      where: { createdAt: { lt: ninetyDaysAgo } },
+    });
+    this.logger.log(`Deleted ${deletedAnalytics.count} analytics events older than 90 days`);
+  }
+
   @Cron(CronExpression.EVERY_DAY_AT_10AM) // Send daily at 10 AM
   async handleDailyReminders() {
     this.logger.log('Running daily appointment reminders cron job...');

@@ -16,19 +16,18 @@ export class AuditLogInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     
-    // Only log admin/editor actions for POST, PUT, PATCH, DELETE
     if (!user || user.role === 'patient' || request.method === 'GET') {
       return next.handle();
     }
 
     const { method, url, body, ip } = request;
+    const userId = user.sub || user.id;
 
     return (next.handle() as any).pipe(
       tap(() => {
-        // Log the action after successful completion
         this.prisma.auditLog.create({
           data: {
-            userId: user.sub || user.id,
+            userId,
             action: `${method} ${url}`,
             resource: url.split('/')[2] || 'unknown',
             details: body,

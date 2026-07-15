@@ -5,24 +5,31 @@ import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { RolesGuard, Roles } from '../../../common/decorators';
 import { AuthService } from '../application/auth.service';
 
+const REFRESH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days - matches DB expiry
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  private setRefreshCookie(res: Response, refreshToken: string) {
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+      path: '/',
+    });
+  }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
   async login(@Body() body: { email: string; password: string }, @Res({ passthrough: true }) res: Response) {
     const data = await this.authService.login(body.email, body.password);
-    res.cookie('refreshToken', data.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
-    });
+    this.setRefreshCookie(res, data.refreshToken);
     return { accessToken: data.accessToken, user: data.user };
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('register')
   async register(@Body() body: { email: string; password: string; name: string; phone?: string; method?: 'email' | 'whatsapp' }) {
     return this.authService.register(body);
@@ -31,16 +38,11 @@ export class AuthController {
   @Post('verify-email')
   async verifyEmail(@Body() body: { email: string; code: string }, @Res({ passthrough: true }) res: Response) {
     const data = await this.authService.verifyEmail(body.email, body.code);
-    res.cookie('refreshToken', data.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
-    });
+    this.setRefreshCookie(res, data.refreshToken);
     return { accessToken: data.accessToken, user: data.user };
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('resend-code')
   async resendCode(@Body() body: { email: string; method?: 'email' | 'whatsapp' }) {
     return this.authService.resendCode(body.email, body.method);
@@ -48,7 +50,7 @@ export class AuthController {
 
   @SkipThrottle()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'editor')
   @Get('users')
   async getUsers(@Query('role') role?: string) {
     return this.authService.getUsers(role);
@@ -74,6 +76,7 @@ export class AuthController {
     return this.authService.forgotPassword(body.email);
   }
 
+  @Throttle({ default: { limit: 3, ttl: 300000 } })
   @Post('reset-password')
   async resetPassword(@Body() body: { email: string; code: string; newPassword: string }) {
     return this.authService.resetPassword(body.email, body.code, body.newPassword);
@@ -87,19 +90,13 @@ export class AuthController {
       throw new UnauthorizedException('No refresh token provided');
     }
     const data = await this.authService.refreshAccessToken(refreshToken);
-    res.cookie('refreshToken', data.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
-    });
+    this.setRefreshCookie(res, data.refreshToken);
     return { accessToken: data.accessToken };
   }
 
   @SkipThrottle()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'editor')
   @Get('users/:id/profile')
   async getUserFullProfile(@Param('id') id: string) {
     return this.authService.getUserFullProfile(id);
@@ -107,7 +104,7 @@ export class AuthController {
 
   @SkipThrottle()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'editor')
   @Post('users/:id/notes')
   async addPatientNote(@Param('id') id: string, @Body() body: { content: string }) {
     return this.authService.addPatientNote(id, body.content);
@@ -115,7 +112,7 @@ export class AuthController {
 
   @SkipThrottle()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'editor')
   @Delete('users/notes/:noteId')
   async deletePatientNote(@Param('noteId') noteId: string) {
     return this.authService.deletePatientNote(noteId);

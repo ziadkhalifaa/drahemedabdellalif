@@ -1,20 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Button } from '@/components/ui';
-import { Link } from '@/i18n/routing';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import type { Appointment } from '@dr-ahmed/shared';
 import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
-import { Check, X, FileDown, Download, Pill, Video } from 'lucide-react';
-import { exportToExcel, exportToPDF } from '@/lib/export-utils';
+import { Check, X, Download, Pill, Video, Calendar, Filter, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { exportToExcel } from '@/lib/export-utils';
 import { formatTime12Hour } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export default function AdminAppointmentsPage() {
+  const t = useTranslations('admin');
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const { token } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [dateFilter, setDateFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -36,156 +41,246 @@ export default function AdminAppointmentsPage() {
     fetchAppointments();
   };
 
-  const handleExportExcel = () => {
-    const data = appointments.map(a => {
-      const name = a.guestName || a.patient?.name || '—';
-      const phone = a.guestPhone || a.patient?.phone || '—';
-      const email = a.guestEmail || a.patient?.email || '—';
-      return {
-        Patient: name,
-        Phone: phone,
-        Email: email,
-        Date: new Date(a.date).toLocaleDateString(),
-        Time: formatTime12Hour(a.timeSlot, false),
-        Status: a.status,
-        Notes: a.notes || ''
-      };
-    });
+  const handleExport = () => {
+    const data = appointments.map(a => ({
+      Patient: a.guestName || a.patient?.name || '—',
+      Phone: a.guestPhone || a.patient?.phone || '—',
+      Email: a.guestEmail || a.patient?.email || '—',
+      Date: new Date(a.date).toLocaleDateString(),
+      Time: formatTime12Hour(a.timeSlot, false),
+      Status: a.status,
+      Notes: a.notes || ''
+    }));
     exportToExcel(data, 'Appointments_Report');
   };
 
-  const handleExportPDF = () => {
-    const headers = ['Patient', 'Phone', 'Date', 'Time', 'Status'];
-    const data = appointments.map(a => {
-      const name = a.guestName || a.patient?.name || '—';
-      const phone = a.guestPhone || a.patient?.phone || '—';
-      return [
-        name,
-        phone,
-        new Date(a.date).toLocaleDateString(),
-        formatTime12Hour(a.timeSlot, false),
-        a.status
-      ];
-    });
-    exportToPDF(headers, data, 'Appointments_Report', 'Appointments List');
-  };
-
   const filteredAppointments = appointments.filter(a => {
-    if (!dateFilter) return true;
-    const aDate = new Date(a.date).toISOString().split('T')[0];
-    return aDate === dateFilter;
+    const matchesStatus = !statusFilter || a.status === statusFilter;
+    const matchesSearch = !searchQuery || 
+      (a.guestName || a.patient?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (a.guestEmail || a.patient?.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (a.guestPhone || a.patient?.phone || '').includes(searchQuery);
+    return matchesStatus && matchesSearch;
   });
 
+  const statusCounts = {
+    total: appointments.length,
+    pending: appointments.filter(a => a.status === 'pending').length,
+    approved: appointments.filter(a => a.status === 'approved').length,
+    completed: appointments.filter(a => a.status === 'completed').length,
+  };
+
+  const statusTabs = [
+    { key: '', label: isRTL ? 'الكل' : 'All', count: statusCounts.total },
+    { key: 'pending', label: isRTL ? 'قيد الانتظار' : 'Pending', count: statusCounts.pending },
+    { key: 'approved', label: isRTL ? 'مقبول' : 'Approved', count: statusCounts.approved },
+    { key: 'completed', label: isRTL ? 'مكتمل' : 'Completed', count: statusCounts.completed },
+  ];
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-5"
+    >
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Appointments</h1>
-          <p className="text-sm text-[var(--muted)]">Manage patient bookings and schedules.</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+            {isRTL ? 'المواعيد' : 'Appointments'}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-white/35 mt-1">
+            {isRTL ? 'إدارة حجوزات المرضى والمواعيد' : 'Manage patient bookings and schedules'}
+          </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <input 
-            type="date" 
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="text-sm px-3 py-2 rounded-md border border-[var(--border)] bg-[var(--background)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-2">
-              <Download size={16} /> Excel
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-2">
-              <FileDown size={16} /> PDF
-            </Button>
-          </div>
-        </div>
+        <button 
+          onClick={handleExport}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium text-gray-600 dark:text-white/50 bg-white dark:bg-[#111b2e] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all"
+        >
+          <Download size={14} />
+          {isRTL ? 'تصدير' : 'Export'}
+        </button>
       </div>
 
+      {/* Status Tabs */}
+      <div className="flex items-center gap-1 bg-white dark:bg-[#111b2e] rounded-xl border border-gray-200/50 dark:border-white/[0.06] p-1">
+        {statusTabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setStatusFilter(tab.key)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium transition-all flex-1 justify-center",
+              statusFilter === tab.key
+                ? "bg-gray-100 dark:bg-white/[0.06] text-gray-900 dark:text-white"
+                : "text-gray-500 dark:text-white/30 hover:text-gray-700 dark:hover:text-white/50"
+            )}
+          >
+            {tab.label}
+            <span className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
+              statusFilter === tab.key
+                ? "bg-primary/10 text-primary"
+                : "bg-gray-100 dark:bg-white/[0.04] text-gray-400 dark:text-white/20"
+            )}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/25" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={isRTL ? 'بحث بالاسم، الإيميل، أو الهاتف...' : 'Search by name, email, or phone...'}
+          className={cn(
+            "w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#111b2e] border border-gray-200/50 dark:border-white/[0.06] text-[13px] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/20",
+            "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+          )}
+        />
+      </div>
+
+      {/* Loading */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-[var(--muted)]">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="font-bold">Loading appointments...</p>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative w-10 h-10 mb-3">
+            <div className="absolute inset-0 border-2 border-gray-200 dark:border-white/10 rounded-xl" />
+            <div className="absolute inset-0 border-2 border-primary border-t-transparent rounded-xl animate-spin" />
+          </div>
+          <p className="text-sm text-gray-400 dark:text-white/30">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
-          <p className="font-bold">Failed to load data</p>
-          <Button variant="outline" onClick={fetchAppointments} className="mt-4">Retry Now</Button>
+        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06]">
+          <p className="text-sm font-medium text-gray-600 dark:text-white/60 mb-3">{isRTL ? 'فشل تحميل البيانات' : 'Failed to load data'}</p>
+          <button onClick={fetchAppointments} className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            {isRTL ? 'إعادة المحاولة' : 'Retry'}
+          </button>
         </div>
       ) : (
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border)] text-left">
-                <th className="px-4 pb-3 font-bold text-[var(--muted)] uppercase text-[10px] tracking-wider">Patient</th>
-                <th className="px-4 pb-3 font-bold text-[var(--muted)] uppercase text-[10px] tracking-wider">Phone</th>
-                <th className="px-4 pb-3 font-bold text-[var(--muted)] uppercase text-[10px] tracking-wider">Date</th>
-                <th className="px-4 pb-3 font-bold text-[var(--muted)] uppercase text-[10px] tracking-wider">Time</th>
-                <th className="px-4 pb-3 font-bold text-[var(--muted)] uppercase text-[10px] tracking-wider">Status</th>
-                <th className="px-4 pb-3 font-bold text-[var(--muted)] uppercase text-[10px] tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border)]">
-              {filteredAppointments.map((apt) => {
-                const name = apt.guestName || apt.patient?.name || '—';
-                const email = apt.guestEmail || apt.patient?.email || '—';
-                const phone = apt.guestPhone || apt.patient?.phone || '—';
-                return (
-                  <tr key={apt.id} className="hover:bg-[var(--card-hover)] transition-colors">
-                    <td className="p-4">
-                      <p className="font-bold text-[var(--foreground)]">{name}</p>
-                      <p className="text-[10px] text-[var(--muted)]">{email}</p>
-                    </td>
-                    <td className="p-4 text-[var(--muted)] font-medium">{phone}</td>
-                  <td className="p-4 text-[var(--muted)]">{new Date(apt.date).toLocaleDateString()}</td>
-                  <td className="p-4 text-[var(--muted)]">{formatTime12Hour(apt.timeSlot, true)}</td>
-                  <td className="p-4">
-                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                      apt.status === AppointmentStatus.APPROVED ? 'bg-emerald-100 text-emerald-700' :
-                      apt.status === AppointmentStatus.REJECTED ? 'bg-red-100 text-red-700' :
-                      'bg-amber-100 text-amber-700'
-                    }`}>{apt.status}</span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      {apt.status === AppointmentStatus.PENDING && (
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => updateStatus(apt.id, AppointmentStatus.APPROVED)} className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50">
-                            <Check size={16} />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => updateStatus(apt.id, AppointmentStatus.REJECTED)} className="h-8 w-8 p-0 text-red-600 hover:bg-red-50">
-                            <X size={16} />
-                          </Button>
-                        </div>
-                      )}
-                      {apt.status === AppointmentStatus.APPROVED && (
-                        <>
-                          {apt.type === AppointmentType.ONLINE && (
-                            <Link href={`/dashboard/video/${apt.meetingId || apt.id}`}>
-                              <Button size="sm" variant="ghost" title="Join Video Call" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50">
-                                <Video size={16} />
-                              </Button>
-                            </Link>
-                          )}
-                          <Link href={`/admin/prescriptions/new/${apt.id}`}>
-                            <Button size="sm" variant="ghost" title="New Prescription" className="h-8 w-8 p-0 text-[var(--primary)] hover:bg-[var(--primary)]/5">
-                              <Pill size={16} />
-                            </Button>
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  </td>
+        /* Table */
+        <div className="bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-white/25 bg-gray-50 dark:bg-white/[0.02]">
+                  <th className="px-5 py-3 text-left">{isRTL ? 'المريض' : 'Patient'}</th>
+                  <th className="px-5 py-3 text-left">{isRTL ? 'التاريخ' : 'Date'}</th>
+                  <th className="px-5 py-3 text-left">{isRTL ? 'الوقت' : 'Time'}</th>
+                  <th className="px-5 py-3 text-left">{isRTL ? 'النوع' : 'Type'}</th>
+                  <th className="px-5 py-3 text-left">{isRTL ? 'الحالة' : 'Status'}</th>
+                  <th className="px-5 py-3 text-right">{isRTL ? 'إجراءات' : 'Actions'}</th>
                 </tr>
-              ); })}
-              {filteredAppointments.length === 0 && (
-                <tr><td colSpan={6} className="py-12 text-center text-[var(--muted)] font-medium">No appointments found</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/[0.04]">
+                {filteredAppointments.map((apt) => {
+                  const name = apt.guestName || apt.patient?.name || '—';
+                  const email = apt.guestEmail || apt.patient?.email || '—';
+                  return (
+                    <tr key={apt.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-blue-500/10 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
+                            {name.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-medium text-gray-700 dark:text-white/70 truncate">{name}</p>
+                            <p className="text-[11px] text-gray-400 dark:text-white/25 truncate">{email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <p className="text-[12px] font-medium text-gray-600 dark:text-white/50">
+                          {new Date(apt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <p className="text-[12px] font-medium text-gray-500 dark:text-white/40">
+                          {formatTime12Hour(apt.timeSlot, isRTL)}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={cn(
+                          "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium",
+                          apt.type === 'ONLINE' 
+                            ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" 
+                            : "bg-gray-100 dark:bg-white/[0.04] text-gray-500 dark:text-white/40"
+                        )}>
+                          {apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={cn(
+                          "inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider",
+                          apt.status === 'approved' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                          apt.status === 'pending' ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+                          apt.status === 'completed' ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400" :
+                          "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+                        )}>
+                          {apt.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {apt.status === AppointmentStatus.PENDING && (
+                            <>
+                              <button 
+                                onClick={() => updateStatus(apt.id, AppointmentStatus.APPROVED)}
+                                className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+                                title={isRTL ? 'قبول' : 'Approve'}
+                              >
+                                <Check size={15} />
+                              </button>
+                              <button 
+                                onClick={() => updateStatus(apt.id, AppointmentStatus.REJECTED)}
+                                className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                title={isRTL ? 'رفض' : 'Reject'}
+                              >
+                                <X size={15} />
+                              </button>
+                            </>
+                          )}
+                          {apt.status === AppointmentStatus.APPROVED && apt.type === AppointmentType.ONLINE && (
+                            <a 
+                              href={`/dashboard/video/${apt.meetingId || apt.id}`}
+                              target="_blank"
+                              className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+                              title={isRTL ? 'دخول الفيديو' : 'Join Video'}
+                            >
+                              <Video size={15} />
+                            </a>
+                          )}
+                          {apt.status === AppointmentStatus.APPROVED && (
+                            <a 
+                              href={`/admin/prescriptions/new/${apt.id}`}
+                              className="p-1.5 rounded-lg text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
+                              title={isRTL ? 'وصفة جديدة' : 'New Prescription'}
+                            >
+                              <Pill size={15} />
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filteredAppointments.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-16 text-center">
+                      <Calendar size={32} className="mx-auto text-gray-300 dark:text-white/15 mb-3" />
+                      <p className="text-sm font-medium text-gray-400 dark:text-white/30">
+                        {isRTL ? 'لا توجد مواعيد' : 'No appointments found'}
+                      </p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </Card>
       )}
-    </div>
+    </motion.div>
   );
 }

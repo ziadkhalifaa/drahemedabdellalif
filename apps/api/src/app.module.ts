@@ -34,7 +34,7 @@ import { HealthModule } from './modules/health/health.module';
       {
         name: 'default',
         ttl: 60000,
-        limit: 300,      // 300 requests/min per IP (was 30 - too low for dashboard)
+        limit: 60,
       },
     ]),
 

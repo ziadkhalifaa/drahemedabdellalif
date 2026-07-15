@@ -5,13 +5,14 @@ import { useAuth } from './admin-layout';
 import { 
   LogOut, LayoutDashboard, Calendar, CalendarDays, FileText, 
   Package, MessageSquare, Star, X, Image, 
-  Settings, ChevronRight, PieChart, Users, Edit3,
-  Clock, Bell, ShieldCheck, Mail, Users2, Layout,
-  Building2, CreditCard
+  Settings, ChevronDown, Users, Edit3,
+  Clock, Bell, Mail, Building2, CreditCard,
+  Stethoscope, Pill, FileBarChart, Newspaper
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { usePathname, Link } from '@/i18n/routing';
+import { useState } from 'react';
 
 const navSections = [
   {
@@ -21,14 +22,14 @@ const navSections = [
       { href: '/admin/appointments', icon: Calendar, labelKey: 'appointments' },
       { href: '/admin/calendar', icon: CalendarDays, labelKey: 'calendar_view' },
       { href: '/admin/payments', icon: CreditCard, labelKey: 'payments' },
-      { href: '/admin/editor', icon: Edit3, labelKey: 'live_editor' },
+      { href: '/admin/prescriptions', icon: Pill, labelKey: 'prescriptions' },
     ]
   },
   {
     title: 'content',
     items: [
-      { href: '/admin/hero-slides', icon: Layout, labelKey: 'Hero Slides' },
-      { href: '/admin/services', icon: Package, labelKey: 'Services' },
+      { href: '/admin/hero-slides', icon: Newspaper, labelKey: 'Hero Slides' },
+      { href: '/admin/services', icon: Stethoscope, labelKey: 'Services' },
       { href: '/admin/techniques', icon: Star, labelKey: 'Techniques' },
       { href: '/admin/blog', icon: FileText, labelKey: 'blog' },
       { href: '/admin/media', icon: Image, labelKey: 'media' },
@@ -45,7 +46,9 @@ const navSections = [
   {
     title: 'system',
     items: [
-      { href: '/admin/patients', icon: Users2, labelKey: 'patients' },
+      { href: '/admin/patients', icon: Users, labelKey: 'patients' },
+      { href: '/admin/reports', icon: FileBarChart, labelKey: 'reports' },
+      { href: '/admin/editor', icon: Edit3, labelKey: 'live_editor' },
       { href: '/admin/working-hours', icon: Clock, labelKey: 'working_hours' },
       { href: '/admin/settings', icon: Settings, labelKey: 'settings' },
     ]
@@ -58,6 +61,7 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
   const isRTL = locale === 'ar';
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin' || pathname === '/admin/dashboard';
@@ -65,99 +69,116 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#072a44] dark:bg-slate-950 text-white relative overflow-hidden">
-      {/* Abstract Background Element - Creative Glows */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[120px] -mr-40 -mt-40 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none" />
+    <div className="flex flex-col h-full bg-[#0a1628] dark:bg-[#060e1a] text-white relative overflow-hidden">
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-blue-500/[0.03] via-transparent to-primary/[0.02] pointer-events-none" />
+      
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
       {/* Brand Header */}
-      <div className="relative flex items-center justify-between px-6 py-10 border-b border-white/5">
-        <Link href="/admin" className="flex items-center gap-4 group">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-400 via-gold to-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/40 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
-            <ShieldCheck className="text-white" size={28} />
+      <div className="relative px-5 pt-7 pb-5">
+        <Link href="/admin" className="flex items-center gap-3.5 group" onClick={() => window.innerWidth < 1024 && onClose()}>
+          <div className="relative">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg shadow-primary/25 transition-all duration-500 group-hover:shadow-primary/40 group-hover:scale-105">
+              <span className="text-white font-black text-lg">A</span>
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#0a1628] dark:border-[#060e1a]" />
           </div>
-          <div>
-            <h2 className="text-sm font-black tracking-tight uppercase leading-tight">{isRTL ? 'د. أحمد عبد اللطيف' : 'Dr. Ahmed'}</h2>
-            <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black mt-1">{isRTL ? 'لوحة تحكم الإدارة' : 'Admin Console'}</p>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[13px] font-bold text-white truncate leading-tight">{isRTL ? 'د. أحمد عبد اللطيف' : 'Dr. Ahmed Abdellatif'}</h2>
+            <p className="text-[10px] text-white/30 font-medium mt-0.5 uppercase tracking-wider">{isRTL ? 'لوحة التحكم' : 'Admin Panel'}</p>
           </div>
         </Link>
-        <button onClick={onClose} className="lg:hidden p-2 rounded-xl bg-white/5 text-white/60 hover:text-white transition-all">
-          <X size={20} />
-        </button>
       </div>
 
+      {/* Divider */}
+      <div className="mx-5 h-px bg-white/[0.06]" />
+
       {/* Navigation */}
-      <nav className="relative flex-1 px-4 py-8 space-y-10 overflow-y-auto custom-scrollbar scrollbar-hide">
+      <nav className="relative flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar scrollbar-hide">
         {navSections.map((section, idx) => (
-          <div key={idx} className="space-y-4">
-            <div className="px-4 flex items-center gap-3">
-              <div className="h-[1px] flex-1 bg-white/10" />
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 whitespace-nowrap">
-                 {isRTL ? (idx === 0 ? 'الرئيسية' : idx === 1 ? 'المحتوى' : idx === 2 ? 'التفاعل' : 'النظام') : section.title}
-              </h3>
-              <div className="h-[1px] flex-1 bg-white/10" />
+          <div key={idx}>
+            {/* Section header */}
+            <div className="px-3 py-2">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-white/20">
+                {isRTL ? (idx === 0 ? 'الرئيسية' : idx === 1 ? 'المحتوى' : idx === 2 ? 'التواصل' : 'النظام') : section.title}
+              </span>
             </div>
-            <div className="space-y-1.5">
-              {section.items.map((item: any) => (
-                <Link
-                  key={item.href}
-                  href={item.href as any}
-                  className={cn(
-                    "group flex items-center justify-between px-4 py-3.5 rounded-2xl text-xs font-bold transition-all duration-500",
-                    isActive(item.href) 
-                      ? "bg-gradient-to-r from-primary/30 to-primary/10 text-white shadow-2xl shadow-black/20 border border-white/10" 
-                      : "text-white/40 hover:bg-white/5 hover:text-white"
-                  )}
-                  onClick={() => { if (window.innerWidth < 1024) onClose(); }}
-                >
-                  <div className="flex items-center gap-4">
+
+            {/* Section items */}
+            <div className="space-y-0.5">
+              {section.items.map((item: any) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href as any}
+                    className={cn(
+                      "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 relative",
+                      active 
+                        ? "bg-white/[0.08] text-white" 
+                        : "text-white/40 hover:bg-white/[0.04] hover:text-white/70"
+                    )}
+                    onClick={() => { if (window.innerWidth < 1024) onClose(); }}
+                  >
+                    {/* Active indicator */}
+                    {active && (
+                      <motion.div 
+                        layoutId="sidebar-active"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full"
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                      />
+                    )}
+
                     <div className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-500",
-                      isActive(item.href) ? "bg-primary text-white scale-110 shadow-lg shadow-primary/30" : "bg-white/5 text-white/20 group-hover:bg-white/10 group-hover:text-white/60"
+                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200",
+                      active 
+                        ? "bg-primary/20 text-primary" 
+                        : "bg-white/[0.04] text-white/30 group-hover:bg-white/[0.08] group-hover:text-white/60"
                     )}>
                       <item.icon size={16} />
                     </div>
-                    <span className="tracking-wide">{item.labelKey === 'live_editor'
-                      ? (isRTL ? 'محرر الموقع' : 'Live Editor')
-                      : item.labelKey === 'clinics'
-                      ? (isRTL ? 'العيادات' : 'Clinics')
-                      : item.labelKey === 'payments'
-                      ? (isRTL ? 'المدفوعات' : 'Payments')
-                      : item.labelKey === 'calendar_view'
-                      ? (isRTL ? 'التقويم' : 'Calendar')
-                      : t(item.labelKey)}</span>
-                  </div>
-                  {isActive(item.href) && (
-                    <motion.div 
-                      layoutId="active-indicator" 
-                      className="w-1.5 h-1.5 rounded-full bg-primary-light shadow-[0_0_10px_var(--primary-light)]" 
-                    />
-                  )}
-                </Link>
-              ))}
+                    <span className="flex-1 truncate">
+                      {item.labelKey === 'live_editor'
+                        ? (isRTL ? 'محرر الموقع' : 'Live Editor')
+                        : item.labelKey === 'clinics'
+                        ? (isRTL ? 'العيادات' : 'Clinics')
+                        : item.labelKey === 'payments'
+                        ? (isRTL ? 'المدفوعات' : 'Payments')
+                        : item.labelKey === 'calendar_view'
+                        ? (isRTL ? 'التقويم' : 'Calendar')
+                        : item.labelKey === 'prescriptions'
+                        ? (isRTL ? 'الوصفات الطبية' : 'Prescriptions')
+                        : item.labelKey === 'reports'
+                        ? (isRTL ? 'التقارير' : 'Reports')
+                        : t(item.labelKey)}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         ))}
       </nav>
 
       {/* User Footer */}
-      <div className="relative p-6 mt-auto border-t border-white/5 bg-black/40 backdrop-blur-3xl">
-        <div className="flex items-center gap-4 px-4 py-4 mb-4 rounded-[2rem] bg-white/5 border border-white/10 group transition-all hover:bg-white/10 cursor-pointer">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/40 to-blue-500/40 flex items-center justify-center text-base font-black border border-white/10 shadow-lg group-hover:scale-105 transition-transform">
+      <div className="relative px-4 pb-4 pt-3 border-t border-white/[0.06]">
+        <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/30 to-blue-500/30 flex items-center justify-center text-sm font-bold text-white/80 border border-white/[0.08]">
             {user?.name?.charAt(0) || 'A'}
           </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-xs font-black truncate text-white tracking-tight">{user?.name}</p>
-            <p className="text-[10px] text-white/40 truncate font-black uppercase tracking-widest mt-0.5">{user?.role || 'Administrator'}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-white/80 truncate">{user?.name}</p>
+            <p className="text-[10px] text-white/25 uppercase tracking-wider">{user?.role || 'admin'}</p>
           </div>
-          <ChevronRight size={14} className="text-white/20 group-hover:text-white transition-colors" />
         </div>
         <button 
           onClick={logout} 
-          className="group flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-4 text-xs text-red-400 font-black transition-all hover:bg-red-500/10 hover:text-red-300 border border-red-500/5 hover:border-red-500/20"
+          className="group flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-medium text-white/30 transition-all hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/10"
         >
-          <LogOut size={16} className="transition-transform group-hover:-translate-x-1" /> 
-          <span className="uppercase tracking-widest">{t('logout')}</span>
+          <LogOut size={14} className="transition-transform group-hover:-translate-x-0.5" /> 
+          <span>{t('logout')}</span>
         </button>
       </div>
     </div>
@@ -168,8 +189,8 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
       {/* Desktop Sidebar */}
       <aside 
         className={cn(
-          "fixed inset-y-0 z-40 hidden w-72 flex-col border-white/10 bg-[#072a44] lg:flex shadow-[0_0_40px_rgba(0,0,0,0.5)]",
-          isRTL ? "right-0 border-l" : "left-0 border-r"
+          "fixed inset-y-0 z-40 hidden w-[260px] flex-col bg-[#0a1628] dark:bg-[#060e1a] lg:flex",
+          isRTL ? "right-0 border-l border-white/[0.06]" : "left-0 border-r border-white/[0.06]"
         )}
       >
         {sidebarContent}
@@ -183,16 +204,16 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
               onClick={onClose} 
             />
             <motion.aside 
               initial={{ x: isRTL ? '100%' : '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: isRTL ? '100%' : '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className={cn(
-                "absolute inset-y-0 w-80 flex-col bg-[#072a44] flex shadow-2xl",
+                "absolute inset-y-0 w-[280px] flex-col bg-[#0a1628] dark:bg-[#060e1a] flex shadow-2xl",
                 isRTL ? "right-0" : "left-0"
               )}
             >

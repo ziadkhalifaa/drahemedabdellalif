@@ -46,12 +46,17 @@ async function bootstrap() {
 
       app.enableCors({
         origin: (origin, cb) => {
-          if (!origin) return cb(null, true);
+          if (!origin || origin === 'null') {
+            if (process.env.NODE_ENV !== 'production') return cb(null, true);
+            return cb(new Error('Not allowed by CORS'));
+          }
           const allowed = allowedOrigins.some(o => {
-            if (o === '*' || origin === o) return true;
+            if (o === origin) return true;
             try {
-              return origin.endsWith(`.${new URL(o).hostname}`);
-            } catch (e) {
+              const allowedHost = new URL(o).hostname;
+              const originHost = new URL(origin).hostname;
+              return originHost === allowedHost || originHost.endsWith(`.${allowedHost}`);
+            } catch {
               return false;
             }
           });
@@ -59,7 +64,7 @@ async function bootstrap() {
         },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-cron-secret'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-cron-secret', 'x-paymob-signature'],
       });
 
       app.useGlobalPipes(

@@ -4,21 +4,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/components/layout/admin-layout';
-import { Card, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { api } from '@/lib/api';
 import { 
   CalendarDays, FileText, MessageSquare, Star, 
   TrendingUp, Users, Activity, Download, 
-  Eye, MousePointerClick, Clock
+  Eye, MousePointerClick, Clock, ArrowUpRight,
+  ArrowDownRight, DollarSign, Stethoscope, Pill
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, LineChart, Line,
-  AreaChart, Area
+  Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
-import { exportToExcel, exportToPDF } from '@/lib/export-utils';
+import { exportToExcel } from '@/lib/export-utils';
 import { cn, formatTime12Hour } from '@/lib/utils';
-
 
 interface DashboardStats {
   overview: {
@@ -35,6 +34,19 @@ interface DashboardStats {
   };
 }
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06 }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0 }
+};
+
 export default function AdminDashboardPage() {
   const t = useTranslations('admin');
   const locale = useLocale();
@@ -47,7 +59,7 @@ export default function AdminDashboardPage() {
 
   const fetchStats = useCallback((attempt = 1) => {
     if (!token) return;
-    setLoading(attempt === 1); // Only show main loader spinner on first attempt
+    setLoading(attempt === 1);
     setError(false);
     api.get<DashboardStats>('/analytics/dashboard', token)
       .then(res => {
@@ -55,7 +67,6 @@ export default function AdminDashboardPage() {
         setLoading(false);
       })
       .catch(err => {
-        console.error(`Failed to fetch admin dashboard stats (attempt ${attempt}):`, err);
         if (attempt < 2) {
           setTimeout(() => fetchStats(attempt + 1), 1500);
         } else {
@@ -69,38 +80,50 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, [fetchStats]);
 
-  const cards = [
+  const statCards = [
     { 
       icon: CalendarDays, 
-      label: t('appointments'), 
+      label: isRTL ? 'المواعيد' : 'Appointments', 
       value: stats?.overview?.appointments?.total ?? 0, 
-      sub: `${stats?.overview?.appointments?.pending ?? 0} ${t('pending')}`, 
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10'
+      sub: `${stats?.overview?.appointments?.pending ?? 0} ${isRTL ? 'قيد الانتظار' : 'pending'}`, 
+      change: '+12%',
+      up: true,
+      gradient: 'from-blue-500 to-blue-600',
+      iconBg: 'bg-blue-500/10',
+      iconColor: 'text-blue-500'
     },
     { 
       icon: MessageSquare, 
-      label: t('messages'), 
+      label: isRTL ? 'الرسائل' : 'Messages', 
       value: stats?.overview?.messages?.total ?? 0, 
-      sub: `${stats?.overview?.messages?.unread ?? 0} ${t('unread')}`, 
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10'
+      sub: `${stats?.overview?.messages?.unread ?? 0} ${isRTL ? 'غير مقروءة' : 'unread'}`, 
+      change: '+5%',
+      up: true,
+      gradient: 'from-violet-500 to-purple-600',
+      iconBg: 'bg-violet-500/10',
+      iconColor: 'text-violet-500'
     },
     { 
       icon: FileText, 
-      label: t('blog'), 
+      label: isRTL ? 'المدونة' : 'Blog Posts', 
       value: stats?.overview?.blog?.total ?? 0, 
-      sub: `${stats?.overview?.blog?.published ?? 0} ${t('published')}`, 
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10'
+      sub: `${stats?.overview?.blog?.published ?? 0} ${isRTL ? 'منشورة' : 'published'}`, 
+      change: '+8%',
+      up: true,
+      gradient: 'from-emerald-500 to-teal-600',
+      iconBg: 'bg-emerald-500/10',
+      iconColor: 'text-emerald-500'
     },
     { 
       icon: Star, 
-      label: t('testimonials'), 
+      label: isRTL ? 'التقييمات' : 'Testimonials', 
       value: stats?.overview?.testimonials?.total ?? 0, 
-      sub: `${stats?.overview?.testimonials?.approved ?? 0} ${t('approved')}`, 
-      color: 'text-amber-500',
-      bg: 'bg-amber-500/10'
+      sub: `${stats?.overview?.testimonials?.approved ?? 0} ${isRTL ? 'معتمدة' : 'approved'}`, 
+      change: '+3%',
+      up: true,
+      gradient: 'from-amber-500 to-orange-600',
+      iconBg: 'bg-amber-500/10',
+      iconColor: 'text-amber-500'
     },
   ];
 
@@ -117,341 +140,331 @@ export default function AdminDashboardPage() {
     exportToExcel(reportData, 'Dashboard_Summary');
   };
 
-  return (
-    <div className="space-y-10 pb-20 relative">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -mr-48 -mt-24 pointer-events-none" />
-      <div className="absolute bottom-40 left-0 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px] -ml-40 pointer-events-none" />
-
-      {/* Header */}
-      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
-            {t('dashboard_overview') || 'Dashboard Overview'}
-          </h1>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest opacity-70">
-              {t('system_status')}
-            </p>
-          </div>
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40">
+        <div className="relative w-12 h-12 mb-4">
+          <div className="absolute inset-0 border-2 border-gray-200 dark:border-white/10 rounded-xl" />
+          <div className="absolute inset-0 border-2 border-primary border-t-transparent rounded-xl animate-spin" />
         </div>
-        <div className="flex items-center gap-3">
-          {error && (
-            <Button variant="destructive" size="sm" onClick={fetchStats} className="gap-2 rounded-xl shadow-lg shadow-red-500/20">
-              Retry Connection
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={handleExport} className="gap-2 h-11 px-5 rounded-xl bg-white/50 dark:bg-white/5 backdrop-blur-md border-white/20 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 group" disabled={loading || error}>
-            <Download size={16} className="group-hover:scale-110 transition-transform" /> 
-            <span className="text-[10px] font-black uppercase tracking-widest">{t('export_summary')}</span>
-          </Button>
-        </div>
+        <p className="text-sm font-medium text-gray-400 dark:text-white/30">{isRTL ? 'جاري تحميل البيانات...' : 'Loading data...'}</p>
       </div>
+    );
+  }
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 text-[var(--muted)] bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/20">
-          <div className="relative w-16 h-16 mb-6">
-             <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
-             <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="font-black text-lg tracking-tight text-[var(--foreground)]">Loading Intelligence...</p>
-          <p className="text-xs font-bold mt-1 opacity-60">Fetching latest clinical analytics</p>
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40">
+        <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mb-4">
+          <Activity size={24} className="text-red-500/50" />
         </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-32 text-red-500 bg-red-500/5 backdrop-blur-xl rounded-[2.5rem] border border-red-500/20">
-          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6">
-             <Activity size={32} className="opacity-50" />
-          </div>
-          <p className="font-black text-lg tracking-tight text-[var(--foreground)]">Synchronization Failed</p>
-          <p className="text-xs font-bold mt-1 mb-8 opacity-60 uppercase tracking-widest">The neural link to server was interrupted</p>
-          <Button variant="outline" onClick={fetchStats} className="rounded-xl border-red-500/30 hover:bg-red-500 hover:text-white transition-all">Reconnect Now</Button>
+        <p className="text-sm font-semibold text-gray-700 dark:text-white/80 mb-1">{isRTL ? 'فشل الاتصال' : 'Connection Failed'}</p>
+        <p className="text-xs text-gray-400 dark:text-white/30 mb-6">{isRTL ? 'تحقق من اتصالك بالإنترنت' : 'Check your internet connection'}</p>
+        <Button variant="outline" size="sm" onClick={() => fetchStats()} className="rounded-lg">
+          {isRTL ? 'إعادة المحاولة' : 'Retry'}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div 
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      {/* Header */}
+      <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+            {isRTL ? 'مرحباً بك، د. أحمد' : 'Welcome back, Dr. Ahmed'}
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-white/35 mt-1">
+            {isRTL ? 'نظرة عامة على أداء المنصة' : 'Here\'s what\'s happening with your platform'}
+          </p>
         </div>
-      ) : (
-        <>
-          {/* Quick Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card, idx) => (
-          <Card key={card.label} className="relative overflow-hidden group hover:-translate-y-2 transition-all duration-500 bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 hover:border-primary/30 p-6 rounded-[2rem]">
-            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full ${card.bg} opacity-20 blur-3xl group-hover:opacity-40 transition-all duration-700`} />
-            
-            <div className="relative flex flex-col gap-5">
-              <div className={`w-14 h-14 rounded-2xl ${card.bg} flex items-center justify-center shadow-lg shadow-black/5 group-hover:scale-110 transition-transform duration-500`}>
-                <card.icon size={28} className={card.color} />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExport}
+          className="gap-2 h-9 px-4 rounded-lg text-xs font-medium"
+        >
+          <Download size={14} /> 
+          {isRTL ? 'تصدير التقرير' : 'Export Report'}
+        </Button>
+      </motion.div>
+
+      {/* Stats Grid */}
+      <motion.div variants={item} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card, idx) => (
+          <div 
+            key={idx}
+            className="group relative bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06] p-5 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/20 transition-all duration-300 hover:-translate-y-0.5"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", card.iconBg)}>
+                <card.icon size={20} className={card.iconColor} />
               </div>
-              
-              <div>
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black text-[var(--muted)] uppercase tracking-[0.2em]">{card.label}</p>
-                  <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">+12%</span>
-                </div>
-                <p className="text-3xl font-black text-[var(--foreground)] mt-1 tracking-tight">{card.value}</p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-                  <p className="text-[10px] font-black text-[var(--muted)] uppercase tracking-widest opacity-60">{card.sub}</p>
-                </div>
+              <div className={cn(
+                "flex items-center gap-0.5 text-[11px] font-semibold px-2 py-0.5 rounded-full",
+                card.up ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" : "text-red-500 bg-red-50 dark:bg-red-500/10"
+              )}>
+                {card.up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                {card.change}
               </div>
             </div>
-          </Card>
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{card.value}</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-white/35 mt-1">{card.label}</p>
+            </div>
+            <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-white/[0.04]">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+              <p className="text-[11px] text-gray-400 dark:text-white/25">{card.sub}</p>
+            </div>
+          </div>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Main Content Area */}
-      <div className="grid gap-8 lg:grid-cols-12 items-start">
+      {/* Main Content Grid */}
+      <div className="grid gap-5 lg:grid-cols-12">
         
-        {/* Analytics Section */}
-        <div className="lg:col-span-8 space-y-8">
-           {/* Primary Chart */}
-           <Card className="p-8 bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 rounded-[2.5rem] shadow-2xl shadow-black/5">
-              <div className="flex items-center justify-between mb-10">
-                <div>
-                  <h3 className="text-lg font-black flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                      <TrendingUp size={20} />
-                    </div>
-                    {isRTL ? 'إحصائيات وتحليلات الأداء' : 'Performance Analytics'}
-                  </h3>
-                  <p className="text-xs font-bold text-[var(--muted)] mt-1 ml-13">
-                    {isRTL ? 'العيادات ضد الاستشارات الأونلاين' : 'Clinics vs. Online Consultations'}
-                  </p>
-                </div>
-                <div className="flex gap-2 bg-black/5 dark:bg-white/5 p-1 rounded-xl">
-                  <button 
-                    onClick={() => setActiveChartTab('bookings')} 
-                    className={cn(
-                      "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                      activeChartTab === 'bookings' ? "bg-white dark:bg-white/10 shadow-sm text-primary" : "text-[var(--muted)] hover:text-[var(--foreground)]"
-                    )}
-                  >
-                    {isRTL ? 'الحجوزات' : 'Bookings'}
-                  </button>
-                  <button 
-                    onClick={() => setActiveChartTab('revenue')} 
-                    className={cn(
-                      "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                      activeChartTab === 'revenue' ? "bg-white dark:bg-white/10 shadow-sm text-primary" : "text-[var(--muted)] hover:text-[var(--foreground)]"
-                    )}
-                  >
-                    {isRTL ? 'الإيرادات' : 'Revenue'}
-                  </button>
-                </div>
+        {/* Chart Section */}
+        <motion.div variants={item} className="lg:col-span-8">
+          <div className="bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06] p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                  {isRTL ? 'إحصائيات الأداء' : 'Performance Analytics'}
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-white/30 mt-0.5">
+                  {isRTL ? 'حجوزات العيادات مقابل الاستشارات الأونلاين' : 'Clinic bookings vs online consultations'}
+                </p>
               </div>
-              
-              <div className="h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  {activeChartTab === 'bookings' ? (
-                    <BarChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="6 6" vertical={false} strokeOpacity={0.05} />
-                      <XAxis 
-                        dataKey="month" 
-                        fontSize={10} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'var(--muted)', fontWeight: 800 }} 
-                      />
-                      <YAxis 
-                        fontSize={10} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'var(--muted)', fontWeight: 800 }}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          borderRadius: '20px', 
-                          border: '1px solid rgba(255,255,255,0.1)', 
-                          background: 'rgba(0,0,0,0.8)',
-                          backdropFilter: 'blur(10px)',
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                          padding: '12px 16px'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                        labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '900' }}
-                      />
-                      <Bar dataKey="clinicsBookings" name={isRTL ? "حجوزات العيادات" : "Clinic Bookings"} fill="#10b981" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="onlineBookings" name={isRTL ? "استشارات أونلاين" : "Online Consultations"} fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  ) : (
-                    <AreaChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="clinicRevenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="onlineRevenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="6 6" vertical={false} strokeOpacity={0.05} />
-                      <XAxis 
-                        dataKey="month" 
-                        fontSize={10} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'var(--muted)', fontWeight: 800 }} 
-                      />
-                      <YAxis 
-                        fontSize={10} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: 'var(--muted)', fontWeight: 800 }}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          borderRadius: '20px', 
-                          border: '1px solid rgba(255,255,255,0.1)', 
-                          background: 'rgba(0,0,0,0.8)',
-                          backdropFilter: 'blur(10px)',
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-                          padding: '12px 16px'
-                         }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                        labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '900' }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="clinicsPayments" 
-                        name={isRTL ? "إيرادات العيادات (EGP)" : "Clinic Revenue (EGP)"}
-                        stroke="#10b981" 
-                        fillOpacity={1} 
-                        fill="url(#clinicRevenueGrad)" 
-                        strokeWidth={3} 
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="onlinePayments" 
-                        name={isRTL ? "إيرادات الأونلاين (EGP)" : "Online Revenue (EGP)"}
-                        stroke="#3b82f6" 
-                        fillOpacity={1} 
-                        fill="url(#onlineRevenueGrad)" 
-                        strokeWidth={3} 
-                      />
-                    </AreaChart>
+              <div className="flex gap-1 bg-gray-100 dark:bg-white/[0.04] p-0.5 rounded-lg">
+                <button 
+                  onClick={() => setActiveChartTab('bookings')} 
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
+                    activeChartTab === 'bookings' 
+                      ? "bg-white dark:bg-white/10 shadow-sm text-gray-900 dark:text-white" 
+                      : "text-gray-500 dark:text-white/30 hover:text-gray-700 dark:hover:text-white/50"
                   )}
-                </ResponsiveContainer>
+                >
+                  {isRTL ? 'الحجوزات' : 'Bookings'}
+                </button>
+                <button 
+                  onClick={() => setActiveChartTab('revenue')} 
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-[11px] font-medium transition-all",
+                    activeChartTab === 'revenue' 
+                      ? "bg-white dark:bg-white/10 shadow-sm text-gray-900 dark:text-white" 
+                      : "text-gray-500 dark:text-white/30 hover:text-gray-700 dark:hover:text-white/50"
+                  )}
+                >
+                  {isRTL ? 'الإيرادات' : 'Revenue'}
+                </button>
               </div>
-           </Card>
-
-           {/* Tables Section */}
-           <Card className="p-0 bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 rounded-[2.5rem] shadow-2xl shadow-black/5 overflow-hidden">
-              <div className="p-8 border-b border-white/10 flex items-center justify-between bg-white/30 dark:bg-white/5">
-                <h3 className="text-lg font-black flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                    <Clock size={20} />
-                  </div>
-                  {t('incoming_queue')}
-                </h3>
-                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary/10 hover:text-primary transition-all">{t('explore_all')}</Button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] bg-white/20 dark:bg-white/5">
-                      <th className="px-8 py-5">{t('patient_identity')}</th>
-                      <th className="px-8 py-5">{t('schedule')}</th>
-                      <th className="px-8 py-5 text-right">{t('verification')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
-                    {stats?.recentAppointments?.map((apt) => {
-                      const name = apt.patientName || apt.guestName || apt.patient?.name || 'مجهول';
-                      return (
-                      <tr key={apt.id} className="group hover:bg-primary/5 transition-all duration-300">
-                        <td className="px-8 py-6">
-                           <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-blue-500/20 flex items-center justify-center font-black text-xs text-primary border border-primary/10">
-                                {name.charAt(0)}
-                              </div>
-                              <span className="font-black text-sm tracking-tight">{name}</span>
-                           </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <div className="flex flex-col">
-                            <span className="text-xs font-black text-[var(--foreground)]">{new Date(apt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider mt-1">{formatTime12Hour(apt.timeSlot, locale === 'ar')}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6 text-right">
-                          <span className={cn(
-                            "px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest inline-block shadow-sm",
-                            apt.status === 'approved' ? "bg-emerald-500 text-white shadow-emerald-500/20" :
-                            apt.status === 'pending' ? "bg-amber-500 text-white shadow-amber-500/20" : "bg-red-500 text-white shadow-red-500/20"
-                          )}>
-                            {apt.status}
-                          </span>
-                        </td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-           </Card>
-        </div>
-
-        {/* Sidebar Analytics */}
-        <div className="lg:col-span-4 space-y-8">
-           {/* Activity Bar Chart */}
-           <Card className="p-8 bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 rounded-[2.5rem] shadow-2xl shadow-black/5">
-              <h3 className="font-black text-sm flex items-center gap-2 mb-8 uppercase tracking-widest">
-                <Activity size={16} className="text-emerald-500" />
-                {t('live_pulse')}
-              </h3>
-              <div className="h-48 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats?.charts?.visitors || []}>
-                    <Bar dataKey="count" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-                    <Tooltip cursor={{ fill: 'rgba(var(--primary-rgb), 0.05)' }} content={<div className="hidden"/>} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-6 pt-6 border-t border-white/10">
-                 <p className="text-[10px] font-black text-[var(--muted)] uppercase tracking-[0.2em] mb-2 text-center">{t('system_reliability')}</p>
-                 <div className="w-full h-1.5 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: '99.9%' }}
-                      transition={{ duration: 2, ease: "easeOut" }}
-                      className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
+            </div>
+            
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {activeChartTab === 'bookings' ? (
+                  <BarChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
+                    <XAxis 
+                      dataKey="month" 
+                      fontSize={11} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontWeight: 500 }} 
                     />
-                 </div>
-              </div>
-           </Card>
+                    <YAxis 
+                      fontSize={11} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontWeight: 500 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(0,0,0,0.08)', 
+                        background: 'white',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+                        padding: '10px 14px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Bar dataKey="clinicsBookings" name={isRTL ? "العيادات" : "Clinic"} fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="onlineBookings" name={isRTL ? "أونلاين" : "Online"} fill="#10b981" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                ) : (
+                  <AreaChart data={stats?.charts?.appointments || []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="clinicGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="onlineGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.04)" />
+                    <XAxis dataKey="month" fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
+                    <YAxis fontSize={11} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 500 }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(0,0,0,0.08)', 
+                        background: 'white',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+                        padding: '10px 14px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Area type="monotone" dataKey="clinicsPayments" name={isRTL ? "إيرادات العيادات" : "Clinic Revenue"} stroke="#3b82f6" fillOpacity={1} fill="url(#clinicGrad)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="onlinePayments" name={isRTL ? "إيرادات الأونلاين" : "Online Revenue"} stroke="#10b981" fillOpacity={1} fill="url(#onlineGrad)" strokeWidth={2} />
+                  </AreaChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </motion.div>
 
-           {/* Event Stream */}
-           <Card className="p-8 bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 rounded-[2.5rem] shadow-2xl shadow-black/5">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                  {t('realtime_log')}
-                </h3>
+        {/* Right Sidebar */}
+        <motion.div variants={item} className="lg:col-span-4 space-y-5">
+          {/* Activity Pulse */}
+          <div className="bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06] p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+                {isRTL ? 'النشاط الحي' : 'Live Activity'}
+              </h3>
+            </div>
+            <div className="h-32 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats?.charts?.visitors || []}>
+                  <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Tooltip cursor={{ fill: 'rgba(99,102,241,0.05)' }} content={<div className="hidden"/>} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/[0.04]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium text-gray-400 dark:text-white/30">{isRTL ? 'معدل التوفر' : 'Uptime'}</span>
+                <span className="text-[11px] font-bold text-emerald-500">99.9%</span>
               </div>
-              <div className="space-y-8">
-                {stats?.recentEvents?.map((event, idx) => (
-                  <div key={event.id} className="relative flex gap-4 group">
-                    {idx !== (stats?.recentEvents?.length - 1) && (
-                      <div className="absolute top-8 left-4 bottom-[-32px] w-[2px] bg-white/5" />
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-white/[0.04] rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: '99.9%' }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full bg-emerald-500 rounded-full" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Events */}
+          <div className="bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06] p-5">
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
+              {isRTL ? 'آخر الأحداث' : 'Recent Events'}
+            </h3>
+            <div className="space-y-3">
+              {stats?.recentEvents?.slice(0, 5).map((event, idx) => (
+                <div key={event.id} className="flex items-center gap-3 group">
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-white/[0.03] flex items-center justify-center shrink-0 group-hover:bg-primary/5 transition-colors">
+                    {event.type.includes('click') ? (
+                      <MousePointerClick size={13} className="text-gray-400 dark:text-white/25 group-hover:text-primary transition-colors" />
+                    ) : (
+                      <Eye size={13} className="text-gray-400 dark:text-white/25 group-hover:text-primary transition-colors" />
                     )}
-                    <div className="w-8 h-8 rounded-xl bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-lg border border-white/20 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                      {event.type.includes('click') ? <MousePointerClick size={14} /> : <Eye size={14} />}
-                    </div>
-                    <div className="min-w-0 pt-1">
-                      <p className="text-[11px] font-black tracking-tight text-[var(--foreground)] truncate capitalize group-hover:text-primary transition-colors">
-                        {event.type.replace(/_/g, ' ')}
-                      </p>
-                      <p className="text-[9px] font-bold text-[var(--muted)] uppercase tracking-widest mt-1">
-                        {new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
                   </div>
-                ))}
-              </div>
-           </Card>
-        </div>
-
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium text-gray-700 dark:text-white/60 truncate capitalize">
+                      {event.type.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-[10px] text-gray-400 dark:text-white/20 mt-0.5">
+                      {new Date(event.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
-      </>
-      )}
-    </div>
+
+      {/* Recent Appointments Table */}
+      <motion.div variants={item}>
+        <div className="bg-white dark:bg-[#111b2e] rounded-2xl border border-gray-200/50 dark:border-white/[0.06] overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-white/[0.04] flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                {isRTL ? 'آخر المواعيد' : 'Recent Appointments'}
+              </h3>
+              <p className="text-xs text-gray-400 dark:text-white/30 mt-0.5">
+                {isRTL ? 'أحدث المواعيد المسجلة' : 'Latest appointment requests'}
+              </p>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-white/25 bg-gray-50 dark:bg-white/[0.02]">
+                  <th className="px-6 py-3 text-left">{isRTL ? 'المريض' : 'Patient'}</th>
+                  <th className="px-6 py-3 text-left">{isRTL ? 'التاريخ والوقت' : 'Schedule'}</th>
+                  <th className="px-6 py-3 text-left">{isRTL ? 'النوع' : 'Type'}</th>
+                  <th className="px-6 py-3 text-right">{isRTL ? 'الحالة' : 'Status'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/[0.04]">
+                {stats?.recentAppointments?.map((apt) => {
+                  const name = apt.patientName || apt.guestName || apt.patient?.name || (isRTL ? 'مجهول' : 'Unknown');
+                  return (
+                    <tr key={apt.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-blue-500/10 flex items-center justify-center text-[11px] font-bold text-primary">
+                            {name.charAt(0)}
+                          </div>
+                          <span className="text-[13px] font-medium text-gray-700 dark:text-white/70">{name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <div>
+                          <p className="text-[12px] font-medium text-gray-600 dark:text-white/50">
+                            {new Date(apt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                          <p className="text-[11px] text-gray-400 dark:text-white/25 mt-0.5">
+                            {formatTime12Hour(apt.timeSlot, locale === 'ar')}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <span className="text-[11px] font-medium text-gray-500 dark:text-white/40">
+                          {apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3.5 text-right">
+                        <span className={cn(
+                          "inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider",
+                          apt.status === 'approved' ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                          apt.status === 'pending' ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400" : 
+                          "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
+                        )}>
+                          {apt.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
