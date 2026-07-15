@@ -98,7 +98,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     <div className={cn("flex min-h-screen bg-slate-50 dark:bg-[#0b1120] transition-colors", isRTL && "font-arabic")}>
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className={cn("flex-1 flex flex-col min-h-screen transition-all", isRTL ? "lg:mr-[240px]" : "lg:ml-[240px]")}>
+      <div className={cn("flex-1 flex flex-col min-h-screen transition-all", isRTL ? "lg:mr-[250px]" : "lg:ml-[250px]")}>
         {/* Header */}
         <header className="sticky top-0 z-30 h-14 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/5 flex items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-3">

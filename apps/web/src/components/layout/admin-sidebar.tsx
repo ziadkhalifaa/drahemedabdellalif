@@ -187,7 +187,7 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <>
       <aside className={cn(
-        "fixed inset-y-0 z-40 hidden w-[250px] flex-col bg-[#0c1222] lg:flex relative overflow-hidden",
+        "fixed inset-y-0 z-40 hidden w-[250px] flex-col bg-[#0c1222] lg:flex overflow-hidden",
         isRTL ? "right-0 border-l border-white/[0.04]" : "left-0 border-r border-white/[0.04]"
       )}>
         {sidebarContent}
