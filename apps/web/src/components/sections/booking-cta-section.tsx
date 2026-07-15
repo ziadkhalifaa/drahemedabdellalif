@@ -25,7 +25,7 @@ export function BookingCTASection() {
       border: 'border-blue-500',
       glow: 'shadow-blue-500/30',
       href: '/booking',
-      badge: isAr ? 'الأكثر طلباً' : 'Most Popular',
+      badge: isAr ? 'استشارة سريعة' : 'Quick Consult',
     },
   ];
 

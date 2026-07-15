@@ -138,13 +138,9 @@ export default async function HomePage() {
                       <div className="group relative flex items-start gap-6 transition-all duration-500">
                         <div className="relative flex-shrink-0 mt-1">
                           <div className="w-[2px] h-full absolute left-1/2 -translate-x-1/2 bg-white/5 group-hover:bg-[var(--primary)]/20 transition-colors duration-500" />
-                          <motion.div
-                            animate={{ scale: [1, 1.15, 1] }}
-                            transition={{ duration: 2 + i * 0.3, repeat: Infinity, ease: 'easeInOut' }}
-                            className="w-10 h-10 rounded-full bg-[#0a192f] border border-white/10 flex items-center justify-center relative z-10 group-hover:border-[var(--primary)]/50 group-hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] transition-all duration-500"
-                          >
+                          <div className="w-10 h-10 rounded-full bg-[#0a192f] border border-white/10 flex items-center justify-center relative z-10 group-hover:border-[var(--primary)]/50 group-hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] transition-all duration-500 animate-soft-pulse" style={{ animationDelay: `${i * 0.3}s` }}>
                             <item.icon size={18} className="text-white/40 group-hover:text-[var(--primary)] transition-colors duration-500" />
-                          </motion.div>
+                          </div>
                         </div>
 
                         <div className="flex-1">
@@ -161,13 +157,9 @@ export default async function HomePage() {
 
               {/* Right: Form */}
               <FadeIn direction={isAr ? 'left' : 'right'} delay={0.2}>
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white/5 border border-white/10 backdrop-blur-md rounded-[2rem] p-8"
-                >
+                <div className="bg-white/5 border border-white/10 backdrop-blur-md rounded-[2rem] p-8 transition-transform duration-300 hover:scale-[1.01]">
                   <BookingForm />
-                </motion.div>
+                </div>
               </FadeIn>
             </div>
           </div>
