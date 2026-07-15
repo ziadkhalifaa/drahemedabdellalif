@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -105,6 +106,8 @@ function timeAgo(dateStr: string) {
 
 export default function AuditLogsPage() {
   const { token } = useAuth();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -192,12 +195,12 @@ export default function AuditLogsPage() {
       <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+            <Search size={15} className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className={cn("w-full h-9 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all", isRTL ? "pr-9 pl-3" : "pl-9 pr-3")}
               placeholder="Search by action, user, or IP..."
             />
           </div>
@@ -279,7 +282,7 @@ export default function AuditLogsPage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Resource</span>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">User</span>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Time</span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25 text-right">Details</span>
+              <span className={cn("text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25", isRTL ? "text-left" : "text-right")}>Details</span>
             </div>
 
             {/* Rows */}

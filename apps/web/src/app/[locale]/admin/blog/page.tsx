@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
@@ -19,6 +20,8 @@ const fadeUp = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
 export default function AdminBlogPage() {
   const { token } = useAuth();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -110,9 +113,9 @@ export default function AdminBlogPage() {
       metaTitleAr: post.metaTitleAr || '', metaTitleEn: post.metaTitleEn || '',
       metaDescriptionAr: post.metaDescriptionAr || '', metaDescriptionEn: post.metaDescriptionEn || '',
       keywords: post.keywords || '',
-      status: (post.status as any) || 'draft',
-      featuredImage: (post as any).featuredImage || '',
-      showOnHomepage: (post as any).showOnHomepage || false
+      status: post.status || 'draft',
+      featuredImage: post.featuredImage || '',
+      showOnHomepage: post.showOnHomepage || false
     });
     setShowForm(true);
   };
@@ -472,8 +475,8 @@ export default function AdminBlogPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="w-16 h-11 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 shrink-0 border border-slate-200/60 dark:border-white/5">
-                            {(post as any).featuredImage ? (
-                              <img src={getMediaUrl((post as any).featuredImage)} className="w-full h-full object-cover" alt="" />
+                            {post.featuredImage ? (
+                              <img src={getMediaUrl(post.featuredImage)} className="w-full h-full object-cover" alt="" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-white/10"><ImageIcon size={18} /></div>
                             )}

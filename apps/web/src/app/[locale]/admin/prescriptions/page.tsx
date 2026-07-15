@@ -85,9 +85,9 @@ export default function PrescriptionsPage() {
       {/* Search + Stats */}
       <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" size={15} />
+          <Search className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} size={15} />
           <input type="text" placeholder={isRTL ? 'بحث باسم المريض، التشخيص، أو الإيميل...' : 'Search by patient name, diagnosis, or email...'}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all"
+            className={cn("w-full py-2 rounded-xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all", isRTL ? "pr-9 pl-4" : "pl-9 pr-4")}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-white/35">
@@ -127,7 +127,7 @@ export default function PrescriptionsPage() {
                     <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500/15 transition-colors">
                       <UserIcon size={18} />
                     </div>
-                    <div className="text-right">
+                    <div className={cn(isRTL ? "text-left" : "text-right")}>
                       <p className="text-[10px] text-slate-400 dark:text-white/25 uppercase font-bold">{isRTL ? 'التاريخ' : 'Date'}</p>
                       <p className="text-[12px] font-bold text-slate-900 dark:text-white mt-0.5">
                         {new Date(prescription.createdAt).toLocaleDateString(isRTL ? 'ar-EG' : 'en-GB', { month: 'short', day: 'numeric' })}

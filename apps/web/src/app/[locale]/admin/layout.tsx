@@ -143,7 +143,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               >
                 <Bell size={15} className="text-slate-400 dark:text-slate-500" />
                 {notifCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold">
+                  <span className={cn("absolute -top-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold", isRTL ? "-left-0.5" : "-right-0.5")}>
                     {notifCount > 99 ? '99+' : notifCount}
                   </span>
                 )}
@@ -155,7 +155,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-2xl shadow-slate-200/60 dark:shadow-black/40 overflow-hidden z-50"
+                    className={cn("absolute mt-2 w-72 bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-2xl shadow-slate-200/60 dark:shadow-black/40 overflow-hidden z-50", isRTL ? "left-0" : "right-0")}
                   >
                     <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                       <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">{isRTL ? 'الإشعارات' : 'Notifications'}</h3>

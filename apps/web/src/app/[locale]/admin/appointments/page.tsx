@@ -191,7 +191,7 @@ export default function AdminAppointmentsPage() {
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-2 mr-2">
+            <div className={cn("flex items-center gap-2", isRTL ? "ml-2" : "mr-2")}>
               <span className="text-[11px] font-bold text-indigo-500">{selectedIds.size} {isRTL ? 'محدد' : 'selected'}</span>
               <button onClick={() => bulkUpdateStatus(AppointmentStatus.APPROVED)} disabled={bulkLoading}
                 className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[11px] font-bold hover:bg-emerald-600 transition-all disabled:opacity-50 flex items-center gap-1">
@@ -243,10 +243,10 @@ export default function AdminAppointmentsPage() {
             className="bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-xl px-3 py-2 text-[12px] text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 [color-scheme:dark]" />
         )}
         <div className="relative flex-1 max-w-sm">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+          <Search size={15} className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} />
           <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             placeholder={isRTL ? 'بحث بالاسم، الإيميل، أو الهاتف...' : 'Search by name, email, or phone...'}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all" />
+            className={cn("w-full py-2 rounded-xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all", isRTL ? "pr-9 pl-4" : "pl-9 pr-4")} />
         </div>
       </motion.div>
 
@@ -333,8 +333,8 @@ export default function AdminAppointmentsPage() {
                           "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
                         )}>{apt.status}</span>
                       </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className={cn("px-4 py-3.5", isRTL ? "text-left" : "text-right")}>
+                        <div className={cn("flex items-center gap-1", isRTL ? "justify-start" : "justify-end")}>
                           {apt.status === AppointmentStatus.PENDING && (
                             <>
                               <button onClick={() => updateStatus(apt.id, AppointmentStatus.APPROVED)} className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors" title={isRTL ? 'قبول' : 'Approve'}><Check size={15} /></button>

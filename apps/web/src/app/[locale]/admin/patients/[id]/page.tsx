@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { Button, Input } from '@/components/ui';
@@ -15,6 +16,8 @@ import { cn } from '@/lib/utils';
 export default function PatientProfilePage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const { token } = useAuth();
   const tCommon = useTranslations('common');
   const tAdmin = useTranslations('admin.reports');
@@ -242,7 +245,7 @@ export default function PatientProfilePage() {
               onClick={() => router.back()}
               className="rounded-xl font-bold text-[13px] text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
             >
-              <ArrowRight size={15} className="ml-1.5" /> رجوع
+              <ArrowRight size={15} className={cn(isRTL ? "mr-1.5 rotate-180" : "ml-1.5")} /> رجوع
             </Button>
           </div>
         </div>
@@ -459,7 +462,7 @@ export default function PatientProfilePage() {
                     <p className="text-[13px] font-medium leading-relaxed whitespace-pre-wrap text-slate-700 dark:text-white/80">{note.content}</p>
                     <button
                       onClick={() => handleDeleteNote(note.id)}
-                      className="absolute top-4 right-4 md:opacity-0 group-hover:opacity-100 transition-opacity p-2 text-red-500 hover:bg-red-500/10 rounded-xl"
+                      className={cn("absolute top-4 md:opacity-0 group-hover:opacity-100 transition-opacity p-2 text-red-500 hover:bg-red-500/10 rounded-xl", isRTL ? "left-4" : "right-4")}
                     >
                       <Trash2 size={15} />
                     </button>
@@ -499,7 +502,7 @@ export default function PatientProfilePage() {
 
               <form onSubmit={handleUploadSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35 ml-1">Report Title</label>
+                  <label className={cn("text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35", isRTL ? "mr-1" : "ml-1")}>Report Title</label>
                   <Input
                     required
                     value={uploadData.title}
@@ -510,7 +513,7 @@ export default function PatientProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35 ml-1">Description (Optional)</label>
+                  <label className={cn("text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35", isRTL ? "mr-1" : "ml-1")}>Description (Optional)</label>
                   <textarea
                     value={uploadData.description}
                     onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
@@ -520,7 +523,7 @@ export default function PatientProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35 ml-1">Select File</label>
+                  <label className={cn("text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-white/35", isRTL ? "mr-1" : "ml-1")}>Select File</label>
 
                   <div className="relative border-2 border-dashed border-slate-200/60 dark:border-white/5 hover:border-indigo-500/50 rounded-xl p-8 text-center transition-all bg-slate-50 dark:bg-white/[0.02] group cursor-pointer">
                     <input
@@ -687,7 +690,7 @@ export default function PatientProfilePage() {
                               const newMeds = prescriptionData.medications.filter((_, i) => i !== index);
                               setPrescriptionData({ ...prescriptionData, medications: newMeds });
                             }}
-                            className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                            className={cn("absolute -top-2 h-6 w-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm", isRTL ? "-left-2" : "-right-2")}
                           >
                             <Trash2 size={11} />
                           </button>

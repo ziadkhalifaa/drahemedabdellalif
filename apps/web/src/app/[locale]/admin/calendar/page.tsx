@@ -101,16 +101,14 @@ export default function AdminCalendarPage() {
   const AptChip = ({ apt, compact = false }: { apt: Appointment; compact?: boolean }) => {
     const s = getStatusStyle(apt.status);
     const name = apt.guestName || apt.patient?.name || 'Unknown';
-    const clinicName = (apt as any).clinic ? (isRTL ? (apt as any).clinic.nameAr : (apt as any).clinic.nameEn) : null;
     return (
       <button onClick={(e) => { e.stopPropagation(); setSelectedApt(apt); }}
-        className={cn("w-full text-left rounded-lg border px-2 py-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] truncate", s.bg, s.border, compact ? 'text-[10px]' : 'text-[11px]', 'font-semibold')}>
+        className={cn("w-full rounded-lg border px-2 py-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] truncate", s.bg, s.border, compact ? 'text-[10px]' : 'text-[11px]', 'font-semibold', isRTL ? "text-right" : "text-left")}>
         <div className={cn("flex items-center gap-1", s.text)}>
           {apt.type === AppointmentType.ONLINE && <Video size={9} className="shrink-0" />}
           <span className="truncate">{compact ? name.split(' ')[0] : name}</span>
-          {!compact && <span className="ml-auto shrink-0 opacity-70">{formatTime12Hour(apt.timeSlot, false)}</span>}
+          {!compact && <span className={cn("shrink-0 opacity-70", isRTL ? "mr-auto" : "ml-auto")}>{formatTime12Hour(apt.timeSlot, false)}</span>}
         </div>
-        {!compact && clinicName && <div className="text-[9px] opacity-50 truncate mt-0.5">{clinicName}</div>}
       </button>
     );
   };
@@ -185,7 +183,7 @@ export default function AdminCalendarPage() {
               <div className="text-slate-900 dark:text-white font-bold">{DAYS_EN[currentDate.getDay()]}</div>
               <div className="text-slate-400 dark:text-white/40 text-sm">{MONTHS_EN[currentDate.getMonth()]} {currentDate.getFullYear()}</div>
             </div>
-            <div className="ml-auto"><span className="text-2xl font-bold text-slate-800 dark:text-white/80">{dayApts.length}</span><span className="text-slate-400 dark:text-white/30 text-sm ml-1">{isRTL ? 'مواعيد' : 'appts'}</span></div>
+            <div className={cn(isRTL ? "mr-auto" : "ml-auto")}><span className="text-2xl font-bold text-slate-800 dark:text-white/80">{dayApts.length}</span><span className={cn("text-slate-400 dark:text-white/30 text-sm", isRTL ? "mr-1" : "ml-1")}>{isRTL ? 'مواعيد' : 'appts'}</span></div>
           </div>
           {dayApts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-slate-300 dark:text-white/20">
@@ -200,14 +198,14 @@ export default function AdminCalendarPage() {
                 const phone = apt.guestPhone || apt.patient?.phone || '—';
                 const email = apt.guestEmail || apt.patient?.email || '—';
                 return (
-                  <button key={apt.id} onClick={() => setSelectedApt(apt)} className={cn("w-full text-left rounded-xl border p-4 transition-all hover:scale-[1.01] active:scale-[0.99]", s.bg, s.border)}>
+                  <button key={apt.id} onClick={() => setSelectedApt(apt)} className={cn("w-full rounded-xl border p-4 transition-all hover:scale-[1.01] active:scale-[0.99]", s.bg, s.border, isRTL ? "text-right" : "text-left")}>
                     <div className="flex items-start gap-4">
                       <div className={cn("w-2 self-stretch rounded-full shrink-0", s.solid)} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className={cn("font-bold text-sm", s.text)}>{name}</span>
                           {apt.type === AppointmentType.ONLINE && <span className="flex items-center gap-1 text-[10px] font-semibold bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-lg px-2 py-0.5"><Video size={9} /> Online</span>}
-                          <span className={cn("ml-auto text-xs font-bold px-2 py-0.5 rounded-lg", s.bg, s.text)}>{apt.status}</span>
+                          <span className={cn("text-xs font-bold px-2 py-0.5 rounded-lg", s.bg, s.text, isRTL ? "ml-auto" : "mr-auto")}>{apt.status}</span>
                         </div>
                         <div className="flex items-center gap-4 text-slate-400 dark:text-white/40 text-[11px] font-medium">
                           <span className="flex items-center gap-1"><Clock size={10} />{formatTime12Hour(apt.timeSlot, true)}</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
 import { toast } from 'sonner';
@@ -9,6 +10,8 @@ import { cn } from '@/lib/utils';
 
 export default function AvailabilityCalendarPage() {
   const { token } = useAuth();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [blockedSlots, setBlockedSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,7 +137,7 @@ export default function AvailabilityCalendarPage() {
             </div>
             Availability Calendar
           </h1>
-          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-1.5 ml-12">
+          <p className={cn("text-[13px] text-slate-500 dark:text-white/35 mt-1.5", isRTL ? "mr-12" : "ml-12")}>
             Block days or individual time slots when you&apos;re unavailable.
           </p>
         </div>
@@ -217,7 +220,7 @@ export default function AvailabilityCalendarPage() {
                   </div>
                 )}
                 {blockedCount > 0 && !blocked && (
-                  <div className="absolute bottom-2 left-2">
+                  <div className={cn("absolute bottom-2", isRTL ? "right-2" : "left-2")}>
                     <span className="text-[9px] font-bold text-orange-500">{blockedCount} slot(s)</span>
                   </div>
                 )}
@@ -285,7 +288,7 @@ export default function AvailabilityCalendarPage() {
           <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 w-full max-w-md p-6 space-y-5 relative shadow-2xl">
             <button
               onClick={() => setShowBlockModal(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-white/25 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+              className={cn("absolute top-4 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-white/25 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all", isRTL ? "left-4" : "right-4")}
             >
               <X size={16} />
             </button>

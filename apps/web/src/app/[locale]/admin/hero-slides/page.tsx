@@ -29,6 +29,7 @@ interface HeroSlide {
 export default function AdminHeroSlidesPage() {
   const { token } = useAuth();
   const locale = useLocale();
+  const isRTL = locale === 'ar';
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -275,7 +276,7 @@ export default function AdminHeroSlidesPage() {
                       <ImageIcon size={32} className="text-slate-300 dark:text-white/10" />
                     </div>
                   )}
-                  <div className="absolute top-3 left-3 flex gap-1.5">
+                  <div className={cn("absolute top-3 flex gap-1.5", isRTL ? "right-3" : "left-3")}>
                     {slide.isActive ? (
                       <span className="bg-emerald-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-lg flex items-center gap-1">
                         <CheckCircle2 size={11} /> Active

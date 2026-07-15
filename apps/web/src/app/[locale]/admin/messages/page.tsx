@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import type { ContactMessage } from '@dr-ahmed/shared';
@@ -11,6 +12,8 @@ import { toast } from 'sonner';
 
 export default function AdminMessagesPage() {
   const { token } = useAuth();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -153,7 +156,7 @@ export default function AdminMessagesPage() {
         <button
           onClick={() => setFilter('all')}
           className={cn(
-            "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+            "bg-white dark:bg-[#111827] rounded-2xl border p-4 transition-all",
             filter === 'all' ? "border-indigo-500/30 dark:border-indigo-500/20 shadow-md shadow-indigo-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
           )}
         >
@@ -163,7 +166,7 @@ export default function AdminMessagesPage() {
         <button
           onClick={() => setFilter('unread')}
           className={cn(
-            "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+            "bg-white dark:bg-[#111827] rounded-2xl border p-4 transition-all",
             filter === 'unread' ? "border-indigo-500/30 dark:border-indigo-500/20 shadow-md shadow-indigo-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
           )}
         >
@@ -173,7 +176,7 @@ export default function AdminMessagesPage() {
         <button
           onClick={() => setFilter('read')}
           className={cn(
-            "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+            "bg-white dark:bg-[#111827] rounded-2xl border p-4 transition-all",
             filter === 'read' ? "border-indigo-500/30 dark:border-indigo-500/20 shadow-md shadow-indigo-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
           )}
         >
@@ -185,16 +188,16 @@ export default function AdminMessagesPage() {
       {/* Search */}
       <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-4">
         <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+          <Search size={15} className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            className={cn("w-full h-9 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all", isRTL ? "pr-9 pl-3" : "pl-9 pr-3")}
             placeholder="Search by name, email, phone, or message..."
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <button onClick={() => setSearch('')} className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600", isRTL ? "left-3" : "right-3")}>
               <X size={14} />
             </button>
           )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { Card, Button, Input } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api, getMediaUrl } from '@/lib/api';
@@ -13,6 +14,8 @@ import { cn } from '@/lib/utils';
 
 export default function AdminMediaPage() {
   const { token } = useAuth();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -376,11 +379,11 @@ export default function AdminMediaPage() {
                   </button>
                 </div>
 
-                <div className="absolute top-3 left-3 px-3 py-1 rounded-lg bg-black/40 backdrop-blur-md text-white text-[11px] font-bold border border-white/10">
+                <div className={cn("absolute top-3 px-3 py-1 rounded-lg bg-black/40 backdrop-blur-md text-white text-[11px] font-bold border border-white/10", isRTL ? "right-3" : "left-3")}>
                   {item.categoryEn || 'Uncategorized'}
                 </div>
 
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-indigo-500/90 backdrop-blur-md text-white text-[10px] font-bold uppercase">
+                <div className={cn("absolute top-3 px-2.5 py-1 rounded-lg bg-indigo-500/90 backdrop-blur-md text-white text-[10px] font-bold uppercase", isRTL ? "left-3" : "right-3")}>
                   {item.type}
                 </div>
               </div>

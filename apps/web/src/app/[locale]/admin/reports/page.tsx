@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
@@ -20,6 +20,8 @@ interface Patient {
 export default function AdminReportsPage() {
   const t = useTranslations('admin.reports');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const searchParam = searchParams.get('search');
@@ -199,7 +201,7 @@ export default function AdminReportsPage() {
               {t('title', { fallback: 'Medical Reports Upload' })}
             </h1>
           </div>
-          <p className="text-[13px] text-slate-500 dark:text-white/35 ml-[46px]">
+          <p className={cn("text-[13px] text-slate-500 dark:text-white/35", isRTL ? "mr-[46px]" : "ml-[46px]")}>
             {t('subtitle', { fallback: 'Upload lab results, prescriptions, or medical reports for your patients.' })}
           </p>
         </div>
@@ -218,18 +220,18 @@ export default function AdminReportsPage() {
             </span>
           </div>
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" size={15} />
+            <Search className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} size={15} />
             <Input 
               placeholder={t('searchPlaceholder')} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 h-10 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-[13px] placeholder:text-slate-400 dark:placeholder:text-white/25 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+              className={cn("h-10 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-[13px] placeholder:text-slate-400 dark:placeholder:text-white/25 focus:border-indigo-500/50 focus:ring-indigo-500/20", isRTL ? "pr-9" : "pl-9")}
             />
           </div>
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left whitespace-nowrap">
+          <table className={cn("w-full whitespace-nowrap", isRTL ? "text-right" : "text-left")}>
             <thead>
               <tr className="border-b border-slate-200/60 dark:border-white/5">
                 <th className="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">
@@ -568,7 +570,7 @@ export default function AdminReportsPage() {
                               const newMeds = prescriptionData.medications.filter((_, i) => i !== index);
                               setPrescriptionData({ ...prescriptionData, medications: newMeds });
                             }}
-                            className="absolute -top-2 -right-2 md:top-3 md:right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                            className={cn("absolute -top-2 p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100", isRTL ? "-left-2 md:top-3 md:left-3" : "-right-2 md:top-3 md:right-3")}
                           >
                             <Trash2 size={13} />
                           </button>

@@ -155,7 +155,7 @@ export default function WorkingHoursPage() {
             </div>
             {isRTL ? 'إدارة المواعيد' : 'Schedule Management'}
           </h1>
-          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-1.5 ml-12">
+          <p className={cn("text-[13px] text-slate-500 dark:text-white/35 mt-1.5", isRTL ? "mr-12" : "ml-12")}>
             {isRTL
               ? 'تحكم في أوقات العمل الأسبوعية، وقم بإضافة استثناءات وحجب لأوقات محددة.'
               : 'Control your weekly working hours and add exceptions to block specific times.'}
