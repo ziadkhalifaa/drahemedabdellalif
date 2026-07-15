@@ -8,7 +8,8 @@ import { WhatsAppButton } from '@/components/layout/whatsapp-button';
 import { Section, SectionHeader } from '@/components/ui';
 import { Heart } from 'lucide-react';
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'testimonials' });
   return {
     title: t('tabSuccessStories'),
@@ -16,7 +17,8 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   };
 }
 
-export default async function SuccessStoriesPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function SuccessStoriesPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations('testimonials');
   
   let stories = [];
