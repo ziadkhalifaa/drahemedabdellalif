@@ -9,14 +9,14 @@ import { Link } from '@/i18n/routing';
 import {
   Calendar, FileText, User as UserIcon, LogOut, Video,
   Clock, Pill, History, LayoutDashboard, HeartPulse, Activity, Star,
-  ArrowRight, ArrowLeft, Bell, Shield, MapPin, ChevronRight,
-  TrendingUp, Download, Sparkles, Award, BarChart3, AlertCircle,
-  RefreshCw, CheckCircle, XCircle, Hourglass, Scissors
+  ArrowRight, ArrowLeft, MapPin, ChevronRight,
+  Download, Sparkles, BarChart3, AlertCircle,
+  CheckCircle, XCircle, Hourglass
 } from 'lucide-react';
 import { cn, formatTime12Hour } from '@/lib/utils';
 import { useLocale } from 'next-intl';
 import { useState, useEffect, Suspense, useMemo } from 'react';
-import { api } from '@/lib/api';
+import { api, getMediaUrl } from '@/lib/api';
 import { useRouter } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -24,7 +24,7 @@ import { MedicalTimeline } from '@/components/dashboard/medical-timeline';
 import { useAuth } from '@/context/auth-context';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, AreaChart, Area
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 
 function DashboardContent() {
@@ -166,7 +166,7 @@ function DashboardContent() {
           <div className="relative w-20 h-20">
             <div className="absolute inset-0 border-[3px] border-indigo-200 dark:border-indigo-800/40 rounded-full" />
             <div className="absolute inset-0 border-[3px] border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            <div className="absolute inset-3 border-2 border-cyan-400 border-b-transparent rounded-full animate-spin -reverse" />
+            <div className="absolute inset-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin animation-delay-500" />
           </div>
           <div className="text-center">
             <p className="text-sm font-bold text-slate-600 dark:text-white/60">{t('subtitle')}</p>
@@ -602,9 +602,9 @@ function DashboardContent() {
                                     <p className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{formatDateStr(report.createdAt)}</p>
                                   </div>
                                 </div>
-                                <Link href={`/dashboard/reports`} className="shrink-0 ml-2 w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-500/10 hover:text-violet-500 transition-all">
+                                <a href={report.fileUrl ? getMediaUrl(report.fileUrl) : '/dashboard/reports'} target="_blank" rel="noopener noreferrer" className="shrink-0 ltr:ml-2 rtl:mr-2 w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-100 dark:hover:bg-violet-500/10 hover:text-violet-500 transition-all">
                                   <Download size={13} />
-                                </Link>
+                                </a>
                               </motion.div>
                             ))}
                           </div>
