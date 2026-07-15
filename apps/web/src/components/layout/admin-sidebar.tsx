@@ -5,7 +5,7 @@ import { useAuth } from './admin-layout';
 import {
   LogOut, LayoutDashboard, Calendar, CalendarDays, FileText,
   Star, X, Image, Settings, Users, Edit3,
-  Clock, Mail, CreditCard, Stethoscope, Pill, FileBarChart, Newspaper
+  Clock, Mail, CreditCard, Stethoscope, Pill, FileBarChart, Newspaper, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,7 @@ const navSections = [
       { href: '/admin/reports', icon: FileBarChart, labelKey: 'reports' },
       { href: '/admin/editor', icon: Edit3, labelKey: 'live_editor' },
       { href: '/admin/working-hours', icon: Clock, labelKey: 'working_hours' },
+      { href: '/admin/audit-logs', icon: Shield, labelKey: 'audit_logs' },
       { href: '/admin/settings', icon: Settings, labelKey: 'settings' },
     ]
   }
@@ -69,6 +70,7 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
     'calendar_view': isRTL ? 'التقويم' : 'Calendar',
     'prescriptions': isRTL ? 'الوصفات الطبية' : 'Prescriptions',
     'reports': isRTL ? 'التقارير' : 'Reports',
+    'audit_logs': isRTL ? 'سجل النشاط' : 'Audit Logs',
   };
 
   const sectionLabels = [

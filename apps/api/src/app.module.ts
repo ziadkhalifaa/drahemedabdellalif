@@ -25,6 +25,7 @@ import { TechniquesModule } from './modules/techniques/techniques.module';
 
 import { RemindersModule } from './modules/reminders/reminders.module';
 import { HealthModule } from './modules/health/health.module';
+import { AuditLogsController } from './common/audit-logs.controller';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { HealthModule } from './modules/health/health.module';
     RemindersModule,
     HealthModule,
   ],
+  controllers: [AuditLogsController],
   providers: [
     {
       provide: APP_GUARD,
