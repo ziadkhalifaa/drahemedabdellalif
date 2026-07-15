@@ -13,6 +13,9 @@ export class AnalyticsService {
     const [
       totalAppointments,
       pendingAppointments,
+      approvedAppointments,
+      completedAppointments,
+      cancelledAppointments,
       totalPosts,
       publishedPosts,
       totalMessages,
@@ -29,6 +32,9 @@ export class AnalyticsService {
     ] = await Promise.all([
       this.prisma.appointment.count(),
       this.prisma.appointment.count({ where: { status: 'pending' } }),
+      this.prisma.appointment.count({ where: { status: 'approved' } }),
+      this.prisma.appointment.count({ where: { status: 'completed' } }),
+      this.prisma.appointment.count({ where: { status: 'cancelled' } }),
       this.prisma.blogPost.count(),
       this.prisma.blogPost.count({ where: { status: 'published' } }),
       this.prisma.contactMessage.count(),
@@ -138,7 +144,7 @@ export class AnalyticsService {
 
     return {
       overview: {
-        appointments: { total: totalAppointments, pending: pendingAppointments },
+        appointments: { total: totalAppointments, pending: pendingAppointments, approved: approvedAppointments, completed: completedAppointments, cancelled: cancelledAppointments },
         blog: { total: totalPosts, published: publishedPosts },
         messages: { total: totalMessages, unread: unreadMessages },
         testimonials: { total: totalTestimonials, approved: approvedTestimonials },

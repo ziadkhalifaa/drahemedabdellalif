@@ -1,25 +1,29 @@
-import { Controller, Get, Post, Delete, Param, Body, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Query, Req, UseGuards, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ReportsService } from './reports.service';
 import { RolesGuard, Roles } from '../../common/decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import { CreateReportDto } from './dto/create-report.dto';
 
-@UseGuards(AuthGuard('jwt'))
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('my')
   async getMyReports(@Req() req: any) {
     return this.reportsService.getMyReports(req.user.id);
   }
 
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'patient')
   @Get('by-appointment/:appointmentId')
   async getByAppointment(@Param('appointmentId') appointmentId: string) {
     return this.reportsService.findByAppointment(appointmentId);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   async getReportById(@Param('id') id: string) {
     return this.reportsService.findById(id);
@@ -33,10 +37,11 @@ export class ReportsController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'patient')
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
-    @Body() body: { title: string; patientId: string; description?: string; appointmentId?: string },
+    @Body() body: CreateReportDto,
     @Req() req: any,
     @UploadedFile(
       new ParseFilePipe({
@@ -50,9 +55,9 @@ export class ReportsController {
   ) {
     const userRole = req.user.role;
     const patientId = userRole === 'patient' ? req.user.id : body.patientId;
-    
+
     if (!patientId) {
-      throw new Error('Patient ID is required');
+      throw new BadRequestException('Patient ID is required');
     }
 
     return this.reportsService.create({ ...body, patientId }, file);

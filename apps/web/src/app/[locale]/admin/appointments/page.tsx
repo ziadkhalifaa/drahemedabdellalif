@@ -97,7 +97,7 @@ export default function AdminAppointmentsPage() {
       Time: formatTime12Hour(a.timeSlot, false),
       Type: a.type,
       Status: a.status,
-      Clinic: a.clinic ? (isRTL ? a.clinic.nameAr : a.clinic.nameEn) : '—',
+      Clinic: a.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic'),
     })), 'Appointments_Report');
     toast.success(isRTL ? 'تم التصدير' : 'Exported');
   };
@@ -314,16 +314,9 @@ export default function AdminAppointmentsPage() {
                         </p>
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="flex flex-col gap-1">
-                          <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-md w-fit", apt.type === 'ONLINE' ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40")}>
-                            {apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}
-                          </span>
-                          {apt.clinic && (
-                            <span className="text-[10px] text-slate-400 dark:text-white/20">
-                              {isRTL ? apt.clinic.nameAr : apt.clinic.nameEn}
-                            </span>
-                          )}
-                        </div>
+                        <span className={cn("inline-flex text-[11px] font-bold px-2 py-0.5 rounded-md", apt.type === 'ONLINE' ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400" : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40")}>
+                          {apt.type === 'ONLINE' ? (isRTL ? 'أونلاين' : 'Online') : (isRTL ? 'عيادة' : 'Clinic')}
+                        </span>
                       </td>
                       <td className="px-4 py-3.5">
                         <span className={cn(

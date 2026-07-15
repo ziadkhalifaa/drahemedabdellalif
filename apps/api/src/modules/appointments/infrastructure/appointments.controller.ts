@@ -8,7 +8,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { AppointmentsService } from '../application/appointments.service';
 import { AppointmentReminderService } from '../application/appointment-reminder.service';
 import { RolesGuard, Roles } from '../../../common/decorators';
-import { AppointmentStatus, AppointmentType } from '@dr-ahmed/shared';
+import { AppointmentStatus } from '@dr-ahmed/shared';
+import { CreateAppointmentDto } from '../application/dto/create-appointment.dto';
+import { CreateReviewDto } from '../application/dto/create-review.dto';
 
 @Controller('appointments')
 export class AppointmentsController {
@@ -29,20 +31,7 @@ export class AppointmentsController {
   }
 
   @Post()
-  async create(@Body() body: {
-    patientId?: string;
-    guestName?: string;
-    guestPhone?: string;
-    guestEmail?: string;
-    type: AppointmentType;
-    date: string;
-    timeSlot: string;
-    notes?: string;
-    paymentMethod?: string;
-    paymentSenderNum?: string;
-    paymentProofUrl?: string;
-    depositAmount?: number;
-  }) {
+  async create(@Body() body: CreateAppointmentDto) {
     return this.appointmentsService.create(body);
   }
 
@@ -136,7 +125,7 @@ export class AppointmentsController {
   @Post(':id/review')
   async createReview(
     @Param('id') id: string,
-    @Body() body: { rating: number; comment?: string },
+    @Body() body: CreateReviewDto,
     @Req() req: any
   ) {
     return this.appointmentsService.createReview(id, req.user.id, body.rating, body.comment);

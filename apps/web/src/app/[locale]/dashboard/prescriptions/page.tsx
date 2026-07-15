@@ -216,7 +216,7 @@ export default function PrescriptionsPage() {
                                   </div>
                                   <div>
                                     <h4 className="font-bold text-[14px] text-slate-800 dark:text-white/80">{med.name}</h4>
-                                    <p className="text-[13px] font-medium text-slate-500 dark:text-white/40 mt-0.5">{med.dosage} — {med.frequency}</p>
+                                    <p className="text-[13px] font-medium text-slate-500 dark:text-white/40 mt-0.5">{med.dosage}{med.frequency ? ` — ${med.frequency}` : ''}</p>
                                     {med.duration && <p className="text-[11px] text-slate-400 dark:text-white/30 mt-0.5">{med.duration}</p>}
                                   </div>
                                 </div>
