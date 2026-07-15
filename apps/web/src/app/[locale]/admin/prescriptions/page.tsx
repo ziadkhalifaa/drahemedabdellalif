@@ -3,16 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/components/layout/admin-layout';
-import { Card, Button } from '@/components/ui';
 import { api } from '@/lib/api';
-import { 
-  FileText, Plus, Search, Filter, 
-  Download, Eye, Printer, Calendar,
-  User as UserIcon, Activity
-} from 'lucide-react';
+import { FileText, Plus, Search, Eye, Printer, Calendar, User as UserIcon, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
+};
 
 export default function PrescriptionsPage() {
   const t = useTranslations('admin');
@@ -42,135 +42,146 @@ export default function PrescriptionsPage() {
     fetchPrescriptions();
   }, [fetchPrescriptions]);
 
-  const filteredPrescriptions = prescriptions.filter(p => 
+  const filteredPrescriptions = prescriptions.filter(p =>
     p.patient?.name?.toLowerCase().includes(search.toLowerCase()) ||
     p.diagnosisAr?.includes(search) ||
     p.diagnosisEn?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="space-y-10 pb-20 relative">
-      {/* Decorative Background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -mr-48 -mt-24 pointer-events-none" />
-
+    <div className="space-y-6 pb-20">
       {/* Header */}
-      <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="show"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
         <div>
-          <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-               <FileText size={24} />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+              <FileText size={20} />
             </div>
             الروشتات الرقمية
           </h1>
-          <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-[0.2em] mt-2 opacity-70">
+          <p className="text-[12px] text-slate-500 dark:text-white/35 mt-1.5 mr-[52px]">
             إدارة وطباعة الوصفات الطبية للمرضى
           </p>
         </div>
-        
-        <Link href="/admin/appointments">
-          <Button className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 gap-3 group transition-all duration-500 hover:-translate-y-1">
-            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-500" />
-            <span className="font-black uppercase tracking-widest text-xs">إضافة روشتة جديدة</span>
-          </Button>
-        </Link>
-      </div>
 
-      {/* Filters & Search */}
-      <Card className="p-4 bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 rounded-[2rem] shadow-2xl shadow-black/5">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)] group-focus-within:text-primary transition-colors" size={18} />
-            <input 
-              type="text" 
-              placeholder="البحث باسم المريض أو التشخيص..."
-              className="w-full h-12 pl-12 pr-4 rounded-xl bg-black/5 dark:bg-white/5 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-white/10 outline-none transition-all font-bold text-sm"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" className="h-12 px-6 rounded-xl border-white/20 bg-white/50 dark:bg-white/5 backdrop-blur-md gap-2">
-            <Filter size={18} />
-            <span className="font-bold">تصفية</span>
-          </Button>
+        <Link href="/admin/appointments">
+          <button className="h-10 px-6 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[13px] font-semibold shadow-lg shadow-indigo-500/20 flex items-center gap-2 transition-all duration-200 hover:shadow-xl hover:shadow-indigo-500/30">
+            <Plus size={16} />
+            إضافة روشتة جديدة
+          </button>
+        </Link>
+      </motion.div>
+
+      {/* Search */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="show"
+        transition={{ delay: 0.05 }}
+        className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-4"
+      >
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" size={16} />
+          <input
+            type="text"
+            placeholder="البحث باسم المريض أو التشخيص..."
+            className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      </Card>
+      </motion.div>
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 text-[var(--muted)] bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/20">
-          <div className="relative w-16 h-16 mb-6">
-             <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
-             <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="font-black text-lg tracking-tight text-[var(--foreground)]">جاري جلب البيانات...</p>
-        </div>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          transition={{ delay: 0.1 }}
+          className="flex flex-col items-center justify-center py-24 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5"
+        >
+          <div className="w-10 h-10 border-[3px] border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4" />
+          <p className="text-[13px] font-semibold text-slate-900 dark:text-white">جاري جلب البيانات...</p>
+        </motion.div>
       ) : filteredPrescriptions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 bg-white/40 dark:bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/20">
-           <div className="w-20 h-20 bg-gray-100 dark:bg-white/5 rounded-3xl flex items-center justify-center text-gray-400 mb-6">
-              <FileText size={40} opacity={0.3} />
-           </div>
-           <p className="font-black text-xl text-[var(--foreground)]">لا توجد روشتات حالياً</p>
-           <p className="text-sm font-bold text-[var(--muted)] mt-2 uppercase tracking-widest">ابدأ بإضافة أول روشتة رقمية الآن</p>
-        </div>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          transition={{ delay: 0.1 }}
+          className="flex flex-col items-center justify-center py-24 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 dark:text-white/25 mb-4">
+            <FileText size={28} />
+          </div>
+          <p className="text-[13px] font-bold text-slate-900 dark:text-white">لا توجد روشتات حالياً</p>
+          <p className="text-[12px] text-slate-500 dark:text-white/35 mt-1">ابدأ بإضافة أول روشتة رقمية الآن</p>
+        </motion.div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
             {filteredPrescriptions.map((prescription, idx) => (
               <motion.div
                 key={prescription.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
+                variants={fadeUp}
+                initial="hidden"
+                animate="show"
+                transition={{ delay: idx * 0.04 }}
               >
-                <Card className="group relative overflow-hidden bg-white/60 dark:bg-white/5 backdrop-blur-xl border-white/20 hover:border-primary/30 p-8 rounded-[2.5rem] transition-all duration-500 hover:-translate-y-2 shadow-xl shadow-black/5">
-                  {/* Status Indicator */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors duration-700" />
-                  
-                  <div className="relative">
-                    <div className="flex items-start justify-between mb-8">
-                       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-blue-500/10 flex items-center justify-center text-primary border border-white/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                          <UserIcon size={24} />
-                       </div>
-                       <div className="text-right">
-                          <p className="text-[10px] font-black text-[var(--muted)] uppercase tracking-widest">التاريخ</p>
-                          <p className="text-xs font-black text-[var(--foreground)] mt-1">
-                            {new Date(prescription.createdAt).toLocaleDateString('ar-EG')}
-                          </p>
-                       </div>
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-5 hover:border-indigo-500/20 dark:hover:border-indigo-500/20 transition-all duration-200 group">
+                  {/* Top Row */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-500/15 transition-colors">
+                      <UserIcon size={18} />
                     </div>
-
-                    <h3 className="text-xl font-black text-[var(--foreground)] mb-2 group-hover:text-primary transition-colors">
-                      {prescription.patient?.name || 'مريض غير معروف'}
-                    </h3>
-                    <div className="flex items-center gap-2 mb-6">
-                       <Activity size={14} className="text-emerald-500" />
-                       <p className="text-xs font-bold text-[var(--muted)] truncate">
-                          {prescription.diagnosisAr || 'لا يوجد تشخيص مسجل'}
-                       </p>
-                    </div>
-
-                    <div className="pt-6 border-t border-white/10 flex items-center justify-between">
-                       <div className="flex gap-2">
-                          <Link href={`/admin/prescriptions/${prescription.id}`}>
-                            <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
-                               <Eye size={18} />
-                            </Button>
-                          </Link>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="w-10 h-10 rounded-xl hover:bg-blue-500/10 hover:text-blue-500 transition-all"
-                            onClick={() => window.print()}
-                          >
-                             <Printer size={18} />
-                          </Button>
-                       </div>
-                       <p className="text-[10px] font-black text-[var(--muted)] uppercase tracking-widest flex items-center gap-2">
-                          ID: <span className="text-primary/50">{prescription.id.slice(-6)}</span>
-                       </p>
+                    <div className="text-right">
+                      <p className="text-[11px] text-slate-400 dark:text-white/25">التاريخ</p>
+                      <p className="text-[12px] font-semibold text-slate-900 dark:text-white mt-0.5">
+                        {new Date(prescription.createdAt).toLocaleDateString('ar-EG')}
+                      </p>
                     </div>
                   </div>
-                </Card>
+
+                  {/* Info */}
+                  <h3 className="text-[13px] font-bold text-slate-900 dark:text-white mb-1">
+                    {prescription.patient?.name || 'مريض غير معروف'}
+                  </h3>
+                  <div className="flex items-center gap-2 mb-5">
+                    <Activity size={12} className="text-emerald-500 shrink-0" />
+                    <p className="text-[12px] text-slate-500 dark:text-white/35 truncate">
+                      {prescription.diagnosisAr || 'لا يوجد تشخيص مسجل'}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                    <div className="flex gap-1.5">
+                      <Link
+                        href={`/admin/prescriptions/${prescription.id}`}
+                        className="h-8 px-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-indigo-500/10 text-slate-500 dark:text-white/35 hover:text-indigo-500 text-[12px] font-semibold flex items-center gap-1.5 transition-all"
+                      >
+                        <Eye size={14} />
+                        عرض
+                      </Link>
+                      <button
+                        className="h-8 px-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-indigo-500/10 text-slate-500 dark:text-white/35 hover:text-indigo-500 text-[12px] font-semibold flex items-center gap-1.5 transition-all"
+                        onClick={() => window.print()}
+                      >
+                        <Printer size={14} />
+                        طباعة
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-400 dark:text-white/25">
+                      #{prescription.id.slice(-6)}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </AnimatePresence>

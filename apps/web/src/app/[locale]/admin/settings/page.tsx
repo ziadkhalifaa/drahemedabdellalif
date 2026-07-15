@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Input, Textarea } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
-import { Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { Save, Globe, Info, Phone, Share2, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function AdminSettingsPage() {
   const { token } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
   const [settings, setSettings] = useState<any>({
     hero: {
       titleAr: 'جراحة الكلى والمسالك البولية والذكورة',
@@ -62,87 +61,336 @@ export default function AdminSettingsPage() {
 
   const handleSave = async (key: string) => {
     if (!token) return;
-    setLoading(true);
+    setSavingKey(key);
     try {
       await api.post(`/settings/${key}`, { value: settings[key] }, token);
       toast.success('Settings saved successfully!');
     } catch (e) {
       toast.error('Failed to save settings');
     }
-    setLoading(false);
+    setSavingKey(null);
   };
 
+  const updateField = (section: string, field: string, value: string) => {
+    setSettings((prev: any) => ({
+      ...prev,
+      [section]: { ...prev[section], [field]: value }
+    }));
+  };
+
+  const sections = [
+    {
+      key: 'hero',
+      title: 'Hero Section',
+      description: 'Main headline and subtitle displayed on the home page.',
+      icon: Globe,
+    },
+    {
+      key: 'about',
+      title: 'About Us',
+      description: 'Description text for the about section.',
+      icon: Info,
+    },
+    {
+      key: 'contact',
+      title: 'Contact & Clinic Info',
+      description: 'Phone, email, and clinic addresses.',
+      icon: Phone,
+    },
+    {
+      key: 'social',
+      title: 'Social Media Links',
+      description: 'External links to social media profiles.',
+      icon: Share2,
+    },
+  ];
+
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-bold text-[var(--foreground)]">Site Settings & Content Control</h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-[22px] font-bold text-slate-900 dark:text-white">
+            Site Settings
+          </h1>
+          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-1">
+            Manage your website content and configuration.
+          </p>
+        </div>
+      </div>
 
-      {/* Hero Section Settings */}
-      <Card className="p-6 space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
-           <h3 className="text-lg font-bold">Home Page Hero Section</h3>
-           <Button onClick={() => handleSave('hero')} disabled={loading} className="gap-2">
-              <Save size={16} /> Save Hero Settings
-           </Button>
+      {/* Hero Section */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+              <Globe size={18} className="text-indigo-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Hero Section</h2>
+              <p className="text-[12px] text-slate-500 dark:text-white/35">Main headline and subtitle on the home page.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSave('hero')}
+            disabled={savingKey === 'hero'}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all",
+              savingKey === 'hero'
+                ? "bg-indigo-500/20 text-indigo-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+            )}
+          >
+            {savingKey === 'hero' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Save size={14} />
+            )}
+            Save
+          </button>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-           <div className="space-y-4">
-              <h4 className="font-semibold text-[var(--primary)]">Arabic Content</h4>
-              <Input label="Main Title (AR)" value={settings.hero.titleAr} onChange={(e) => setSettings({ ...settings, hero: { ...settings.hero, titleAr: e.target.value } })} />
-              <Textarea label="Subtitle (AR)" value={settings.hero.subtitleAr} onChange={(e) => setSettings({ ...settings, hero: { ...settings.hero, subtitleAr: e.target.value } })} />
-           </div>
-           <div className="space-y-4">
-              <h4 className="font-semibold text-[var(--primary)]">English Content</h4>
-              <Input label="Main Title (EN)" value={settings.hero.titleEn} onChange={(e) => setSettings({ ...settings, hero: { ...settings.hero, titleEn: e.target.value } })} />
-              <Textarea label="Subtitle (EN)" value={settings.hero.subtitleEn} onChange={(e) => setSettings({ ...settings, hero: { ...settings.hero, subtitleEn: e.target.value } })} />
-           </div>
-        </div>
-      </Card>
 
-      {/* About Us Settings */}
-      <Card className="p-6 space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
-           <h3 className="text-lg font-bold">About Us Section</h3>
-           <Button onClick={() => handleSave('about')} disabled={loading} className="gap-2">
-              <Save size={16} /> Save About Settings
-           </Button>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Arabic</span>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={settings.hero.titleAr}
+                onChange={(e) => updateField('hero', 'titleAr', e.target.value)}
+                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                placeholder="Title in Arabic"
+              />
+              <textarea
+                value={settings.hero.subtitleAr}
+                onChange={(e) => updateField('hero', 'subtitleAr', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                placeholder="Subtitle in Arabic"
+              />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">English</span>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={settings.hero.titleEn}
+                onChange={(e) => updateField('hero', 'titleEn', e.target.value)}
+                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                placeholder="Title in English"
+              />
+              <textarea
+                value={settings.hero.subtitleEn}
+                onChange={(e) => updateField('hero', 'subtitleEn', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                placeholder="Subtitle in English"
+              />
+            </div>
+          </div>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-           <Textarea label="About Text (AR)" className="min-h-[200px]" value={settings.about.textAr} onChange={(e) => setSettings({ ...settings, about: { ...settings.about, textAr: e.target.value } })} />
-           <Textarea label="About Text (EN)" className="min-h-[200px]" value={settings.about.textEn} onChange={(e) => setSettings({ ...settings, about: { ...settings.about, textEn: e.target.value } })} />
-        </div>
-      </Card>
+      </div>
 
-      {/* Contact Settings */}
-      <Card className="p-6 space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
-           <h3 className="text-lg font-bold">Contact & Clinic Info</h3>
-           <Button onClick={() => handleSave('contact')} disabled={loading} className="gap-2">
-              <Save size={16} /> Save Contact Info
-           </Button>
+      {/* About Section */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+              <Info size={18} className="text-indigo-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">About Us</h2>
+              <p className="text-[12px] text-slate-500 dark:text-white/35">Description text for the about section.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSave('about')}
+            disabled={savingKey === 'about'}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all",
+              savingKey === 'about'
+                ? "bg-indigo-500/20 text-indigo-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+            )}
+          >
+            {savingKey === 'about' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Save size={14} />
+            )}
+            Save
+          </button>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-           <Input label="Phone Number" value={settings.contact.phone} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, phone: e.target.value } })} />
-           <Input label="Email Address" value={settings.contact.email} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, email: e.target.value } })} />
-           <Input label="Address (Beni Suef)" value={settings.contact.addressBeniSuef} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, addressBeniSuef: e.target.value } })} />
-           <Input label="Address (6 October)" value={settings.contact.addressOctober} onChange={(e) => setSettings({ ...settings, contact: { ...settings.contact, addressOctober: e.target.value } })} />
-        </div>
-      </Card>
 
-      {/* Social Links Settings */}
-      <Card className="p-6 space-y-6">
-        <div className="flex items-center justify-between border-b pb-4">
-           <h3 className="text-lg font-bold">Social Media Links</h3>
-           <Button onClick={() => handleSave('social')} disabled={loading} className="gap-2">
-              <Save size={16} /> Save Social Links
-           </Button>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Arabic</span>
+            <textarea
+              value={settings.about.textAr}
+              onChange={(e) => updateField('about', 'textAr', e.target.value)}
+              rows={8}
+              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+              placeholder="About text in Arabic"
+            />
+          </div>
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">English</span>
+            <textarea
+              value={settings.about.textEn}
+              onChange={(e) => updateField('about', 'textEn', e.target.value)}
+              rows={8}
+              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+              placeholder="About text in English"
+            />
+          </div>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-           <Input label="Facebook URL" value={settings.social?.facebook || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, facebook: e.target.value } })} />
-           <Input label="YouTube URL" value={settings.social?.youtube || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, youtube: e.target.value } })} />
-           <Input label="Instagram URL" value={settings.social?.instagram || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, instagram: e.target.value } })} />
-           <Input label="WhatsApp URL" value={settings.social?.whatsapp || ''} onChange={(e) => setSettings({ ...settings, social: { ...settings.social, whatsapp: e.target.value } })} />
+      </div>
+
+      {/* Contact Section */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+              <Phone size={18} className="text-indigo-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Contact & Clinic Info</h2>
+              <p className="text-[12px] text-slate-500 dark:text-white/35">Phone, email, and clinic addresses.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSave('contact')}
+            disabled={savingKey === 'contact'}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all",
+              savingKey === 'contact'
+                ? "bg-indigo-500/20 text-indigo-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+            )}
+          >
+            {savingKey === 'contact' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Save size={14} />
+            )}
+            Save
+          </button>
         </div>
-      </Card>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Phone Number</label>
+            <input
+              type="text"
+              value={settings.contact.phone}
+              onChange={(e) => updateField('contact', 'phone', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Email Address</label>
+            <input
+              type="email"
+              value={settings.contact.email}
+              onChange={(e) => updateField('contact', 'email', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Address (Beni Suef)</label>
+            <input
+              type="text"
+              value={settings.contact.addressBeniSuef}
+              onChange={(e) => updateField('contact', 'addressBeniSuef', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Address (6 October)</label>
+            <input
+              type="text"
+              value={settings.contact.addressOctober}
+              onChange={(e) => updateField('contact', 'addressOctober', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Social Links */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+              <Share2 size={18} className="text-indigo-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Social Media Links</h2>
+              <p className="text-[12px] text-slate-500 dark:text-white/35">External links to social media profiles.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSave('social')}
+            disabled={savingKey === 'social'}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all",
+              savingKey === 'social'
+                ? "bg-indigo-500/20 text-indigo-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+            )}
+          >
+            {savingKey === 'social' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Save size={14} />
+            )}
+            Save
+          </button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Facebook URL</label>
+            <input
+              type="url"
+              value={settings.social?.facebook || ''}
+              onChange={(e) => updateField('social', 'facebook', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              placeholder="https://facebook.com/..."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">YouTube URL</label>
+            <input
+              type="url"
+              value={settings.social?.youtube || ''}
+              onChange={(e) => updateField('social', 'youtube', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              placeholder="https://youtube.com/..."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Instagram URL</label>
+            <input
+              type="url"
+              value={settings.social?.instagram || ''}
+              onChange={(e) => updateField('social', 'instagram', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              placeholder="https://instagram.com/..."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">WhatsApp URL</label>
+            <input
+              type="url"
+              value={settings.social?.whatsapp || ''}
+              onChange={(e) => updateField('social', 'whatsapp', e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              placeholder="https://wa.me/..."
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

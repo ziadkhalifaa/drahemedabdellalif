@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
-import { Card, Button, Input } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 import { FileText, Upload, Search, User, FileUp, X, Stethoscope, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -29,16 +29,13 @@ export default function AdminReportsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Modals State
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   
-  // Upload Report State
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadData, setUploadData] = useState({ title: '', description: '' });
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Prescription State
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [submittingPrescription, setSubmittingPrescription] = useState(false);
   const [prescriptionData, setPrescriptionData] = useState({
@@ -70,7 +67,6 @@ export default function AdminReportsPage() {
   useEffect(() => {
     if (!token) return;
     
-    // Fetch users with role 'patient'
     api.get<Patient[]>('/auth/users?role=patient', token)
       .then(res => setPatients(res))
       .catch(err => {
@@ -152,7 +148,6 @@ export default function AdminReportsPage() {
     e.preventDefault();
     if (!token || !selectedPatient) return;
     
-    // Validate medications
     const validMedications = prescriptionData.medications.filter(m => m.name && m.dosage);
     if (validMedications.length === 0) {
       toast.error('Please add at least one medication with name and dosage.');
@@ -181,84 +176,118 @@ export default function AdminReportsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-6 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-black">{t('title', { fallback: 'Medical Reports Upload' })}</h1>
-        <div className="h-96 animate-pulse bg-[var(--card)] rounded-3xl" />
+      <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-6">
+        <div className="space-y-3">
+          <div className="h-8 w-64 bg-slate-100 dark:bg-white/5 rounded-xl animate-pulse" />
+          <div className="h-4 w-96 bg-slate-100 dark:bg-white/5 rounded-lg animate-pulse" />
+        </div>
+        <div className="h-96 bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-black mb-2 flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-[var(--primary)]/10 text-[var(--primary)]">
-            <FileText size={28} />
+    <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-indigo-500/10">
+              <FileText size={22} className="text-indigo-500" />
+            </div>
+            <h1 className="text-[22px] font-bold text-slate-900 dark:text-white">
+              {t('title', { fallback: 'Medical Reports Upload' })}
+            </h1>
           </div>
-          {t('title', { fallback: 'Medical Reports Upload' })}
-        </h1>
-        <p className="text-[var(--muted)]">{t('subtitle', { fallback: 'Upload lab results, prescriptions, or medical reports for your patients.' })}</p>
+          <p className="text-[13px] text-slate-500 dark:text-white/35 ml-[46px]">
+            {t('subtitle', { fallback: 'Upload lab results, prescriptions, or medical reports for your patients.' })}
+          </p>
+        </div>
       </div>
 
-      <Card className="border-[var(--border)] rounded-3xl shadow-sm overflow-hidden bg-[var(--card)]">
-        <div className="p-6 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--background)]/50">
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <User size={20} className="text-[var(--muted)]" />
-            {t('patientsList')} ({patients.length})
-          </h2>
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" size={16} />
+      {/* Patients Table Card */}
+      <div className="bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <User size={16} className="text-slate-400 dark:text-white/25" />
+            <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">
+              {t('patientsList')}
+            </h2>
+            <span className="text-[11px] font-bold text-slate-400 dark:text-white/25 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-md">
+              {patients.length}
+            </span>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" size={15} />
             <Input 
               placeholder={t('searchPlaceholder')} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 rounded-xl bg-[var(--background)]"
+              className="pl-9 h-10 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-[13px] placeholder:text-slate-400 dark:placeholder:text-white/25 focus:border-indigo-500/50 focus:ring-indigo-500/20"
             />
           </div>
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-[var(--background)] border-b border-[var(--border)] uppercase text-[10px] font-black tracking-wider text-[var(--muted)]">
-              <tr>
-                <th className="px-6 py-4">{t('patientName')}</th>
-                <th className="px-6 py-4">{t('contactInfo')}</th>
-                <th className="px-6 py-4 text-center">{t('actions')}</th>
+          <table className="w-full text-left whitespace-nowrap">
+            <thead>
+              <tr className="border-b border-slate-200/60 dark:border-white/5">
+                <th className="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">
+                  {t('patientName')}
+                </th>
+                <th className="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">
+                  {t('contactInfo')}
+                </th>
+                <th className="px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25 text-center">
+                  {t('actions')}
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="divide-y divide-slate-200/60 dark:divide-white/5">
               {filteredPatients.length > 0 ? (
                 filteredPatients.map(patient => (
-                  <tr key={patient.id} className="hover:bg-[var(--background)]/50 transition-colors">
+                  <tr key={patient.id} className="group transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.02]">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-bold flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-full bg-indigo-500/10 text-indigo-500 font-bold flex items-center justify-center text-[13px]">
                           {patient.name?.[0]?.toUpperCase() || 'P'}
                         </div>
-                        <span className="font-bold text-base">{patient.name || t('unnamedPatient')}</span>
+                        <span className="text-[13px] font-bold text-slate-900 dark:text-white">
+                          {patient.name || t('unnamedPatient')}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{patient.email}</span>
-                        <span className="text-xs text-[var(--muted)]">{patient.phone || t('noPhone')}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] text-slate-700 dark:text-white/70">{patient.email}</span>
+                        <span className="text-[12px] text-slate-400 dark:text-white/25">{patient.phone || t('noPhone')}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center justify-center gap-2">
                         <Button 
                           onClick={() => handlePrescriptionClick(patient)}
                           variant="outline"
-                          className="rounded-xl font-bold gap-2 px-4 py-2 text-xs border-blue-500/30 hover:bg-blue-500 hover:text-white text-blue-500 transition-colors"
+                          className={cn(
+                            "rounded-xl h-9 px-3.5 text-[12px] font-bold gap-1.5",
+                            "border-indigo-500/20 text-indigo-500 hover:bg-indigo-500 hover:text-white",
+                            "dark:border-indigo-400/20 dark:text-indigo-400 dark:hover:bg-indigo-500 dark:hover:text-white",
+                            "transition-all duration-200"
+                          )}
                         >
-                          <Stethoscope size={16} />
+                          <Stethoscope size={14} />
                           عمل روشتة
                         </Button>
                         <Button 
                           onClick={() => handleUploadClick(patient)}
-                          className="rounded-xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] gap-2 shadow-lg shadow-[var(--primary)]/20 px-4 py-2 text-xs h-auto"
+                          className={cn(
+                            "rounded-xl h-9 px-3.5 text-[12px] font-bold gap-1.5",
+                            "bg-indigo-500 hover:bg-indigo-600 text-white",
+                            "shadow-sm shadow-indigo-500/20",
+                            "transition-all duration-200"
+                          )}
                         >
-                          <FileUp size={16} />
+                          <FileUp size={14} />
                           {t('uploadReport')}
                         </Button>
                       </div>
@@ -267,69 +296,88 @@ export default function AdminReportsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-6 py-16 text-center text-[var(--muted)] text-base font-medium">
-                    {t('noPatientsFound')} &quot;{searchTerm}&quot;
+                  <td colSpan={3} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-3 rounded-xl bg-slate-100 dark:bg-white/5">
+                        <User size={20} className="text-slate-300 dark:text-white/15" />
+                      </div>
+                      <p className="text-[13px] text-slate-400 dark:text-white/25">
+                        {t('noPatientsFound')} &quot;{searchTerm}&quot;
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
 
-      {/* Upload Dialog */}
+      {/* Upload Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="w-full sm:max-w-[500px] bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl">
-            <div className="p-8">
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-black flex items-center gap-2">
-                    <FileUp className="text-[var(--primary)]" />
+          <div className="w-full sm:max-w-[480px] bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="p-6">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-indigo-500/10">
+                    <FileUp size={18} className="text-indigo-500" />
+                  </div>
+                  <h2 className="text-[17px] font-bold text-slate-900 dark:text-white">
                     {t('uploadMedicalReport')}
                   </h2>
-                  <button onClick={() => setIsUploadModalOpen(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]">
-                    <X size={24} />
-                  </button>
                 </div>
-                
-                <div className="p-3 bg-[var(--primary)]/5 border border-[var(--primary)]/10 rounded-xl flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-[var(--primary)]/20 text-[var(--primary)] font-bold flex items-center justify-center text-xs">
-                    {selectedPatient?.name?.[0]?.toUpperCase() || 'P'}
-                  </div>
-                  <div>
-                    <div className="text-xs text-[var(--muted)] uppercase tracking-widest font-bold">{t('patient')}</div>
-                    <div className="font-bold text-sm leading-tight">{selectedPatient?.name}</div>
-                  </div>
+                <button 
+                  onClick={() => setIsUploadModalOpen(false)} 
+                  className="p-1.5 rounded-lg text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Patient Info */}
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 mb-6">
+                <div className="h-8 w-8 rounded-full bg-indigo-500/10 text-indigo-500 font-bold flex items-center justify-center text-[12px]">
+                  {selectedPatient?.name?.[0]?.toUpperCase() || 'P'}
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">{t('patient')}</div>
+                  <div className="text-[13px] font-bold text-slate-900 dark:text-white leading-tight">{selectedPatient?.name}</div>
                 </div>
               </div>
               
               <form onSubmit={handleUploadSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] ml-1">{t('reportTitle')}</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">{t('reportTitle')}</label>
                   <Input 
                     required
                     value={uploadData.title}
                     onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
                     placeholder={t('reportTitlePlaceholder')}
-                    className="py-6 rounded-xl font-medium"
+                    className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-[13px] focus:border-indigo-500/50 focus:ring-indigo-500/20"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] ml-1">{t('descriptionOptional')}</label>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">{t('descriptionOptional')}</label>
                   <textarea 
                     value={uploadData.description}
                     onChange={(e) => setUploadData({ ...uploadData, description: e.target.value })}
                     placeholder={t('descriptionPlaceholder')}
-                    className="w-full min-h-[100px] p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]/50 focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-y text-sm font-medium outline-none"
+                    className={cn(
+                      "w-full min-h-[90px] p-3 rounded-xl border text-[13px]",
+                      "bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5",
+                      "text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25",
+                      "focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50",
+                      "transition-all resize-y outline-none"
+                    )}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-[var(--muted)] ml-1">{t('selectFile')}</label>
-                  
-                  <div className="relative border-2 border-dashed border-[var(--border)] hover:border-[var(--primary)]/50 rounded-2xl p-8 text-center transition-all bg-[var(--background)]/30 group">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">{t('selectFile')}</label>
+                  <div className="relative border-2 border-dashed border-slate-200/60 dark:border-white/10 hover:border-indigo-500/40 rounded-2xl p-8 text-center transition-all cursor-pointer group">
                     <input 
                       type="file" 
                       onChange={handleFileChange}
@@ -339,29 +387,38 @@ export default function AdminReportsPage() {
                     />
                     {file ? (
                       <div className="flex flex-col items-center gap-2">
-                        <div className="p-3 bg-green-500/10 text-green-500 rounded-full">
-                          <FileText size={24} />
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10">
+                          <FileText size={20} className="text-emerald-500" />
                         </div>
-                        <div className="font-bold text-sm truncate max-w-[200px]">{file.name}</div>
-                        <div className="text-xs text-[var(--muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        <div className="text-[13px] font-bold text-slate-900 dark:text-white truncate max-w-[200px]">{file.name}</div>
+                        <div className="text-[12px] text-slate-400 dark:text-white/25">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="p-4 bg-[var(--primary)]/5 text-[var(--primary)] rounded-full group-hover:scale-110 transition-transform">
-                          <Upload size={24} />
+                      <div className="flex flex-col items-center gap-2.5">
+                        <div className="p-3 rounded-xl bg-indigo-500/10 group-hover:scale-110 transition-transform duration-200">
+                          <Upload size={20} className="text-indigo-500" />
                         </div>
-                        <div className="font-bold text-sm">{t('clickOrDrag')}</div>
-                        <div className="text-xs text-[var(--muted)]">{t('fileTypesLimit')}</div>
+                        <div className="text-[13px] font-bold text-slate-700 dark:text-white/60">{t('clickOrDrag')}</div>
+                        <div className="text-[12px] text-slate-400 dark:text-white/25">{t('fileTypesLimit')}</div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-6 border-t border-[var(--border)]">
-                  <Button type="button" variant="ghost" onClick={() => setIsUploadModalOpen(false)} className="rounded-xl font-bold h-12 px-6">
+                <div className="flex justify-end gap-3 pt-5 border-t border-slate-200/60 dark:border-white/5">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={() => setIsUploadModalOpen(false)} 
+                    className="rounded-xl h-10 px-5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5"
+                  >
                     {tCommon('cancel', { fallback: 'Cancel' })}
                   </Button>
-                  <Button type="submit" disabled={uploading || !uploadData.title || !file} className="rounded-xl font-bold px-8 h-12 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] shadow-lg shadow-[var(--primary)]/20">
+                  <Button 
+                    type="submit" 
+                    disabled={uploading || !uploadData.title || !file} 
+                    className="rounded-xl h-10 px-6 text-[13px] font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
                     {uploading ? tCommon('loading', { fallback: 'Uploading...' }) : t('uploadReport')}
                   </Button>
                 </div>
@@ -371,60 +428,65 @@ export default function AdminReportsPage() {
         </div>
       )}
 
-      {/* Create Prescription Dialog */}
+      {/* Prescription Modal */}
       {isPrescriptionModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full sm:max-w-3xl bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl my-8">
-            <div className="p-8">
-              <div className="mb-8 border-b border-[var(--border)] pb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-black flex items-center gap-3">
-                    <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
-                      <Stethoscope size={24} />
-                    </div>
+          <div className="w-full sm:max-w-3xl bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl overflow-hidden shadow-2xl my-8">
+            <div className="p-6">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between mb-6 pb-5 border-b border-slate-200/60 dark:border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-indigo-500/10">
+                    <Stethoscope size={18} className="text-indigo-500" />
+                  </div>
+                  <h2 className="text-[17px] font-bold text-slate-900 dark:text-white">
                     عمل روشتة طبية (Prescription)
                   </h2>
-                  <button onClick={() => setIsPrescriptionModalOpen(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]">
-                    <X size={24} />
-                  </button>
                 </div>
-                
-                <div className="p-4 bg-[var(--primary)]/5 border border-[var(--primary)]/10 rounded-2xl flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-[var(--primary)]/20 text-[var(--primary)] font-black flex items-center justify-center text-sm">
-                    {selectedPatient?.name?.[0]?.toUpperCase() || 'P'}
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-[var(--muted)] uppercase tracking-[0.2em] font-black">{t('patient')}</div>
-                    <div className="font-black text-lg leading-tight">{selectedPatient?.name}</div>
-                  </div>
+                <button 
+                  onClick={() => setIsPrescriptionModalOpen(false)} 
+                  className="p-1.5 rounded-lg text-slate-400 dark:text-white/25 hover:text-slate-600 dark:hover:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              {/* Patient Info */}
+              <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 mb-7">
+                <div className="h-9 w-9 rounded-full bg-indigo-500/10 text-indigo-500 font-bold flex items-center justify-center text-[13px]">
+                  {selectedPatient?.name?.[0]?.toUpperCase() || 'P'}
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">{t('patient')}</div>
+                  <div className="text-[15px] font-bold text-slate-900 dark:text-white leading-tight">{selectedPatient?.name}</div>
                 </div>
               </div>
               
-              <form onSubmit={handlePrescriptionSubmit} className="space-y-8">
+              <form onSubmit={handlePrescriptionSubmit} className="space-y-7">
                 {/* Diagnosis Section */}
-                <div className="space-y-4">
-                  <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />
+                <div className="space-y-3">
+                  <h3 className="text-[13px] font-bold text-slate-500 dark:text-white/35 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                     التشخيص (Diagnosis)
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--muted)]">التشخيص (عربي)</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">التشخيص (عربي)</label>
                       <Input 
                         value={prescriptionData.diagnosisAr}
                         onChange={(e) => setPrescriptionData({ ...prescriptionData, diagnosisAr: e.target.value })}
                         placeholder="أدخل التشخيص..."
-                        className="py-5 rounded-xl font-medium text-right"
+                        className="h-10 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-[13px] focus:border-indigo-500/50 focus:ring-indigo-500/20 text-right"
                         dir="rtl"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--muted)]">Diagnosis (English)</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">Diagnosis (English)</label>
                       <Input 
                         value={prescriptionData.diagnosisEn}
                         onChange={(e) => setPrescriptionData({ ...prescriptionData, diagnosisEn: e.target.value })}
                         placeholder="Enter diagnosis..."
-                        className="py-5 rounded-xl font-medium"
+                        className="h-10 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-[13px] focus:border-indigo-500/50 focus:ring-indigo-500/20"
                         dir="ltr"
                       />
                     </div>
@@ -432,10 +494,10 @@ export default function AdminReportsPage() {
                 </div>
 
                 {/* Medications Section */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    <h3 className="text-[13px] font-bold text-slate-500 dark:text-white/35 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                       الأدوية (Medications)
                     </h3>
                     <Button 
@@ -446,55 +508,57 @@ export default function AdminReportsPage() {
                         ...prescriptionData, 
                         medications: [...prescriptionData.medications, { name: '', dosage: '', duration: '', notes: '' }]
                       })}
-                      className="gap-2 rounded-xl text-xs font-bold"
+                      className="gap-1.5 rounded-xl h-8 px-3 text-[12px] font-bold border-slate-200/60 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-50 dark:hover:bg-white/5"
                     >
-                      <Plus size={14} /> إضافة دواء
+                      <Plus size={13} /> إضافة دواء
                     </Button>
                   </div>
                   
-                  <div className="space-y-3 bg-[var(--background)]/50 p-4 rounded-2xl border border-[var(--border)] max-h-[300px] overflow-y-auto">
+                  <div className="space-y-2 bg-slate-50 dark:bg-white/[0.02] p-3.5 rounded-xl border border-slate-200/60 dark:border-white/5 max-h-[280px] overflow-y-auto">
                     {prescriptionData.medications.map((med, index) => (
-                      <div key={index} className="flex flex-col md:flex-row gap-3 p-4 bg-[var(--card)] border border-[var(--border)] rounded-xl relative group">
-                        <div className="flex-1 space-y-2">
-                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">اسم الدواء (Medication Name)</label>
-                          <Input 
-                            required
-                            value={med.name}
-                            onChange={(e) => {
-                              const newMeds = [...prescriptionData.medications];
-                              newMeds[index].name = e.target.value;
-                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
-                            }}
-                            placeholder="e.g. Panadol 500mg"
-                            className="h-10 text-sm"
-                          />
-                        </div>
-                        <div className="w-full md:w-1/4 space-y-2">
-                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">الجرعة (Dosage)</label>
-                          <Input 
-                            required
-                            value={med.dosage}
-                            onChange={(e) => {
-                              const newMeds = [...prescriptionData.medications];
-                              newMeds[index].dosage = e.target.value;
-                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
-                            }}
-                            placeholder="e.g. 1 pill every 8 hours"
-                            className="h-10 text-sm"
-                          />
-                        </div>
-                        <div className="w-full md:w-1/5 space-y-2">
-                          <label className="text-[10px] font-bold text-[var(--muted)] uppercase">المدة (Duration)</label>
-                          <Input 
-                            value={med.duration}
-                            onChange={(e) => {
-                              const newMeds = [...prescriptionData.medications];
-                              newMeds[index].duration = e.target.value;
-                              setPrescriptionData({ ...prescriptionData, medications: newMeds });
-                            }}
-                            placeholder="e.g. 5 days"
-                            className="h-10 text-sm"
-                          />
+                      <div key={index} className="relative p-3.5 bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-xl group">
+                        <div className="flex flex-col md:flex-row gap-2.5">
+                          <div className="flex-1 space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">اسم الدواء (Medication Name)</label>
+                            <Input 
+                              required
+                              value={med.name}
+                              onChange={(e) => {
+                                const newMeds = [...prescriptionData.medications];
+                                newMeds[index].name = e.target.value;
+                                setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                              }}
+                              placeholder="e.g. Panadol 500mg"
+                              className="h-9 text-[13px] rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+                            />
+                          </div>
+                          <div className="w-full md:w-1/4 space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">الجرعة (Dosage)</label>
+                            <Input 
+                              required
+                              value={med.dosage}
+                              onChange={(e) => {
+                                const newMeds = [...prescriptionData.medications];
+                                newMeds[index].dosage = e.target.value;
+                                setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                              }}
+                              placeholder="e.g. 1 pill every 8 hours"
+                              className="h-9 text-[13px] rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+                            />
+                          </div>
+                          <div className="w-full md:w-[18%] space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 dark:text-white/25 uppercase tracking-wider">المدة (Duration)</label>
+                            <Input 
+                              value={med.duration}
+                              onChange={(e) => {
+                                const newMeds = [...prescriptionData.medications];
+                                newMeds[index].duration = e.target.value;
+                                setPrescriptionData({ ...prescriptionData, medications: newMeds });
+                              }}
+                              placeholder="e.g. 5 days"
+                              className="h-9 text-[13px] rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+                            />
+                          </div>
                         </div>
                         
                         {prescriptionData.medications.length > 1 && (
@@ -504,9 +568,9 @@ export default function AdminReportsPage() {
                               const newMeds = prescriptionData.medications.filter((_, i) => i !== index);
                               setPrescriptionData({ ...prescriptionData, medications: newMeds });
                             }}
-                            className="absolute -top-2 -right-2 md:top-auto md:bottom-2 md:right-4 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg transition-colors"
+                            className="absolute -top-2 -right-2 md:top-3 md:right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={13} />
                           </button>
                         )}
                       </div>
@@ -515,34 +579,55 @@ export default function AdminReportsPage() {
                 </div>
                 
                 {/* Instructions Section */}
-                <div className="space-y-4">
-                  <h3 className="font-black text-sm uppercase tracking-widest text-[var(--muted)] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="space-y-3">
+                  <h3 className="text-[13px] font-bold text-slate-500 dark:text-white/35 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                     تعليمات إضافية (Instructions)
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <textarea 
                       value={prescriptionData.instructionsAr}
                       onChange={(e) => setPrescriptionData({ ...prescriptionData, instructionsAr: e.target.value })}
                       placeholder="تعليمات إضافية للمريض..."
-                      className="w-full min-h-[100px] p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]/50 focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-y text-sm font-medium outline-none text-right"
+                      className={cn(
+                        "w-full min-h-[90px] p-3 rounded-xl border text-[13px]",
+                        "bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5",
+                        "text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25",
+                        "focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50",
+                        "transition-all resize-y outline-none text-right"
+                      )}
                       dir="rtl"
                     />
                     <textarea 
                       value={prescriptionData.instructionsEn}
                       onChange={(e) => setPrescriptionData({ ...prescriptionData, instructionsEn: e.target.value })}
                       placeholder="Additional instructions..."
-                      className="w-full min-h-[100px] p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]/50 focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all resize-y text-sm font-medium outline-none"
+                      className={cn(
+                        "w-full min-h-[90px] p-3 rounded-xl border text-[13px]",
+                        "bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-white/5",
+                        "text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25",
+                        "focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50",
+                        "transition-all resize-y outline-none"
+                      )}
                       dir="ltr"
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-8 border-t border-[var(--border)]">
-                  <Button type="button" variant="ghost" onClick={() => setIsPrescriptionModalOpen(false)} className="rounded-xl font-bold h-12 px-8 bg-[var(--background)] border border-[var(--border)]">
+                <div className="flex justify-end gap-3 pt-5 border-t border-slate-200/60 dark:border-white/5">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={() => setIsPrescriptionModalOpen(false)} 
+                    className="rounded-xl h-10 px-5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5"
+                  >
                     إلغاء (Cancel)
                   </Button>
-                  <Button type="submit" disabled={submittingPrescription} className="rounded-xl font-bold px-10 h-12 bg-gradient-to-r from-blue-600 to-blue-400 shadow-lg shadow-blue-500/30">
+                  <Button 
+                    type="submit" 
+                    disabled={submittingPrescription} 
+                    className="rounded-xl h-10 px-6 text-[13px] font-bold bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm shadow-indigo-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  >
                     {submittingPrescription ? 'جاري الحفظ...' : 'حفظ الروشتة (Save)'}
                   </Button>
                 </div>

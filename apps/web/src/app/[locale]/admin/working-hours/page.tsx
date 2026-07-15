@@ -4,9 +4,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
-import { Card, Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
-import { Clock, Save, AlertCircle, CalendarX, Plus, Trash2, ShieldAlert } from 'lucide-react';
+import { Clock, Save, AlertCircle, CalendarX, Plus, Trash2, ShieldAlert, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,15 +15,13 @@ export default function WorkingHoursPage() {
   const locale = useLocale();
   const isRTL = locale === 'ar';
   const { token } = useAuth();
-  
+
   const [activeTab, setActiveTab] = useState<'schedule' | 'exceptions'>('schedule');
   const [loading, setLoading] = useState(true);
-  
-  // Schedule State
+
   const [hours, setHours] = useState<any[]>([]);
   const [savingId, setSavingId] = useState<number | null>(null);
 
-  // Exceptions State
   const [blockedSlots, setBlockedSlots] = useState<any[]>([]);
   const [blockDate, setBlockDate] = useState('');
   const [blockTime, setBlockTime] = useState('');
@@ -53,7 +50,7 @@ export default function WorkingHoursPage() {
         api.get<any[]>('/working-hours', token),
         api.get<any[]>('/working-hours/blocked', token)
       ]);
-      
+
       const merged = defaultHours.map(def => {
         const existing = hoursRes.find(h => h.dayOfWeek === def.dayOfWeek);
         return existing ? existing : def;
@@ -87,11 +84,11 @@ export default function WorkingHoursPage() {
   };
 
   const handleToggle = (dayOfWeek: number, currentHour: any, isActive: boolean) => {
-    handleUpdate(dayOfWeek, { 
-      startTime: currentHour.startTime, 
-      endTime: currentHour.endTime, 
-      slotDuration: currentHour.slotDuration, 
-      isActive 
+    handleUpdate(dayOfWeek, {
+      startTime: currentHour.startTime,
+      endTime: currentHour.endTime,
+      slotDuration: currentHour.slotDuration,
+      isActive
     });
   };
 
@@ -105,13 +102,12 @@ export default function WorkingHoursPage() {
         timeSlot: blockTime || undefined,
         reason: blockReason || undefined
       }, token);
-      
+
       toast.success(isRTL ? 'تم إضافة الاستثناء بنجاح' : 'Exception added successfully');
       setBlockDate('');
       setBlockTime('');
       setBlockReason('');
-      
-      // Refresh blocked slots
+
       const res = await api.get<any[]>('/working-hours/blocked', token);
       setBlockedSlots(res || []);
     } catch (err: any) {
@@ -134,11 +130,14 @@ export default function WorkingHoursPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-6 max-w-5xl mx-auto">
-        <h1 className="text-3xl font-black">{t('title')}</h1>
-        <div className="space-y-4">
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="h-7 w-48 bg-slate-100 dark:bg-white/5 rounded-xl animate-pulse" />
+          <div className="h-4 w-72 bg-slate-100 dark:bg-white/5 rounded-lg animate-pulse" />
+        </div>
+        <div className="space-y-3">
           {[0, 1, 2, 3, 4, 5, 6].map(i => (
-            <Card key={i} className="p-6 h-24 animate-pulse bg-[var(--card)] border-none" />
+            <div key={i} className="h-24 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 animate-pulse" />
           ))}
         </div>
       </div>
@@ -146,275 +145,308 @@ export default function WorkingHoursPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-5xl mx-auto">
-      
-      {/* Header & Tabs */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--border)]">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black mb-2 flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-blue-600 text-white shadow-lg shadow-blue-500/20">
-              <Clock size={28} />
+          <h1 className="text-[22px] font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+              <Clock size={18} className="text-indigo-500" />
             </div>
             {isRTL ? 'إدارة المواعيد' : 'Schedule Management'}
           </h1>
-          <p className="text-[var(--muted)]">
-            {isRTL 
-              ? 'تحكم في أوقات العمل الأسبوعية، وقم بإضافة استثناءات وحجب لأوقات محددة.' 
+          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-1.5 ml-12">
+            {isRTL
+              ? 'تحكم في أوقات العمل الأسبوعية، وقم بإضافة استثناءات وحجب لأوقات محددة.'
               : 'Control your weekly working hours and add exceptions to block specific times.'}
           </p>
         </div>
 
-        <div className="flex bg-[var(--card)] p-1.5 rounded-2xl border border-[var(--border)] shadow-sm">
+        {/* Tabs */}
+        <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab('schedule')}
             className={cn(
-              "px-6 py-2.5 rounded-xl text-sm font-bold transition-all relative",
-              activeTab === 'schedule' ? "text-white" : "text-[var(--muted)] hover:text-white"
+              "px-4 py-2 rounded-lg text-[13px] font-bold transition-all relative",
+              activeTab === 'schedule'
+                ? "bg-white dark:bg-[#111827] text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-white/35 hover:text-slate-700 dark:hover:text-white/50"
             )}
           >
-            {activeTab === 'schedule' && (
-              <motion.div layoutId="activeTab" className="absolute inset-0 bg-[var(--primary)] rounded-xl" />
-            )}
-            <span className="relative z-10">{isRTL ? 'الجدول الأسبوعي' : 'Weekly Schedule'}</span>
+            {isRTL ? 'الجدول الأسبوعي' : 'Weekly Schedule'}
           </button>
           <button
             onClick={() => setActiveTab('exceptions')}
             className={cn(
-              "px-6 py-2.5 rounded-xl text-sm font-bold transition-all relative flex items-center gap-2",
-              activeTab === 'exceptions' ? "text-white" : "text-[var(--muted)] hover:text-white"
+              "px-4 py-2 rounded-lg text-[13px] font-bold transition-all relative flex items-center gap-2",
+              activeTab === 'exceptions'
+                ? "bg-white dark:bg-[#111827] text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-white/35 hover:text-slate-700 dark:hover:text-white/50"
             )}
           >
-            {activeTab === 'exceptions' && (
-              <motion.div layoutId="activeTab" className="absolute inset-0 bg-rose-500 rounded-xl" />
-            )}
-            <span className="relative z-10 flex items-center gap-2">
-              <CalendarX size={16} />
-              {isRTL ? 'الاستثناءات (حجب)' : 'Exceptions (Block)'}
-            </span>
+            <CalendarX size={14} />
+            {isRTL ? 'الاستثناءات' : 'Exceptions'}
           </button>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         {activeTab === 'schedule' ? (
-          <motion.div 
+          <motion.div
             key="schedule"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-4"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
           >
             {hours.map((hour) => (
-              <Card key={hour.dayOfWeek} className={cn(
-                "p-5 md:p-6 border-[var(--border)] transition-all duration-300 hover:border-[var(--primary)]/50 hover:shadow-lg hover:shadow-[var(--primary)]/5", 
-                !hour.isActive && "opacity-60 bg-black/20"
-              )}>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  
-                  {/* Left side: Day and Toggle */}
-                  <div className="flex items-center gap-6 w-full md:w-1/4">
-                    <div className="flex items-center gap-4">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer" 
-                          checked={hour.isActive}
-                          onChange={(e) => handleToggle(hour.dayOfWeek, hour, e.target.checked)}
-                          disabled={savingId === hour.dayOfWeek}
-                        />
-                        <div className="w-12 h-7 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[22px] after:w-[22px] after:transition-all dark:border-gray-600 peer-checked:bg-[var(--primary)] shadow-inner"></div>
-                      </label>
-                      <span className={cn("font-black text-lg", hour.isActive ? "text-white" : "text-[var(--muted)]")}>
-                        {daysOfWeek[hour.dayOfWeek]}
-                      </span>
-                    </div>
+              <div
+                key={hour.dayOfWeek}
+                className={cn(
+                  "bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-5 transition-all",
+                  !hour.isActive && "opacity-50"
+                )}
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  {/* Day + Toggle */}
+                  <div className="flex items-center gap-4 w-full md:w-48 shrink-0">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={hour.isActive}
+                        onChange={(e) => handleToggle(hour.dayOfWeek, hour, e.target.checked)}
+                        disabled={savingId === hour.dayOfWeek}
+                      />
+                      <div className="w-10 h-[22px] bg-slate-200 dark:bg-white/10 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:bg-indigo-500 shadow-inner" />
+                    </label>
+                    <span className={cn(
+                      "text-[13px] font-bold",
+                      hour.isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-white/25"
+                    )}>
+                      {daysOfWeek[hour.dayOfWeek]}
+                    </span>
                   </div>
 
-                  {/* Right side: Times and Duration */}
-                  <div className={cn("grid grid-cols-2 lg:grid-cols-4 items-end gap-4 w-full md:flex-1", !hour.isActive && "pointer-events-none opacity-50")}>
+                  {/* Fields */}
+                  <div className={cn(
+                    "grid grid-cols-2 lg:grid-cols-4 items-end gap-3 flex-1",
+                    !hour.isActive && "pointer-events-none"
+                  )}>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)] block px-1">{t('startTime', { fallback: 'Start Time' })}</label>
-                      <Input 
-                        type="time" 
-                        value={hour.startTime} 
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25 block px-1">
+                        {t('startTime', { fallback: 'Start' })}
+                      </label>
+                      <input
+                        type="time"
+                        value={hour.startTime}
                         onChange={(e) => setHours(prev => prev.map(h => h.dayOfWeek === hour.dayOfWeek ? { ...h, startTime: e.target.value } : h))}
-                        className="font-bold text-base h-11 bg-[var(--background)]/50 border-[var(--border)] rounded-xl focus:border-[var(--primary)]"
+                        className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)] block px-1">{t('endTime', { fallback: 'End Time' })}</label>
-                      <Input 
-                        type="time" 
-                        value={hour.endTime} 
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25 block px-1">
+                        {t('endTime', { fallback: 'End' })}
+                      </label>
+                      <input
+                        type="time"
+                        value={hour.endTime}
                         onChange={(e) => setHours(prev => prev.map(h => h.dayOfWeek === hour.dayOfWeek ? { ...h, endTime: e.target.value } : h))}
-                        className="font-bold text-base h-11 bg-[var(--background)]/50 border-[var(--border)] rounded-xl focus:border-[var(--primary)]"
+                        className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-[var(--muted)] block px-1 truncate">{t('slotDuration', { fallback: 'Duration' })}</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25 block px-1">
+                        {t('slotDuration', { fallback: 'Duration' })}
+                      </label>
                       <div className="relative">
-                        <Input 
-                          type="number" 
+                        <input
+                          type="number"
                           min="5"
                           step="5"
-                          value={hour.slotDuration} 
+                          value={hour.slotDuration}
                           onChange={(e) => setHours(prev => prev.map(h => h.dayOfWeek === hour.dayOfWeek ? { ...h, slotDuration: parseInt(e.target.value) } : h))}
-                          className="font-bold text-base h-11 bg-[var(--background)]/50 border-[var(--border)] rounded-xl pl-4 pr-10 focus:border-[var(--primary)]"
+                          className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                         />
-                        <span className={cn("absolute top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--muted)] pointer-events-none", isRTL ? "left-3" : "right-3")}>min</span>
+                        <span className={cn(
+                          "absolute top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 dark:text-white/25 pointer-events-none",
+                          isRTL ? "left-3" : "right-3"
+                        )}>min</span>
                       </div>
                     </div>
-                    
-                    <div className="col-span-2 lg:col-span-1">
-                      <Button 
-                        onClick={() => handleUpdate(hour.dayOfWeek, { startTime: hour.startTime, endTime: hour.endTime, slotDuration: hour.slotDuration, isActive: hour.isActive })}
-                        disabled={savingId === hour.dayOfWeek || !hour.isActive}
-                        variant="default"
-                        className="w-full bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] h-11 px-6 rounded-xl font-bold shadow-md shadow-[var(--primary)]/20"
-                      >
-                        <Save size={18} className={cn(isRTL ? "ml-2" : "mr-2")} />
-                        {savingId === hour.dayOfWeek ? tCommon('loading', { fallback: 'Saving...' }) : tCommon('save', { fallback: 'Save' })}
-                      </Button>
-                    </div>
-                  </div>
 
+                    <button
+                      onClick={() => handleUpdate(hour.dayOfWeek, { startTime: hour.startTime, endTime: hour.endTime, slotDuration: hour.slotDuration, isActive: hour.isActive })}
+                      disabled={savingId === hour.dayOfWeek || !hour.isActive}
+                      className={cn(
+                        "h-10 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2 transition-all",
+                        savingId === hour.dayOfWeek
+                          ? "bg-indigo-500/20 text-indigo-400 cursor-not-allowed"
+                          : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+                      )}
+                    >
+                      {savingId === hour.dayOfWeek ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Save size={14} />
+                      )}
+                      {savingId === hour.dayOfWeek ? tCommon('loading', { fallback: 'Saving...' }) : tCommon('save', { fallback: 'Save' })}
+                    </button>
+                  </div>
                 </div>
-                
+
                 {!hour.isActive && (
-                   <div className="mt-5 p-3 rounded-xl bg-zinc-500/10 border border-zinc-500/20 text-zinc-400 text-sm flex items-center gap-3 font-medium">
-                      <AlertCircle size={18} className="text-zinc-500" />
-                      {t('closed', { fallback: 'No online consultations on this day.' })}
-                   </div>
+                  <div className="mt-3 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-slate-500 dark:text-white/35 text-[12px] flex items-center gap-2">
+                    <AlertCircle size={14} />
+                    {t('closed', { fallback: 'No online consultations on this day.' })}
+                  </div>
                 )}
-              </Card>
+              </div>
             ))}
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="exceptions"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="grid lg:grid-cols-3 gap-8"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="grid lg:grid-cols-3 gap-6"
           >
-            {/* Form Side */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="p-6 border-[var(--border)] shadow-xl shadow-black/40 bg-gradient-to-b from-[var(--card)] to-[var(--background)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-                
-                <h3 className="text-xl font-black mb-6 flex items-center gap-2 text-rose-400">
-                  <ShieldAlert size={20} />
-                  {isRTL ? 'إضافة حجب جديد' : 'Add New Block'}
-                </h3>
-                
-                <form onSubmit={handleAddBlock} className="space-y-5 relative z-10">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-white block">{isRTL ? 'التاريخ' : 'Date'} *</label>
-                    <Input 
-                      type="date" 
+            {/* Add Block Form */}
+            <div className="lg:col-span-1">
+              <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 space-y-5 sticky top-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+                    <ShieldAlert size={18} className="text-indigo-500" />
+                  </div>
+                  <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">
+                    {isRTL ? 'إضافة حجب جديد' : 'Add New Block'}
+                  </h3>
+                </div>
+
+                <form onSubmit={handleAddBlock} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">
+                      {isRTL ? 'التاريخ' : 'Date'} *
+                    </label>
+                    <input
+                      type="date"
                       required
                       value={blockDate}
                       onChange={e => setBlockDate(e.target.value)}
-                      className="bg-black/50 border-white/10 h-12"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-white block">
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">
                       {isRTL ? 'الوقت (اختياري)' : 'Time Slot (Optional)'}
                     </label>
-                    <Input 
-                      type="time" 
+                    <input
+                      type="time"
                       value={blockTime}
                       onChange={e => setBlockTime(e.target.value)}
-                      className="bg-black/50 border-white/10 h-12"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                     />
-                    <p className="text-[10px] text-white/40">
+                    <p className="text-[11px] text-slate-400 dark:text-white/25">
                       {isRTL ? 'اتركه فارغاً لإغلاق اليوم بالكامل' : 'Leave empty to block the entire day'}
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-white block">{isRTL ? 'السبب (اختياري)' : 'Reason (Optional)'}</label>
-                    <Input 
-                      type="text" 
-                      placeholder={isRTL ? 'مثال: استراحة غداء، ظرف طارئ...' : 'e.g., Lunch break, Emergency...'}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">
+                      {isRTL ? 'السبب (اختياري)' : 'Reason (Optional)'}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={isRTL ? 'مثال: استراحة غداء' : 'e.g., Lunch break'}
                       value={blockReason}
                       onChange={e => setBlockReason(e.target.value)}
-                      className="bg-black/50 border-white/10 h-12"
+                      className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={isBlocking || !blockDate}
-                    className="w-full bg-rose-500 hover:bg-rose-600 text-white h-12 rounded-xl font-black text-sm"
+                    className={cn(
+                      "w-full h-10 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2 transition-all",
+                      isBlocking || !blockDate
+                        ? "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/25 cursor-not-allowed"
+                        : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+                    )}
                   >
                     {isBlocking ? (
-                      <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/> {isRTL ? 'جاري الإضافة...' : 'Adding...'}</span>
+                      <Loader2 size={14} className="animate-spin" />
                     ) : (
-                      <span className="flex items-center gap-2"><Plus size={18} /> {isRTL ? 'إغلاق الموعد' : 'Block Slot'}</span>
+                      <Plus size={14} />
                     )}
-                  </Button>
+                    {isBlocking ? (isRTL ? 'جاري الإضافة...' : 'Adding...') : (isRTL ? 'إغلاق الموعد' : 'Block Slot')}
+                  </button>
                 </form>
-              </Card>
+              </div>
             </div>
 
-            {/* List Side */}
+            {/* Blocked Slots List */}
             <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-xl font-black mb-6 px-2">{isRTL ? 'الاستثناءات القادمة' : 'Upcoming Blocked Slots'}</h3>
-              
+              <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">
+                {isRTL ? 'الاستثناءات القادمة' : 'Upcoming Blocked Slots'}
+              </h3>
+
               {blockedSlots.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 border border-dashed border-white/10 rounded-3xl bg-white/5">
-                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-white/20 mb-4">
-                    <CalendarX size={32} />
+                <div className="flex flex-col items-center justify-center p-12 bg-slate-100 dark:bg-white/5 rounded-2xl border border-dashed border-slate-200/60 dark:border-white/5">
+                  <div className="w-14 h-14 bg-slate-200/50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-slate-400 dark:text-white/25 mb-3">
+                    <CalendarX size={24} />
                   </div>
-                  <p className="text-white/50 font-medium">
+                  <p className="text-[13px] text-slate-500 dark:text-white/35 font-medium">
                     {isRTL ? 'لا توجد أوقات استثنائية محجوبة قادمة.' : 'No upcoming blocked slots.'}
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-3">
+                <div className="space-y-2">
                   {blockedSlots.map(slot => {
                     const slotDate = new Date(slot.date);
                     const formattedDate = slotDate.toLocaleDateString(isRTL ? 'ar-EG' : 'en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
-                    
+
                     return (
-                      <Card key={slot.id} className="p-4 md:p-5 flex items-center justify-between gap-4 border-white/10 bg-white/5 hover:bg-white/10 transition-colors">
-                        <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
-                            <CalendarX size={18} />
+                      <div
+                        key={slot.id}
+                        className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-4 flex items-center justify-between gap-4 hover:border-slate-300 dark:hover:border-white/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-red-500/10 dark:bg-red-500/15 flex items-center justify-center shrink-0">
+                            <CalendarX size={16} className="text-red-500" />
                           </div>
-                          <div>
-                            <div className="font-bold text-white flex items-center gap-2 flex-wrap">
+                          <div className="min-w-0">
+                            <div className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                               {formattedDate}
                               {slot.timeSlot && (
-                                <span className="px-2 py-0.5 rounded text-[10px] bg-white/10 text-white/80 uppercase tracking-wider">
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/35 uppercase tracking-wider">
                                   {slot.timeSlot}
                                 </span>
                               )}
                               {!slot.timeSlot && (
-                                <span className="px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 uppercase tracking-wider font-bold">
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/10 text-red-500 uppercase tracking-wider">
                                   {isRTL ? 'مغلق بالكامل' : 'Whole Day'}
                                 </span>
                               )}
                             </div>
                             {slot.reason && (
-                              <p className="text-sm text-white/50 mt-1">{slot.reason}</p>
+                              <p className="text-[12px] text-slate-500 dark:text-white/35 mt-0.5 truncate">{slot.reason}</p>
                             )}
                           </div>
                         </div>
-                        
-                        <Button
-                          variant="ghost"
-                          size="icon"
+
+                        <button
                           onClick={() => handleDeleteBlock(slot.id)}
-                          className="text-white/40 hover:text-rose-400 hover:bg-rose-500/10 shrink-0"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-white/25 hover:text-red-500 hover:bg-red-500/10 transition-all shrink-0"
                           title={isRTL ? 'حذف الاستثناء' : 'Remove Exception'}
                         >
-                          <Trash2 size={18} />
-                        </Button>
-                      </Card>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>

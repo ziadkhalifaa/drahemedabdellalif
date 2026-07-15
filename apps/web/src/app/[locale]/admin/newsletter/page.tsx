@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import { useAuth } from '@/components/layout/admin-layout';
-import { Card, Button, Input } from '@/components/ui';
 import { toast } from 'sonner';
 import { Mail, Download, Send, Users, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,7 +24,6 @@ export default function NewsletterPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Campaign state
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [campaignData, setCampaignData] = useState({ subject: '', content: '' });
   const [sending, setSending] = useState(false);
@@ -101,11 +99,11 @@ export default function NewsletterPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <h1 className="text-3xl font-black">{t('title')}</h1>
-        <div className="flex flex-col items-center justify-center py-20 text-[var(--muted)]">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="font-bold">{t('loadingSubscribers')}</p>
+      <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('title')}</h1>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-slate-200 dark:border-white/10 border-indigo-500 border-t-transparent rounded-xl animate-spin mb-4" />
+          <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">{t('loadingSubscribers')}</p>
         </div>
       </div>
     );
@@ -113,141 +111,161 @@ export default function NewsletterPage() {
 
   if (error) {
     return (
-      <div className="p-8 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <h1 className="text-3xl font-black">{t('title')}</h1>
-        <div className="flex flex-col items-center justify-center py-20 text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
-          <p className="font-bold">{t('failedToLoad')}</p>
-          <Button variant="outline" onClick={fetchSubscribers} className="mt-4">{t('retryNow')}</Button>
+      <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('title')}</h1>
+        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#111827] border border-red-200/60 dark:border-red-500/10 rounded-2xl">
+          <p className="text-[13px] font-bold text-red-500 mb-3">{t('failedToLoad')}</p>
+          <button onClick={fetchSubscribers} className="px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            {t('retryNow')}
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-10 space-y-8 max-w-6xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black mb-2 flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500">
-              <Mail size={28} />
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+              <Mail size={20} />
             </div>
             {t('title')}
           </h1>
-          <p className="text-[var(--muted)]">{t('subtitle')}</p>
+          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-1">{t('subtitle')}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="outline"
+          <button
             onClick={handleExportCSV}
-            className="rounded-xl font-bold gap-2"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
-            <Download size={18} />
+            <Download size={15} />
             {t('exportCSV')}
-          </Button>
+          </button>
 
-          <Button onClick={() => setIsCampaignModalOpen(true)} className="rounded-xl font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)] gap-2 shadow-lg shadow-[var(--primary)]/20">
-            <Send size={18} />
+          <button
+            onClick={() => setIsCampaignModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-500 text-white text-[13px] font-bold hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-500/20"
+          >
+            <Send size={15} />
             {t('sendCampaign')}
-          </Button>
-
-          {isCampaignModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-              <div className="w-full sm:max-w-[600px] bg-[var(--background)] border border-[var(--border)] rounded-3xl overflow-hidden relative shadow-2xl">
-                <div className="p-8">
-                  <div className="mb-6 flex justify-between items-center">
-                    <h2 className="text-2xl font-black flex items-center gap-2">
-                      <Send className="text-[var(--primary)]" />
-                      {t('newCampaign')}
-                    </h2>
-                    <button onClick={() => setIsCampaignModalOpen(false)} className="text-[var(--muted)] hover:text-[var(--foreground)]">
-                      <X size={24} />
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleSendCampaign} className="space-y-6">
-                    <div className="space-y-2">
-                      <label className={cn("text-sm font-bold text-[var(--muted)] block", isRTL ? "mr-1" : "ml-1")}>{t('subject')}</label>
-                      <Input
-                        required
-                        value={campaignData.subject}
-                        onChange={(e) => setCampaignData({ ...campaignData, subject: e.target.value })}
-                        placeholder={t('subjectPlaceholder')}
-                        className="py-6 rounded-xl"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className={cn("text-sm font-bold text-[var(--muted)] block", isRTL ? "mr-1" : "ml-1")}>{t('content')}</label>
-                      <textarea
-                        required
-                        value={campaignData.content}
-                        onChange={(e) => setCampaignData({ ...campaignData, content: e.target.value })}
-                        placeholder={isRTL ? '<p>عزيزي المشترك...</p>' : '<p>Dear subscriber...</p>'}
-                        className="w-full min-h-[200px] p-4 rounded-xl border border-[var(--border)] bg-[var(--card)] focus:ring-2 focus:ring-[var(--primary)]/20 focus:outline-none transition-all resize-y"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-4 bg-[var(--primary)]/5 p-4 rounded-xl border border-[var(--primary)]/10 text-sm">
-                      <Users size={20} className="text-[var(--primary)] shrink-0" />
-                      <p>
-                        {t.rich('recipientsCount', {
-                          count: subscribers.length,
-                          strong: (chunks) => <strong>{chunks}</strong>
-                        })}
-                      </p>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border)]">
-                      <Button type="button" variant="ghost" onClick={() => setIsCampaignModalOpen(false)} className="rounded-xl font-bold">
-                        {tCommon('cancel')}
-                      </Button>
-                      <Button type="submit" disabled={sending || !campaignData.subject || !campaignData.content} className="rounded-xl font-bold px-8">
-                        {sending ? tCommon('loading') : t('sendNow')}
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          )}
+          </button>
         </div>
       </div>
 
-      <Card className="border-[var(--border)] rounded-3xl shadow-sm overflow-hidden bg-[var(--card)]">
-        <div className="p-6 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[var(--background)]/50">
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <Users size={20} className="text-[var(--muted)]" />
+      {isCampaignModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-[560px] bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[15px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                    <Send size={16} />
+                  </div>
+                  {t('newCampaign')}
+                </h2>
+                <button
+                  onClick={() => setIsCampaignModalOpen(false)}
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-white/25 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSendCampaign} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className={cn("text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/25 block", isRTL ? "mr-1" : "ml-1")}>{t('subject')}</label>
+                  <input
+                    required
+                    value={campaignData.subject}
+                    onChange={(e) => setCampaignData({ ...campaignData, subject: e.target.value })}
+                    placeholder={t('subjectPlaceholder')}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className={cn("text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/25 block", isRTL ? "mr-1" : "ml-1")}>{t('content')}</label>
+                  <textarea
+                    required
+                    value={campaignData.content}
+                    onChange={(e) => setCampaignData({ ...campaignData, content: e.target.value })}
+                    placeholder={isRTL ? '<p>عزيزي subscriber...</p>' : '<p>Dear subscriber...</p>'}
+                    className="w-full min-h-[180px] p-4 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-y"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-indigo-500/5 p-4 rounded-xl border border-indigo-500/10">
+                  <Users size={18} className="text-indigo-500 shrink-0" />
+                  <p className="text-[13px] text-slate-600 dark:text-white/50">
+                    {t.rich('recipientsCount', {
+                      count: subscribers.length,
+                      strong: (chunks) => <strong className="text-slate-900 dark:text-white">{chunks}</strong>
+                    })}
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200/60 dark:border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setIsCampaignModalOpen(false)}
+                    className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 dark:text-white/35 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                  >
+                    {tCommon('cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={sending || !campaignData.subject || !campaignData.content}
+                    className="px-8 py-2.5 rounded-xl bg-indigo-500 text-white text-[13px] font-bold hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {sending ? tCommon('loading') : t('sendNow')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-[#111827] border border-slate-200/60 dark:border-white/5 rounded-2xl overflow-hidden">
+        <div className="p-5 border-b border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-[15px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users size={18} className="text-slate-400 dark:text-white/25" />
             {t('subscribersList')} ({subscribers.length})
           </h2>
-          <div className="relative w-full sm:w-72">
-            <Search className={cn("absolute top-1/2 -translate-y-1/2 text-[var(--muted)]", isRTL ? "right-3" : "left-3")} size={16} />
-            <Input
+          <div className="relative w-full sm:w-64">
+            <Search className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25", isRTL ? "right-3" : "left-3")} size={15} />
+            <input
               placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={cn("rounded-xl bg-[var(--background)]", isRTL ? "pr-10 pl-3" : "pl-10 pr-3")}
+              className={cn(
+                "w-full py-2 rounded-xl border border-slate-200/60 dark:border-white/5 bg-slate-50 dark:bg-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all",
+                isRTL ? "pr-10 pl-3" : "pl-10 pr-3"
+              )}
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className={cn("w-full text-sm whitespace-nowrap", isRTL ? "text-right" : "text-left")}>
-            <thead className="bg-[var(--background)] border-b border-[var(--border)] uppercase text-[10px] font-black tracking-wider text-[var(--muted)]">
+          <table className={cn("w-full text-[13px] whitespace-nowrap", isRTL ? "text-right" : "text-left")}>
+            <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200/60 dark:border-white/5">
               <tr>
-                <th className="px-6 py-4">{t('emailAddress')}</th>
-                <th className="px-6 py-4">{t('subscribedDate')}</th>
-                <th className={cn("px-6 py-4", isRTL ? "text-left" : "text-right")}>{t('status')}</th>
+                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">{t('emailAddress')}</th>
+                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">{t('subscribedDate')}</th>
+                <th className={cn("px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25", isRTL ? "text-left" : "text-right")}>{t('status')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]">
+            <tbody className="divide-y divide-slate-200/60 dark:divide-white/5">
               {filteredSubscribers.length > 0 ? (
                 filteredSubscribers.map(sub => (
-                  <tr key={sub.id} className="hover:bg-[var(--background)]/50 transition-colors">
-                    <td className="px-6 py-4 font-bold">{sub.email}</td>
-                    <td className="px-6 py-4 text-[var(--muted)]">{new Date(sub.createdAt).toLocaleDateString()}</td>
-                    <td className={cn("px-6 py-4", isRTL ? "text-left" : "text-right")}>
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/20">
+                  <tr key={sub.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white">{sub.email}</td>
+                    <td className="px-5 py-3.5 text-slate-500 dark:text-white/35">{new Date(sub.createdAt).toLocaleDateString()}</td>
+                    <td className={cn("px-5 py-3.5", isRTL ? "text-left" : "text-right")}>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                         {t('active')}
                       </span>
                     </td>
@@ -255,15 +273,22 @@ export default function NewsletterPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="px-6 py-12 text-center text-[var(--muted)]">
-                    {t('noSubscribersFound')} &quot;{searchTerm}&quot;
+                  <td colSpan={3} className="px-5 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3">
+                        <Mail size={28} className="text-slate-300 dark:text-white/15" />
+                      </div>
+                      <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">
+                        {t('noSubscribersFound')} &quot;{searchTerm}&quot;
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

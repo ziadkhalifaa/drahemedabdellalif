@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import { Check, X, Trash2, Star, Trophy, Eye, EyeOff } from 'lucide-react';
@@ -79,146 +78,161 @@ export default function AdminTestimonialsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">التعليقات والتقييمات</h1>
-        <p className="text-sm text-[var(--muted)]">إدارة تعليقات المرضى وقصص النجاح.</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">التعليقات والتقييمات</h1>
+        <p className="text-[13px] text-slate-500 dark:text-white/35">إدارة تعليقات المرضى وقصص النجاح.</p>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-[var(--muted)]">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="font-bold">Loading testimonials...</p>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-slate-200 dark:border-white/10 border-indigo-500 border-t-transparent rounded-xl animate-spin mb-4" />
+          <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">Loading testimonials...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
-          <p className="font-bold">Failed to load data</p>
-          <Button variant="outline" onClick={fetchTestimonials} className="mt-4">Retry Now</Button>
+        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#111827] border border-red-200/60 dark:border-red-500/10 rounded-2xl">
+          <p className="text-[13px] font-bold text-red-500 mb-3">Failed to load data</p>
+          <button onClick={fetchTestimonials} className="px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            Retry Now
+          </button>
         </div>
       ) : (
-      <>
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-[var(--border)] pb-0">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "px-5 py-3 text-sm font-bold rounded-t-xl transition-all border-b-2 -mb-[2px]",
-              activeTab === tab.id
-                ? "border-[var(--primary)] text-[var(--primary)] bg-[var(--primary)]/5"
-                : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"
-            )}
-          >
-            {tab.label}
-            {tab.count !== undefined && (
-              <span className={cn(
-                "mr-2 inline-flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-black",
-                activeTab === tab.id ? "bg-[var(--primary)] text-white" : "bg-gray-100 dark:bg-gray-800 text-[var(--muted)]"
-              )}>{tab.count}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* List */}
-      <div className="space-y-3">
-        {filtered.map((item) => (
-          <Card key={item.id} className={cn(
-            "p-5 transition-all",
-            item.isSuccessStory && "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10"
-          )}>
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-bold text-lg flex-shrink-0">
-                {item.patientName?.charAt(0) || '?'}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center flex-wrap gap-2 mb-1">
-                  <span className="font-bold text-[var(--foreground)]">{item.patientName}</span>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: item.rating || 5 }).map((_, i) => (
-                      <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  {item.isSuccessStory && (
-                    <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Trophy size={10} /> قصة نجاح
-                    </span>
-                  )}
+        <>
+          <div className="flex gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-xl w-fit">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "px-5 py-2.5 rounded-lg text-[13px] font-bold transition-all flex items-center gap-2",
+                  activeTab === tab.id
+                    ? "bg-white dark:bg-[#111827] text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-500 dark:text-white/35 hover:text-slate-700 dark:hover:text-white/50"
+                )}
+              >
+                {tab.label}
+                {tab.count !== undefined && (
                   <span className={cn(
-                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                    item.isApproved ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                  )}>
-                    {item.isApproved ? 'معتمد' : 'بانتظار الموافقة'}
-                  </span>
-                  {!item.isVisible && (
-                    <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-full">مخفي</span>
-                  )}
-                </div>
-                <p className="text-sm text-[var(--muted)] line-clamp-2">{item.content}</p>
-                {item.storyTitle && (
-                  <p className="text-xs text-[var(--primary)] font-bold mt-1">📖 {item.storyTitle}</p>
+                    "inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md text-[10px] font-black",
+                    activeTab === tab.id
+                      ? "bg-indigo-500 text-white"
+                      : "bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-white/35"
+                  )}>{tab.count}</span>
                 )}
-                {item.treatmentType && (
-                  <p className="text-xs text-gray-400 mt-0.5">النوع: {item.treatmentType}</p>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-1 flex-shrink-0">
-                {!item.isApproved && (
-                  <Button
-                    size="sm" variant="ghost"
-                    onClick={() => approve(item.id)}
-                    className="h-9 w-9 p-0 rounded-xl text-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-900/20"
-                    title="اعتماد"
-                  >
-                    <Check size={16} />
-                  </Button>
-                )}
-                <Button
-                  size="sm" variant="ghost"
-                  onClick={() => toggleSuccessStory(item)}
-                  className={cn(
-                    "h-9 w-9 p-0 rounded-xl",
-                    item.isSuccessStory
-                      ? "text-amber-500 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20"
-                      : "text-gray-400 hover:text-amber-500 hover:bg-amber-50"
-                  )}
-                  title={item.isSuccessStory ? "إلغاء قصة النجاح" : "تعيين كقصة نجاح"}
-                >
-                  <Trophy size={16} />
-                </Button>
-                <Button
-                  size="sm" variant="ghost"
-                  onClick={() => toggleVisibility(item)}
-                  className="h-9 w-9 p-0 rounded-xl text-blue-500 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20"
-                  title={item.isVisible ? "إخفاء" : "إظهار"}
-                >
-                  {item.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                </Button>
-                <Button
-                  size="sm" variant="ghost"
-                  onClick={() => handleDelete(item.id)}
-                  className="h-9 w-9 p-0 rounded-xl text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/20"
-                  title="حذف"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="text-center py-16 text-[var(--muted)]">
-            <p className="text-4xl mb-4">💬</p>
-            <p className="font-bold">لا توجد تعليقات في هذا القسم</p>
+              </button>
+            ))}
           </div>
-        )}
-      </div>
-      </>
+
+          <div className="space-y-3">
+            {filtered.map((item) => (
+              <div
+                key={item.id}
+                className={cn(
+                  "bg-white dark:bg-[#111827] border rounded-2xl p-5 transition-all duration-300",
+                  item.isSuccessStory
+                    ? "border-amber-200/60 dark:border-amber-500/10"
+                    : "border-slate-200/60 dark:border-white/5"
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={cn(
+                    "w-11 h-11 rounded-xl flex items-center justify-center text-[15px] font-bold flex-shrink-0",
+                    item.isSuccessStory
+                      ? "bg-amber-500/10 text-amber-500"
+                      : "bg-indigo-500/10 text-indigo-500"
+                  )}>
+                    {item.patientName?.charAt(0) || '?'}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                      <span className="text-[13px] font-bold text-slate-900 dark:text-white">{item.patientName}</span>
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: item.rating || 5 }).map((_, i) => (
+                          <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center flex-wrap gap-1.5 mb-2">
+                      {item.isSuccessStory && (
+                        <span className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold px-2.5 py-1 rounded-lg">
+                          <Trophy size={11} /> قصة نجاح
+                        </span>
+                      )}
+                      <span className={cn(
+                        "text-[11px] font-bold px-2.5 py-1 rounded-lg",
+                        item.isApproved
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      )}>
+                        {item.isApproved ? 'معتمد' : 'بانتظار الموافقة'}
+                      </span>
+                      {!item.isVisible && (
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/25">
+                          مخفي
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[13px] text-slate-500 dark:text-white/35 line-clamp-2 leading-relaxed">{item.content}</p>
+                    {item.storyTitle && (
+                      <p className="text-[12px] text-indigo-500 font-bold mt-1.5">{item.storyTitle}</p>
+                    )}
+                    {item.treatmentType && (
+                      <p className="text-[12px] text-slate-400 dark:text-white/25 mt-0.5">النوع: {item.treatmentType}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    {!item.isApproved && (
+                      <button
+                        onClick={() => approve(item.id)}
+                        className="h-9 w-9 p-0 rounded-xl text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors flex items-center justify-center"
+                        title="اعتماد"
+                      >
+                        <Check size={16} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => toggleSuccessStory(item)}
+                      className={cn(
+                        "h-9 w-9 p-0 rounded-xl transition-colors flex items-center justify-center",
+                        item.isSuccessStory
+                          ? "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20"
+                          : "text-slate-400 dark:text-white/25 hover:text-amber-500 hover:bg-amber-500/10"
+                      )}
+                      title={item.isSuccessStory ? "إلغاء قصة النجاح" : "تعيين كقصة نجاح"}
+                    >
+                      <Trophy size={16} />
+                    </button>
+                    <button
+                      onClick={() => toggleVisibility(item)}
+                      className="h-9 w-9 p-0 rounded-xl text-blue-500 bg-blue-500/10 hover:bg-blue-500/20 transition-colors flex items-center justify-center"
+                      title={item.isVisible ? "إخفاء" : "إظهار"}
+                    >
+                      {item.isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="h-9 w-9 p-0 rounded-xl text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center"
+                      title="حذف"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {filtered.length === 0 && (
+              <div className="py-20 flex flex-col items-center justify-center text-center">
+                <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
+                  <span className="text-3xl">💬</span>
+                </div>
+                <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">لا توجد تعليقات في هذا القسم</p>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

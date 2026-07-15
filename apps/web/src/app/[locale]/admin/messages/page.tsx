@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '@/components/ui';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import type { ContactMessage } from '@dr-ahmed/shared';
-import { Trash2, MailOpen, Download, FileDown, MessageCircle } from 'lucide-react';
+import { Trash2, MailOpen, Download, FileDown, MessageCircle, Mail, Phone, User } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { cn } from '@/lib/utils';
 
@@ -75,87 +74,131 @@ export default function AdminMessagesPage() {
     exportToPDF(headers, data, 'Messages_Report', 'Contact Messages List');
   };
 
+  const unreadCount = messages.filter(m => !m.isRead).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Messages</h1>
-          <p className="text-sm text-[var(--muted)]">Handle inquiries and messages from the contact form.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Messages</h1>
+          <p className="text-[13px] text-slate-500 dark:text-white/35">
+            Handle inquiries and messages from the contact form.
+            {unreadCount > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md bg-indigo-500 text-white text-[10px] font-black">
+                {unreadCount}
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-2">
-            <Download size={16} /> Excel
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportPDF} className="gap-2">
-            <FileDown size={16} /> PDF
-          </Button>
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+          >
+            <Download size={15} /> Excel
+          </button>
+          <button
+            onClick={handleExportPDF}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+          >
+            <FileDown size={15} /> PDF
+          </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-[var(--muted)]">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="font-bold">Loading messages...</p>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-slate-200 dark:border-white/10 border-indigo-500 border-t-transparent rounded-xl animate-spin mb-4" />
+          <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">Loading messages...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 text-red-500 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
-          <p className="font-bold">Failed to load data</p>
-          <Button variant="outline" onClick={fetchMessages} className="mt-4">Retry Now</Button>
+        <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#111827] border border-red-200/60 dark:border-red-500/10 rounded-2xl">
+          <p className="text-[13px] font-bold text-red-500 mb-3">Failed to load data</p>
+          <button onClick={fetchMessages} className="px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            Retry Now
+          </button>
         </div>
       ) : (
-      <div className="grid gap-4">
-        {messages.map((msg) => (
-          <Card key={msg.id} className={cn(
-            "p-0 overflow-hidden transition-all duration-300",
-            !msg.isRead ? "border-l-4 border-l-[var(--primary)] shadow-md" : "opacity-80"
-          )}>
-            <div className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex gap-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                    !msg.isRead ? "bg-[var(--primary)]/10 text-[var(--primary)]" : "bg-gray-100 text-gray-400"
-                  )}>
-                    <MessageCircle size={20} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-[var(--foreground)]">{msg.name}</h3>
-                      {!msg.isRead && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-[var(--primary)] text-white text-[8px] font-bold uppercase">New</span>
-                      )}
+        <div className="grid gap-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn(
+                "bg-white dark:bg-[#111827] rounded-2xl overflow-hidden transition-all duration-300 border",
+                !msg.isRead
+                  ? "border-l-[3px] border-l-indigo-500 border-slate-200/60 dark:border-white/5 shadow-lg shadow-indigo-500/5"
+                  : "border-slate-200/60 dark:border-white/5"
+              )}
+            >
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                      !msg.isRead
+                        ? "bg-indigo-500/10 text-indigo-500"
+                        : "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/25"
+                    )}>
+                      <MessageCircle size={20} />
                     </div>
-                    <p className="text-xs text-[var(--muted)] font-medium">{msg.email} &middot; {msg.phone}</p>
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">{msg.name}</h3>
+                        {!msg.isRead && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-indigo-500 text-white text-[9px] font-black uppercase">New</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-[12px] text-slate-500 dark:text-white/35">
+                        <span className="flex items-center gap-1">
+                          <Mail size={11} /> {msg.email}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Phone size={11} /> {msg.phone}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {!msg.isRead && (
+                      <button
+                        onClick={() => markAsRead(msg.id)}
+                        className="h-8 w-8 p-0 rounded-lg text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors flex items-center justify-center"
+                        title="Mark as read"
+                      >
+                        <MailOpen size={15} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(msg.id)}
+                      className="h-8 w-8 p-0 rounded-lg text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center"
+                      title="Delete"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  {!msg.isRead && (
-                    <Button size="sm" variant="ghost" onClick={() => markAsRead(msg.id)} className="h-8 w-8 p-0 text-[var(--primary)] hover:bg-[var(--primary)]/10">
-                      <MailOpen size={16} />
-                    </Button>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(msg.id)} className="h-8 w-8 p-0 text-red-500 hover:bg-red-50">
-                    <Trash2 size={16} />
-                  </Button>
+                <div className="mt-4 p-4 bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-100 dark:border-white/5">
+                  <p className="text-[13px] text-slate-700 dark:text-white/50 leading-relaxed">{msg.message}</p>
                 </div>
-              </div>
-              <div className="mt-4 p-4 bg-[var(--card-hover)] rounded-xl">
-                <p className="text-sm text-[var(--foreground)] leading-relaxed italic">&quot;{msg.message}&quot;</p>
-              </div>
-              <div className="mt-4 flex items-center justify-between text-[10px] text-[var(--muted)] font-medium">
-                <span>{new Date(msg.createdAt).toLocaleString()}</span>
-                {msg.isRead && <span className="uppercase tracking-widest opacity-50">Read</span>}
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400 dark:text-white/25">{new Date(msg.createdAt).toLocaleString()}</span>
+                  {msg.isRead && (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300 dark:text-white/15">Read</span>
+                  )}
+                </div>
               </div>
             </div>
-          </Card>
-        ))}
-        {messages.length === 0 && (
-          <Card className="py-20 flex flex-col items-center justify-center text-[var(--muted)]">
-            <MessageCircle size={48} className="opacity-10 mb-4" />
-            <p className="font-medium">No messages found in your inbox</p>
-          </Card>
-        )}
-      </div>
+          ))}
+
+          {messages.length === 0 && (
+            <div className="py-20 flex flex-col items-center justify-center text-center">
+              <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
+                <Mail size={36} className="text-slate-300 dark:text-white/15" />
+              </div>
+              <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">No messages found in your inbox</p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
