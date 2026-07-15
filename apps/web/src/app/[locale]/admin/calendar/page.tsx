@@ -42,7 +42,7 @@ export default function AdminCalendarPage() {
   const fetchAppointments = useCallback(() => {
     if (!token) return;
     setLoading(true); setError(false);
-    api.get<{ data: Appointment[]; total: number }>('/appointments', token)
+    api.get<{ data: Appointment[]; total: number }>('/appointments?limit=500', token)
       .then(res => setAppointments(res.data || []))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -101,14 +101,16 @@ export default function AdminCalendarPage() {
   const AptChip = ({ apt, compact = false }: { apt: Appointment; compact?: boolean }) => {
     const s = getStatusStyle(apt.status);
     const name = apt.guestName || apt.patient?.name || 'Unknown';
+    const clinicName = (apt as any).clinic ? (isRTL ? (apt as any).clinic.nameAr : (apt as any).clinic.nameEn) : null;
     return (
       <button onClick={(e) => { e.stopPropagation(); setSelectedApt(apt); }}
-        className={cn("w-full text-left rounded-lg border px-2 py-1 transition-all hover:scale-[1.02] active:scale-[0.98] truncate", s.bg, s.border, compact ? 'text-[10px]' : 'text-[11px]', 'font-semibold')}>
+        className={cn("w-full text-left rounded-lg border px-2 py-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] truncate", s.bg, s.border, compact ? 'text-[10px]' : 'text-[11px]', 'font-semibold')}>
         <div className={cn("flex items-center gap-1", s.text)}>
           {apt.type === AppointmentType.ONLINE && <Video size={9} className="shrink-0" />}
           <span className="truncate">{compact ? name.split(' ')[0] : name}</span>
           {!compact && <span className="ml-auto shrink-0 opacity-70">{formatTime12Hour(apt.timeSlot, false)}</span>}
         </div>
+        {!compact && clinicName && <div className="text-[9px] opacity-50 truncate mt-0.5">{clinicName}</div>}
       </button>
     );
   };
@@ -127,7 +129,7 @@ export default function AdminCalendarPage() {
             const dayApts = date ? getAptsForDay(date) : [];
             const extra = dayApts.length > 3 ? dayApts.length - 3 : 0;
             return (
-              <div key={i} className={cn("min-h-[110px] p-2 border-b border-r border-slate-100 dark:border-white/5 transition-colors", date ? "hover:bg-slate-50 dark:hover:bg-white/[0.02]" : "bg-slate-50/50 dark:bg-white/[0.01]", !isCurrentMonth && "opacity-30")}>
+              <div key={i} className={cn("min-h-[120px] p-2.5 border-b border-r border-slate-100 dark:border-white/[0.04] transition-colors", date ? "hover:bg-slate-50 dark:hover:bg-white/[0.02]" : "bg-slate-50/50 dark:bg-white/[0.01]", !isCurrentMonth && "opacity-30")}>
                 {date && <>
                   <div className={cn("inline-flex w-7 h-7 items-center justify-center rounded-lg text-[11px] font-bold mb-1.5", isToday ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/30" : "text-slate-500 dark:text-white/50")}>{date.getDate()}</div>
                   <div className="space-y-0.5">
