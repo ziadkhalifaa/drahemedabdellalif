@@ -15,12 +15,14 @@ export class ReportsController {
     return this.reportsService.getMyReports(req.user.id);
   }
 
+  @Get('by-appointment/:appointmentId')
+  async getByAppointment(@Param('appointmentId') appointmentId: string) {
+    return this.reportsService.findByAppointment(appointmentId);
+  }
+
   @Get(':id')
-  async getReportById(@Param('id') id: string, @Req() req: any) {
-    // Note: getReportById was removed from service, using a direct prisma check or restoring it
-    // For now, I'll just use the patient check in service if I restore it.
-    // Let me restore getReportById in service in next step if needed.
-    return this.reportsService.getMyReports(req.user.id); 
+  async getReportById(@Param('id') id: string) {
+    return this.reportsService.findById(id);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -34,12 +36,12 @@ export class ReportsController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(
-    @Body() body: { title: string; patientId: string; description?: string },
+    @Body() body: { title: string; patientId: string; description?: string; appointmentId?: string },
     @Req() req: any,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
           new FileTypeValidator({ fileType: '.(png|jpeg|jpg|pdf)' }),
         ],
         fileIsRequired: true,

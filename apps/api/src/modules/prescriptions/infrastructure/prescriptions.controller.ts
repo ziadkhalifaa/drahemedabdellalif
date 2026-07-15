@@ -26,6 +26,11 @@ export class PrescriptionsController {
     return this.prescriptionsService.findOne(id);
   }
 
+  @Get('by-appointment/:appointmentId')
+  async getByAppointment(@Param('appointmentId') appointmentId: string) {
+    return this.prescriptionsService.findByAppointment(appointmentId);
+  }
+
   @Get('patient/:patientId')
   @UseGuards(RolesGuard)
   @Roles('admin', 'editor')

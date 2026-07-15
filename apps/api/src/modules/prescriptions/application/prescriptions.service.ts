@@ -23,6 +23,16 @@ export class PrescriptionsService {
     });
   }
 
+  async findByAppointment(appointmentId: string) {
+    return this.prisma.prescription.findFirst({
+      where: { appointmentId },
+      include: { 
+        appointment: { include: { patient: true } },
+        patient: true 
+      },
+    });
+  }
+
   async findByPatient(patientId: string) {
     return this.prisma.prescription.findMany({
       where: { patientId },
