@@ -5,7 +5,7 @@ import { useAuth } from './admin-layout';
 import {
   LogOut, LayoutDashboard, Calendar, CalendarDays, FileText,
   Star, X, Image, Settings, Users, Edit3,
-  Clock, Mail, CreditCard, Stethoscope, Pill, FileBarChart, Newspaper, Shield
+  Clock, Mail, CreditCard, Stethoscope, Pill, FileBarChart, Newspaper, Shield, Building2, Send, CalendarOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,7 @@ const navSections = [
       { href: '/admin/hero-slides', icon: Newspaper, labelKey: 'Hero Slides' },
       { href: '/admin/services', icon: Stethoscope, labelKey: 'Services' },
       { href: '/admin/techniques', icon: Star, labelKey: 'Techniques' },
+      { href: '/admin/clinics', icon: Building2, labelKey: 'clinics' },
       { href: '/admin/blog', icon: FileText, labelKey: 'blog' },
       { href: '/admin/media', icon: Image, labelKey: 'media' },
     ]
@@ -37,6 +38,7 @@ const navSections = [
     items: [
       { href: '/admin/testimonials', icon: Star, labelKey: 'testimonials' },
       { href: '/admin/messages', icon: Mail, labelKey: 'messages' },
+      { href: '/admin/newsletter', icon: Send, labelKey: 'newsletter' },
     ]
   },
   {
@@ -46,6 +48,7 @@ const navSections = [
       { href: '/admin/reports', icon: FileBarChart, labelKey: 'reports' },
       { href: '/admin/editor', icon: Edit3, labelKey: 'live_editor' },
       { href: '/admin/working-hours', icon: Clock, labelKey: 'working_hours' },
+      { href: '/admin/availability', icon: CalendarOff, labelKey: 'availability' },
       { href: '/admin/audit-logs', icon: Shield, labelKey: 'audit_logs' },
       { href: '/admin/settings', icon: Settings, labelKey: 'settings' },
     ]
@@ -71,6 +74,9 @@ export function AdminSidebar({ open, onClose }: { open: boolean; onClose: () => 
     'prescriptions': isRTL ? 'الوصفات الطبية' : 'Prescriptions',
     'reports': isRTL ? 'التقارير' : 'Reports',
     'audit_logs': isRTL ? 'سجل النشاط' : 'Audit Logs',
+    'clinics': isRTL ? 'العيادات' : 'Clinics',
+    'newsletter': isRTL ? 'النشرة البريدية' : 'Newsletter',
+    'availability': isRTL ? 'حجز المواعيد' : 'Availability',
   };
 
   const sectionLabels = [

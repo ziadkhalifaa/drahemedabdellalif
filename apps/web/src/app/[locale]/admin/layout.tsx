@@ -30,6 +30,10 @@ const pageTitles: Record<string, { ar: string; en: string }> = {
   '/admin/editor': { ar: 'محرر الموقع', en: 'Live Editor' },
   '/admin/working-hours': { ar: 'ساعات العمل', en: 'Working Hours' },
   '/admin/settings': { ar: 'الإعدادات', en: 'Settings' },
+  '/admin/clinics': { ar: 'العيادات', en: 'Clinics' },
+  '/admin/newsletter': { ar: 'النشرة البريدية', en: 'Newsletter' },
+  '/admin/availability': { ar: 'حجز المواعيد', en: 'Availability' },
+  '/admin/audit-logs': { ar: 'سجل النشاط', en: 'Audit Logs' },
 };
 
 function AdminShell({ children }: { children: React.ReactNode }) {
