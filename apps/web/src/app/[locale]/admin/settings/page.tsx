@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Save, Globe, Info, Phone, Share2, Loader2 } from 'lucide-react';
+import { Save, Globe, Info, Phone, Share2, Loader2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminSettingsPage() {
@@ -32,6 +32,13 @@ export default function AdminSettingsPage() {
       youtube: 'https://www.youtube.com/@DrAhmedAbdellatif',
       instagram: '',
       whatsapp: ''
+    },
+    seo: {
+      metaTitleAr: 'د. أحمد عبد اللطيف - استشاري جراحة المسالك البولية',
+      metaTitleEn: 'Dr. Ahmed Abdellatif - Urology & Andrology Consultant',
+      metaDescriptionAr: 'استشاري جراحة المسالك البولية والكلى والمناظير والذكورة في مصر',
+      metaDescriptionEn: 'Consultant Urologist specializing in endoscopic and laser surgeries',
+      ogImage: '',
     }
   });
 
@@ -102,6 +109,12 @@ export default function AdminSettingsPage() {
       title: 'Social Media Links',
       description: 'External links to social media profiles.',
       icon: Share2,
+    },
+    {
+      key: 'seo',
+      title: 'SEO Settings',
+      description: 'Meta tags and Open Graph for search engines.',
+      icon: Search,
     },
   ];
 
@@ -389,6 +402,103 @@ export default function AdminSettingsPage() {
               placeholder="https://wa.me/..."
             />
           </div>
+        </div>
+      </div>
+
+      {/* SEO Settings */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center">
+              <Search size={18} className="text-indigo-500" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">SEO Settings</h2>
+              <p className="text-[12px] text-slate-500 dark:text-white/35">Meta tags and Open Graph for search engines.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSave('seo')}
+            disabled={savingKey === 'seo'}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold transition-all",
+              savingKey === 'seo'
+                ? "bg-indigo-500/20 text-indigo-400 cursor-not-allowed"
+                : "bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/20"
+            )}
+          >
+            {savingKey === 'seo' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Save size={14} />
+            )}
+            Save
+          </button>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Arabic</span>
+            <div className="space-y-2">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-white/25">Meta Title</label>
+                <input
+                  type="text"
+                  value={settings.seo?.metaTitleAr || ''}
+                  onChange={(e) => updateField('seo', 'metaTitleAr', e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  placeholder="Meta title in Arabic"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-white/25">Meta Description</label>
+                <textarea
+                  value={settings.seo?.metaDescriptionAr || ''}
+                  onChange={(e) => updateField('seo', 'metaDescriptionAr', e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                  placeholder="Meta description in Arabic"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">English</span>
+            <div className="space-y-2">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-white/25">Meta Title</label>
+                <input
+                  type="text"
+                  value={settings.seo?.metaTitleEn || ''}
+                  onChange={(e) => updateField('seo', 'metaTitleEn', e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  placeholder="Meta title in English"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-white/25">Meta Description</label>
+                <textarea
+                  value={settings.seo?.metaDescriptionEn || ''}
+                  onChange={(e) => updateField('seo', 'metaDescriptionEn', e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                  placeholder="Meta description in English"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Open Graph Image URL</label>
+          <input
+            type="url"
+            value={settings.seo?.ogImage || ''}
+            onChange={(e) => updateField('seo', 'ogImage', e.target.value)}
+            className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            placeholder="https://example.com/og-image.jpg"
+          />
+          <p className="text-[11px] text-slate-400 dark:text-white/25">Image shown when the site is shared on social media (1200x630 recommended).</p>
         </div>
       </div>
     </div>
