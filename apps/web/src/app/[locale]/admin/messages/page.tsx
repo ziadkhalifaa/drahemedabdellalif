@@ -4,15 +4,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/layout/admin-layout';
 import { api } from '@/lib/api';
 import type { ContactMessage } from '@dr-ahmed/shared';
-import { Trash2, MailOpen, Download, FileDown, MessageCircle, Mail, Phone, User } from 'lucide-react';
+import { Trash2, MailOpen, Download, FileDown, MessageCircle, Mail, Phone, Search, Filter, X, CheckCheck } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/lib/export-utils';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function AdminMessagesPage() {
   const { token } = useAuth();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const fetchMessages = useCallback((attempt = 1) => {
     if (!token) return;
@@ -38,20 +41,38 @@ export default function AdminMessagesPage() {
 
   const markAsRead = async (id: string) => {
     if (!token) return;
-    await api.patch(`/contact/${id}/read`, {}, token);
+    try {
+      await api.patch(`/contact/${id}/read`, {}, token);
+      toast.success('Marked as read');
+      fetchMessages();
+    } catch {
+      toast.error('Failed to mark as read');
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!token) return;
+    const unread = filteredMessages.filter(m => !m.isRead);
+    for (const msg of unread) {
+      await api.patch(`/contact/${msg.id}/read`, {}, token);
+    }
+    toast.success(`Marked ${unread.length} messages as read`);
     fetchMessages();
   };
 
   const handleDelete = async (id: string) => {
     if (!token) return;
-    if (confirm('Delete this message?')) {
+    try {
       await api.delete(`/contact/${id}`, token);
+      toast.success('Message deleted');
       fetchMessages();
+    } catch {
+      toast.error('Failed to delete');
     }
   };
 
   const handleExportExcel = () => {
-    const data = messages.map(m => ({
+    const data = filteredMessages.map(m => ({
       Name: m.name,
       Email: m.email,
       Phone: m.phone,
@@ -64,7 +85,7 @@ export default function AdminMessagesPage() {
 
   const handleExportPDF = () => {
     const headers = ['Name', 'Email', 'Phone', 'Date', 'Status'];
-    const data = messages.map(m => [
+    const data = filteredMessages.map(m => [
       m.name,
       m.email,
       m.phone,
@@ -75,52 +96,139 @@ export default function AdminMessagesPage() {
   };
 
   const unreadCount = messages.filter(m => !m.isRead).length;
+  const totalCount = messages.length;
+
+  const filteredMessages = messages.filter(m => {
+    if (filter === 'unread' && m.isRead) return false;
+    if (filter === 'read' && !m.isRead) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        m.name.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        m.phone?.toLowerCase().includes(q) ||
+        m.message.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Messages</h1>
-          <p className="text-[13px] text-slate-500 dark:text-white/35">
-            Handle inquiries and messages from the contact form.
-            {unreadCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md bg-indigo-500 text-white text-[10px] font-black">
-                {unreadCount}
-              </span>
-            )}
+          <h1 className="text-[22px] font-bold text-slate-900 dark:text-white">Messages</h1>
+          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-1">
+            Contact form submissions and inquiries.
           </p>
         </div>
         <div className="flex gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/10 text-indigo-500 text-[12px] font-bold hover:bg-indigo-500/15 transition-colors"
+            >
+              <CheckCheck size={14} />
+              Mark all read ({unreadCount})
+            </button>
+          )}
           <button
             onClick={handleExportExcel}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[12px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
-            <Download size={15} /> Excel
+            <Download size={13} /> Excel
           </button>
           <button
             onClick={handleExportPDF}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[12px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
           >
-            <FileDown size={15} /> PDF
+            <FileDown size={13} /> PDF
           </button>
         </div>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <button
+          onClick={() => setFilter('all')}
+          className={cn(
+            "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+            filter === 'all' ? "border-indigo-500/30 dark:border-indigo-500/20 shadow-md shadow-indigo-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+          )}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Total</p>
+          <p className="text-[22px] font-bold text-slate-900 dark:text-white mt-1">{totalCount}</p>
+        </button>
+        <button
+          onClick={() => setFilter('unread')}
+          className={cn(
+            "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+            filter === 'unread' ? "border-indigo-500/30 dark:border-indigo-500/20 shadow-md shadow-indigo-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+          )}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-500">Unread</p>
+          <p className="text-[22px] font-bold text-indigo-500 mt-1">{unreadCount}</p>
+        </button>
+        <button
+          onClick={() => setFilter('read')}
+          className={cn(
+            "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+            filter === 'read' ? "border-indigo-500/30 dark:border-indigo-500/20 shadow-md shadow-indigo-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+          )}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/25">Read</p>
+          <p className="text-[22px] font-bold text-slate-900 dark:text-white mt-1">{totalCount - unreadCount}</p>
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-4">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            placeholder="Search by name, email, phone, or message..."
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Messages */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-8 h-8 border-2 border-slate-200 dark:border-white/10 border-indigo-500 border-t-transparent rounded-xl animate-spin mb-4" />
-          <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">Loading messages...</p>
+          <div className="w-7 h-7 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-3" />
+          <p className="text-[13px] text-slate-500 dark:text-white/35">Loading messages...</p>
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#111827] border border-red-200/60 dark:border-red-500/10 rounded-2xl">
           <p className="text-[13px] font-bold text-red-500 mb-3">Failed to load data</p>
-          <button onClick={fetchMessages} className="px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+          <button onClick={() => fetchMessages()} className="px-4 py-2 rounded-xl border border-slate-200/60 dark:border-white/5 text-[13px] font-bold text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
             Retry Now
           </button>
         </div>
+      ) : filteredMessages.length === 0 ? (
+        <div className="py-20 flex flex-col items-center justify-center text-center bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5">
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3">
+            <Mail size={24} className="text-slate-300 dark:text-white/15" />
+          </div>
+          <p className="text-[13px] font-bold text-slate-900 dark:text-white">
+            {search ? 'No messages match your search' : filter === 'unread' ? 'No unread messages' : filter === 'read' ? 'No read messages' : 'No messages yet'}
+          </p>
+          <p className="text-[12px] text-slate-500 dark:text-white/35 mt-1">
+            {search ? 'Try a different search term' : 'Messages from the contact form will appear here'}
+          </p>
+        </div>
       ) : (
-        <div className="grid gap-4">
-          {messages.map((msg) => (
+        <div className="space-y-3">
+          {filteredMessages.map((msg) => (
             <div
               key={msg.id}
               className={cn(
@@ -152,9 +260,11 @@ export default function AdminMessagesPage() {
                         <span className="flex items-center gap-1">
                           <Mail size={11} /> {msg.email}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Phone size={11} /> {msg.phone}
-                        </span>
+                        {msg.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone size={11} /> <span dir="ltr">{msg.phone}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -181,7 +291,9 @@ export default function AdminMessagesPage() {
                   <p className="text-[13px] text-slate-700 dark:text-white/50 leading-relaxed">{msg.message}</p>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 dark:text-white/25">{new Date(msg.createdAt).toLocaleString()}</span>
+                  <span className="text-[11px] text-slate-400 dark:text-white/25">
+                    {new Date(msg.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
                   {msg.isRead && (
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300 dark:text-white/15">Read</span>
                   )}
@@ -189,16 +301,14 @@ export default function AdminMessagesPage() {
               </div>
             </div>
           ))}
-
-          {messages.length === 0 && (
-            <div className="py-20 flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-4">
-                <Mail size={36} className="text-slate-300 dark:text-white/15" />
-              </div>
-              <p className="text-[13px] font-bold text-slate-500 dark:text-white/35">No messages found in your inbox</p>
-            </div>
-          )}
         </div>
+      )}
+
+      {/* Result count */}
+      {!loading && filteredMessages.length > 0 && (
+        <p className="text-center text-[11px] text-slate-400 dark:text-white/25">
+          Showing {filteredMessages.length} of {totalCount} messages
+        </p>
       )}
     </div>
   );

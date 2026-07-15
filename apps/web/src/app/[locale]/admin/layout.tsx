@@ -5,8 +5,8 @@ import { AdminSidebar } from '@/components/layout/admin-sidebar';
 import { useTranslations, useLocale } from 'next-intl';
 import { usePathname, useRouter, Link } from '@/i18n/routing';
 import { useTheme } from '@/components/theme-provider';
-import { Menu, Bell, Globe, Moon, Sun, ChevronRight, ExternalLink } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Menu, Bell, Globe, Moon, Sun, ChevronRight, ExternalLink, Calendar, MessageCircle, Star, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/lib/api';
@@ -41,15 +41,29 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [notifCount, setNotifCount] = useState(0);
+  const [notifData, setNotifData] = useState({ pendingAppointments: 0, unreadMessages: 0, pendingTestimonials: 0 });
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   const isLoginPage = pathname.includes('/login');
 
   useEffect(() => {
     if (!token) return;
-    api.get<{ total: number }>('/analytics/notifications', token)
-      .then(data => setNotifCount(data.total))
+    api.get<{ total: number; pendingAppointments: number; unreadMessages: number; pendingTestimonials: number }>('/analytics/notifications', token)
+      .then(data => {
+        setNotifCount(data.total);
+        setNotifData({ pendingAppointments: data.pendingAppointments, unreadMessages: data.unreadMessages, pendingTestimonials: data.pendingTestimonials });
+      })
       .catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   useEffect(() => {
     if (!token && !isLoginPage) router.push('/admin/login');
@@ -113,12 +127,75 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               </AnimatePresence>
             </button>
 
-            <button className="relative p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-              <Bell size={15} className="text-slate-400 dark:text-slate-500" />
-              {notifCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              )}
-            </button>
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              >
+                <Bell size={15} className="text-slate-400 dark:text-slate-500" />
+                {notifCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold">
+                    {notifCount > 99 ? '99+' : notifCount}
+                  </span>
+                )}
+              </button>
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1a2332] rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-2xl shadow-slate-200/60 dark:shadow-black/40 overflow-hidden z-50"
+                  >
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                      <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">{isRTL ? 'الإشعارات' : 'Notifications'}</h3>
+                      {notifCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-500 text-[10px] font-bold">{notifCount}</span>
+                      )}
+                    </div>
+                    <div className="p-2 space-y-1">
+                      {notifData.pendingAppointments > 0 && (
+                        <Link href="/admin/appointments" onClick={() => setNotifOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center"><Calendar size={14} className="text-indigo-500" /></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-medium text-slate-700 dark:text-white/60">{isRTL ? 'مواعيد في الانتظار' : 'Pending Appointments'}</p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 text-[11px] font-bold">{notifData.pendingAppointments}</span>
+                        </Link>
+                      )}
+                      {notifData.unreadMessages > 0 && (
+                        <Link href="/admin/messages" onClick={() => setNotifOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center"><MessageCircle size={14} className="text-amber-500" /></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-medium text-slate-700 dark:text-white/60">{isRTL ? 'رسائل جديدة' : 'Unread Messages'}</p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[11px] font-bold">{notifData.unreadMessages}</span>
+                        </Link>
+                      )}
+                      {notifData.pendingTestimonials > 0 && (
+                        <Link href="/admin/testimonials" onClick={() => setNotifOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center"><Star size={14} className="text-rose-500" /></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[12px] font-medium text-slate-700 dark:text-white/60">{isRTL ? 'تقييمات تنتظر الموافقة' : 'Pending Testimonials'}</p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-500 text-[11px] font-bold">{notifData.pendingTestimonials}</span>
+                        </Link>
+                      )}
+                      {notifCount === 0 && (
+                        <div className="py-6 text-center">
+                          <Bell size={20} className="mx-auto mb-2 text-slate-300 dark:text-white/15" />
+                          <p className="text-[12px] text-slate-400 dark:text-white/30">{isRTL ? 'لا توجد إشعارات جديدة' : 'No new notifications'}</p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 

@@ -6,7 +6,10 @@ import { useAuth } from '@/components/layout/admin-layout';
 import { appointmentsApi } from '@/lib/api';
 import { cn, formatTime12Hour } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, CheckCircle, XCircle, Loader2, Eye, Phone, Calendar, Clock, Building2, AlertCircle, Image } from 'lucide-react';
+import {
+  CreditCard, CheckCircle, XCircle, Loader2, Eye, Phone, Calendar,
+  Clock, Building2, AlertCircle, Image, Search, X, TrendingUp,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 const STATUS_LABELS: Record<string, { ar: string; en: string; color: string }> = {
@@ -120,56 +123,105 @@ export default function AdminPaymentsPage() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [filter, setFilter] = useState('PENDING_REVIEW');
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const data = await appointmentsApi.getAll({ paymentStatus: filter, limit: 50 }, token);
+      const data = await appointmentsApi.getAll({ paymentStatus: filter, limit: 100 }, token);
       setAppointments(data.data || []);
     } catch { toast.error(isRTL ? 'فشل التحميل' : 'Failed to load'); } finally { setLoading(false); }
   }, [token, filter, isRTL]);
 
   useEffect(() => { load(); }, [load]);
 
-  const paymentApts = appointments.filter(a => a.paymentMethod && a.paymentMethod !== 'NONE' && a.paymentMethod !== 'CASH');
+  const paymentApts = appointments.filter(a => {
+    if (!a.paymentMethod || a.paymentMethod === 'NONE' || a.paymentMethod === 'CASH') return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const name = (a.guestName || a.patient?.name || '').toLowerCase();
+      const phone = (a.guestPhone || a.patient?.phone || '').toLowerCase();
+      return name.includes(q) || phone.includes(q);
+    }
+    return true;
+  });
+
+  const pendingCount = appointments.filter(a => a.paymentStatus === 'PENDING_REVIEW').length;
+  const confirmedCount = appointments.filter(a => a.paymentStatus === 'CONFIRMED').length;
+  const rejectedCount = appointments.filter(a => a.paymentStatus === 'REJECTED').length;
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center border border-amber-200 dark:border-amber-500/20">
           <CreditCard className="text-amber-600 dark:text-amber-400" size={22} />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{isRTL ? 'مراجعة المدفوعات' : 'Payment Review'}</h1>
-          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-0.5">{isRTL ? 'InstaPay وفودافون كاش' : 'InstaPay & Vodafone Cash'}</p>
+          <h1 className="text-[22px] font-bold text-slate-900 dark:text-white tracking-tight">{isRTL ? 'مراجعة المدفوعات' : 'Payment Review'}</h1>
+          <p className="text-[13px] text-slate-500 dark:text-white/35 mt-0.5">{isRTL ? 'الدفعات الإلكترونية والكاش' : 'Electronic payments & cash deposits'}</p>
         </div>
       </div>
 
-      <div className="flex gap-1 p-1 bg-white dark:bg-[#111827] rounded-xl border border-slate-200/60 dark:border-white/5">
-        {[
-          { key: 'PENDING_REVIEW', ar: 'في الانتظار', en: 'Pending' },
-          { key: 'CONFIRMED', ar: 'مؤكدة', en: 'Confirmed' },
-          { key: 'REJECTED', ar: 'مرفوضة', en: 'Rejected' },
-        ].map(f => (
-          <button key={f.key} onClick={() => setFilter(f.key)} className={cn('flex-1 py-2.5 rounded-lg text-[12px] font-bold transition-all',
-            filter === f.key ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/25' : 'text-slate-500 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/50')}>
-            {isRTL ? f.ar : f.en}
-          </button>
-        ))}
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <button onClick={() => setFilter('PENDING_REVIEW')} className={cn(
+          "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+          filter === 'PENDING_REVIEW' ? "border-amber-500/30 shadow-md shadow-amber-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+        )}>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-500">{isRTL ? 'في الانتظار' : 'Pending'}</p>
+          <p className="text-[22px] font-bold text-amber-500 mt-1">{pendingCount}</p>
+        </button>
+        <button onClick={() => setFilter('CONFIRMED')} className={cn(
+          "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+          filter === 'CONFIRMED' ? "border-emerald-500/30 shadow-md shadow-emerald-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+        )}>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-500">{isRTL ? 'مؤكدة' : 'Confirmed'}</p>
+          <p className="text-[22px] font-bold text-emerald-500 mt-1">{confirmedCount}</p>
+        </button>
+        <button onClick={() => setFilter('REJECTED')} className={cn(
+          "bg-white dark:bg-[#111827] rounded-2xl border p-4 text-left transition-all",
+          filter === 'REJECTED' ? "border-red-500/30 shadow-md shadow-red-500/5" : "border-slate-200/60 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10"
+        )}>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-red-500">{isRTL ? 'مرفوضة' : 'Rejected'}</p>
+          <p className="text-[22px] font-bold text-red-500 mt-1">{rejectedCount}</p>
+        </button>
       </div>
 
+      {/* Search */}
+      <div className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5 p-4">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/25" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            placeholder={isRTL ? 'بحث بالاسم أو رقم الهاتف...' : 'Search by name or phone...'}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Cards */}
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="relative w-10 h-10">
-            <div className="absolute inset-0 border-2 border-slate-200 dark:border-white/10 rounded-xl" />
-            <div className="absolute inset-0 border-2 border-indigo-500 border-t-transparent rounded-xl animate-spin" />
-          </div>
+          <div className="w-7 h-7 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
         </div>
       ) : paymentApts.length === 0 ? (
         <div className="text-center py-20 bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/60 dark:border-white/5">
-          <AlertCircle size={40} className="mx-auto mb-4 text-slate-300 dark:text-white/15" />
-          <p className="font-medium text-slate-400 dark:text-white/30">{isRTL ? 'لا توجد مدفوعات' : 'No payments found'}</p>
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
+            <CreditCard size={24} className="text-slate-300 dark:text-white/15" />
+          </div>
+          <p className="font-bold text-[13px] text-slate-900 dark:text-white">{isRTL ? 'لا توجد مدفوعات' : 'No payments found'}</p>
+          <p className="text-[12px] text-slate-500 dark:text-white/35 mt-1">
+            {search ? (isRTL ? 'جرّب كلمة بحث مختلفة' : 'Try a different search') : (isRTL ? 'المدفوعات ستظهر هنا' : 'Payments will appear here')}
+          </p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -177,6 +229,12 @@ export default function AdminPaymentsPage() {
             <AppointmentPaymentCard key={apt.id} apt={apt} onAction={(id, newStatus) => setAppointments(prev => prev.map(a => a.id === id ? { ...a, paymentStatus: newStatus } : a))} />
           ))}
         </div>
+      )}
+
+      {!loading && paymentApts.length > 0 && (
+        <p className="text-center text-[11px] text-slate-400 dark:text-white/25">
+          {isRTL ? `عرض ${paymentApts.length} من ${appointments.length} حجز` : `Showing ${paymentApts.length} of ${appointments.length} appointments`}
+        </p>
       )}
     </div>
   );
