@@ -59,7 +59,7 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
   ];
 
   return (
-    <section className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-[#0a192f] flex items-center">
+    <section className="relative min-h-[600px] lg:h-[90vh] lg:min-h-[700px] w-full overflow-hidden bg-[#0a192f] flex items-center pt-28 pb-16 lg:py-0">
       <FloatingOrbs count={6} />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
@@ -73,7 +73,7 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
             transition={{ duration: 0.6 }}
             style={{ transformStyle: 'preserve-3d', transform: 'translateZ(30px)' }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-6 lg:mb-8">
               <Star size={14} className="fill-[var(--accent)]" />
               {isAr ? 'رعاية طبية عالمية' : 'World Class Care'}
             </div>
@@ -82,7 +82,7 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
           <motion.div style={{ transformStyle: 'preserve-3d', transform: 'translateZ(50px)' }}>
             <TextReveal
               text={isAr ? 'أ.د. أحمد عبد اللطيف' : 'Prof. Dr. Ahmed Abdellatif'}
-              className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl mb-8"
+              className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[1.15] lg:leading-[1.1] tracking-tight drop-shadow-2xl mb-6 lg:mb-8"
             />
           </motion.div>
 
@@ -92,7 +92,7 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
             transition={{ duration: 0.7, delay: 0.6 }}
             style={{ transformStyle: 'preserve-3d', transform: 'translateZ(20px)' }}
             className={cn(
-              "text-xl sm:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg mb-10",
+              "text-lg sm:text-xl lg:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg mb-8 lg:mb-10",
               isAr ? "border-r-4 pr-6 border-[var(--accent)]" : "border-l-4 pl-6 border-[var(--accent)]"
             )}
           >
@@ -105,7 +105,7 @@ function StaticHero({ t, locale }: { t: any; locale: string }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.9 }}
-            className="flex flex-col sm:flex-row gap-4 mb-16"
+            className="flex flex-col sm:flex-row gap-4 mb-10 lg:mb-16"
             style={{ transformStyle: 'preserve-3d', transform: 'translateZ(40px)' }}
           >
             <MagneticButton as="a" href="/booking">
@@ -190,7 +190,7 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
     <section
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative h-[90vh] min-h-[600px] w-full overflow-hidden bg-black flex items-center"
+      className="relative min-h-[600px] lg:h-[90vh] lg:min-h-[700px] w-full overflow-hidden bg-black flex items-center pt-28 pb-20 lg:py-0"
     >
       <FloatingOrbs count={4} />
 
@@ -284,7 +284,7 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 style={{ transformStyle: 'preserve-3d', transform: 'translateZ(30px)' }}
               >
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-8">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[var(--accent)] text-xs font-black uppercase tracking-widest mb-6 lg:mb-8">
                   <Star size={14} className="fill-[var(--accent)]" />
                   {isAr ? 'رعاية طبية عالمية' : 'World Class Care'}
                 </div>
@@ -295,7 +295,7 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.4 }}
                 style={{ transformStyle: 'preserve-3d', transform: 'translateZ(50px)' }}
-                className="text-5xl sm:text-6xl lg:text-8xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl mb-8"
+                className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-black text-white leading-[1.15] lg:leading-[1.1] tracking-tight drop-shadow-2xl mb-6 lg:mb-8"
               >
                 {isAr ? slides[currentSlide].titleAr : slides[currentSlide].titleEn}
               </motion.h1>
@@ -306,7 +306,7 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
                 transition={{ duration: 0.7, delay: 0.6 }}
                 style={{ transformStyle: 'preserve-3d', transform: 'translateZ(20px)' }}
                 className={cn(
-                  "text-xl sm:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg",
+                  "text-lg sm:text-xl lg:text-2xl text-white/80 max-w-2xl leading-relaxed font-medium drop-shadow-lg",
                   isAr ? "border-r-4 pr-6 border-[var(--accent)]" : "border-l-4 pl-6 border-[var(--accent)]"
                 )}
               >
@@ -317,7 +317,7 @@ export function HeroSection({ fallbackData }: { fallbackData?: Slide[] }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="mt-10 flex flex-col sm:flex-row gap-4"
+                className="mt-6 lg:mt-10 flex flex-col sm:flex-row gap-4"
                 style={{ transformStyle: 'preserve-3d', transform: 'translateZ(40px)' }}
               >
                 {currentSlide === 0 ? (
