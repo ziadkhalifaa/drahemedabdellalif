@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx next build && node -e \"const fs=require('fs');try{fs.cpSync('.next/static','.next/standalone/.next/static',{recursive:true});fs.cpSync('public','.next/standalone/public',{recursive:true});console.log('Static files copied to standalone.')}catch(e){console.warn('Copy skipped:',e.message)}\"",
+    "build": "npx next build && node -e \"const fs=require('fs');const path=require('path');const root=path.resolve(__dirname,'../..');try{fs.cpSync('.next/static','.next/standalone/.next/static',{recursive:true});fs.cpSync('public','.next/standalone/public',{recursive:true});const mods=['framer-motion','@radix-ui','clsx','class-variance-authority','tailwind-merge','lucide-react','@tiptap','embla-carousel-react','embla-carousel-autoplay','react-leaflet','leaflet','recharts','date-fns','react-hot-toast','sonner','next-themes','next-intl','zod'];for(const m of mods){const src=path.join(root,'node_modules',m);const dest=path.join(__dirname,'.next/standalone/node_modules',m);if(fs.existsSync(src))fs.cpSync(src,dest,{recursive:true});}console.log('Static files and node_modules copied to standalone.')}catch(e){console.warn('Copy skipped:',e.message)}\"",
     "start": "next start",
     "lint": "next lint"
   },
