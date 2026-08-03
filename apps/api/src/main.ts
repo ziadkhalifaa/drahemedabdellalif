@@ -40,7 +40,7 @@ async function bootstrap() {
 
       app.use(cookieParser());
 
-      const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://drahmedabdellatif.com')
+      const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,https://drahmedabdellatif.com,https://www.drahmedabdellatif.com')
         .split(',')
         .map(o => o.trim());
 
@@ -53,8 +53,10 @@ async function bootstrap() {
           const allowed = allowedOrigins.some(o => {
             if (o === origin) return true;
             try {
-              const allowedHost = new URL(o).hostname;
-              const originHost = new URL(origin).hostname;
+              let allowedHost = new URL(o).hostname;
+              let originHost = new URL(origin).hostname;
+              if (allowedHost.startsWith('www.')) allowedHost = allowedHost.slice(4);
+              if (originHost.startsWith('www.')) originHost = originHost.slice(4);
               return originHost === allowedHost;
             } catch {
               return false;
