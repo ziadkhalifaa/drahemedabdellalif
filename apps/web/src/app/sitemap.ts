@@ -1,7 +1,23 @@
 import type { MetadataRoute } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://drahmedabdellatif.com';
+
+async function fetchJson(path: string, timeoutMs = 8000): Promise<any[] | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { signal: controller.signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const locales = ['ar', 'en'];
@@ -17,37 +33,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   let blogPosts: MetadataRoute.Sitemap = [];
-  try {
-    const res = await fetch(`${API_BASE}/blog/published`, { next: { revalidate: 3600 } });
-    if (res.ok) {
-      const posts = await res.json();
-      blogPosts = posts.flatMap((post: any) => 
-        locales.map(locale => ({
-          url: `${BASE_URL}/${locale}/blog/${locale === 'ar' ? post.slugAr : post.slugEn}`,
-          lastModified: new Date(post.updatedAt),
-          changeFrequency: 'weekly' as const,
-          priority: 0.6,
-        }))
-      );
-    }
-  } catch {}
+  const posts = await fetchJson('/blog/published');
+  if (posts) {
+    blogPosts = posts.flatMap((post: any) => 
+      locales.map(locale => ({
+        url: `${BASE_URL}/${locale}/blog/${locale === 'ar' ? post.slugAr : post.slugEn}`,
+        lastModified: new Date(post.updatedAt),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      }))
+    );
+  }
 
   // Dynamic: Services
   let servicePages: MetadataRoute.Sitemap = [];
-  try {
-    const res = await fetch(`${API_BASE}/services`, { next: { revalidate: 3600 } });
-    if (res.ok) {
-      const services = await res.json();
-      servicePages = services.flatMap((svc: any) =>
-        locales.map(locale => ({
-          url: `${BASE_URL}/${locale}/services/${svc.id}`,
-          lastModified: new Date(svc.updatedAt || svc.createdAt),
-          changeFrequency: 'monthly' as const,
-          priority: 0.8,
-        }))
-      );
-    }
-  } catch {}
+  const services = await fetchJson('/services');
+  if (services) {
+    servicePages = services.flatMap((svc: any) =>
+      locales.map(locale => ({
+        url: `${BASE_URL}/${locale}/services/${svc.id}`,
+        lastModified: new Date(svc.updatedAt || svc.createdAt),
+        changeFrequency: 'monthly' as const,
+        priority: 0.8,
+      }))
+    );
+  }
 
   return [...staticPages, ...blogPosts, ...servicePages];
 }
